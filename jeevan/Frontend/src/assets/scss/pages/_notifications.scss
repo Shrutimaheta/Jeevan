@@ -1,0 +1,17 @@
+@use "../variables" as *;
+@use "../utils/mixins" as *;
+
+.notication-card{
+    &:hover{
+       .noti-btn{
+        opacity: 1;
+        } 
+    }
+    .noti-btn{
+       opacity: 0;
+       transition: .3s;
+       @include respond-below(md) {
+          opacity: 1;
+       }
+    }
+}

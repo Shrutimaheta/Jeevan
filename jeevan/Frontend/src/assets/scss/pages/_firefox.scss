@@ -1,0 +1,38 @@
+@-moz-document url-prefix() {
+  .custom-quote{
+    p {
+      color: var(--body-color) !important;
+    }
+  }
+  [data-bs-theme="dark"] {
+    p {
+      color: var(--body-color) !important;
+    }
+    .card-header {
+      color: #fff;
+    }
+    .custom-quote{
+      footer {
+        color: #fff;
+      }
+    }
+  }
+}
+
+@-moz-document url-prefix() {
+  :root[data-bs-theme="dark"] {
+    --body-color: #9facbf !important;
+    .bg-primary,
+    .bg-secondary,
+    .bg-warning,
+    .bg-success,
+    .bg-info {
+      p {
+        color: #fff;
+      }
+      footer {
+        color: #fff;
+      }
+    }
+  }
+}

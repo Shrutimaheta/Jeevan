@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Jeevan Healthcare{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Admin-like header */
+        .admin-header {
+            background: #417690;
+            color: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid #205067;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .admin-header h1 {
+            font-size: 18px;
+            font-weight: 400;
+            margin: 0;
+            display: inline-block;
+        }
+        
+        .admin-header .user-tools {
+            float: right;
+            margin-top: 2px;
+        }
+        
+        .admin-header .user-tools a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 13px;
+        }
+        
+        .admin-header .user-tools a:hover {
+            color: #ffc;
+        }
+        
+        /* Main content area */
+        .main-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Card styling similar to admin */
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: white;
+        }
+        
+        .card-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .form-control {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus {
+            border-color: #417690;
+            box-shadow: 0 0 0 0.2rem rgba(65, 118, 144, 0.25);
+            outline: 0;
+        }
+        
+        /* Button styling */
+        .btn {
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .btn-primary {
+            background-color: #417690;
+            border-color: #417690;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #205067;
+            border-color: #205067;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+            border-color: #4e555b;
+            color: white;
+        }
+        
+        /* Alert styling */
+        .alert {
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        /* Text colors */
+        .text-primary {
+            color: #417690 !important;
+        }
+        
+        .text-muted {
+            color: #6c757d !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+            }
+            
+            .admin-header {
+                padding: 10px 15px;
+            }
+            
+            .admin-header h1 {
+                font-size: 16px;
+            }
+            
+            .admin-header .user-tools {
+                float: none;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1><i class="fas fa-heartbeat me-2"></i>Jeevan Healthcare System</h1>
+        <div class="user-tools">
+            {% if user.is_authenticated %}
+                <a href="{% url 'patient:patient_dashboard' %}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
+                <a href="{% url 'patient:patient_profile' %}"><i class="fas fa-user me-1"></i>Profile</a>
+                <a href="{% url 'patient:patient_logout' %}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+            {% else %}
+                <a href="{% url 'patient:patient_login' %}"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+                <a href="{% url 'patient:patient_register' %}"><i class="fas fa-user-plus me-1"></i>Register</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

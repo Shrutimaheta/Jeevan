@@ -1,0 +1,101 @@
+@use "../variables" as *;
+@use "../utils/mixins" as *;
+
+//
+// authentication.scss
+//
+
+.login-or {
+	&::after {
+		width: 100%;
+		content: "";
+		border-top: 1px solid $border-color;
+		position: absolute;
+		top: 50%;
+		right: 0;
+	}
+	&::before {
+		width: 100%;
+		content: "";
+		border-top: 1px solid $border-color;
+		position: absolute;
+		top: 50%;
+		left: 0;
+	}
+}
+
+.login-backgrounds.login-covers {
+    padding: 60px;
+    .authentication-card {
+        z-index: 2;
+        max-width: 457px;
+        margin: auto;
+    }
+    .auth-img-01 {
+        left: 5px;
+        bottom: 100px;
+    }
+    .auth-img-02 {
+        right: 40px;
+        bottom: 130px;
+    }
+}
+
+.lock-screen-cover {
+
+    .logo {
+        width: 165px;
+    }
+    h2 {
+        background: $login-gradient;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .lock-screen-img-01 {
+        position: absolute;
+        top: 0;
+        left: 70px;
+    }
+    .lock-screen-img-02 {
+        position: absolute;
+        bottom: 0;
+        right: 70px;
+    }
+}
+
+// coming soon
+
+.timer-cover {
+    width: 70px;
+    height: 70px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $white;
+    border: 1px solid $white;
+    border-radius: 5px;
+    margin-bottom: 4px;
+    @include respond-below(md) {
+        width: 50px;
+        height: 50px;
+    }
+}
+.subscribe-form {
+    position: relative;
+    input {
+        position: relative;
+    }
+    .btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+}
+.theme-image {
+    &.active {
+        border: 1px solid $primary;
+    }
+}
+

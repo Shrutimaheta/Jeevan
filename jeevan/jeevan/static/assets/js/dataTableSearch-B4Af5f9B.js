@@ -1,0 +1,1 @@
+import{j as a}from"./ui-CS7-p66C.js";const n=({value:e,onChange:r})=>{const t=s=>{r(s.target.value)};return a.jsx("div",{className:"datatable-search",children:a.jsx("input",{type:"search",className:"form-control form-control-sm",placeholder:"Search","aria-controls":"DataTables_Table_0",value:e,onChange:t})})};export{n as S};

@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Dreams EMR - Responsive Bootstrap 5 Medical Admin Template</title>
+    <meta name="description" content="DreamsEMR is a flexible, powerful, modern, and responsive Bootstrap 5 admin template with endless potential."/>
+    <meta name="keywords" content="Dreams EMR admin template, admin template, dashboard template, responsive admin template, medical admin template, web app"/>
+    <meta name="author" content="dreamstechnologies" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/favicon.png' %}" />
+
+    <!-- Apple Icon -->
+    <link rel="apple-touch-icon" href="{% static 'assets/apple-icon.png' %}" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'assets/index-Ct1jLzce.css' %}" crossorigin="anonymous">
+
+    <!-- JS -->
+    <script type="module" crossorigin src="{% static 'assets/js/index-5O_Laqqa.js' %}"></script>
+    
+    <!-- Debug Script -->
+    <script>
+      console.log('🔍 Debug: HTML loaded');
+      console.log('🔍 Debug: Current URL:', window.location.href);
+      console.log('🔍 Debug: Current pathname:', window.location.pathname);
+      
+      // Force redirect to /index if we're on root
+      if (window.location.pathname === '/') {
+        console.log('🔍 Debug: Redirecting from / to /index');
+        window.location.href = '/index';
+      }
+      
+      // Check if React is mounting
+      window.addEventListener('load', function() {
+        console.log('🔍 Debug: Window loaded');
+        setTimeout(function() {
+          const root = document.getElementById('root');
+          console.log('🔍 Debug: Root element:', root);
+          console.log('🔍 Debug: Root innerHTML length:', root ? root.innerHTML.length : 'null');
+          console.log('🔍 Debug: Root children count:', root ? root.children.length : 'null');
+          
+          // Check for React error boundaries
+          const errorBoundary = document.querySelector('[data-react-error-boundary]');
+          if (errorBoundary) {
+            console.log('🔍 Debug: React error boundary found:', errorBoundary);
+          }
+          
+          // If React hasn't rendered anything after 3 seconds, show fallback
+          if (root && root.innerHTML.length < 100) {
+            console.log('🔍 Debug: React not rendering, showing fallback');
+            root.innerHTML = `
+              <div style="padding: 20px; text-align: center;">
+                <h2>🏥 Healthcare Management Dashboard</h2>
+                <p>React app is loading... If this persists, there may be a routing issue.</p>
+                <div style="margin-top: 20px;">
+                  <a href="/index" class="btn btn-primary">Try /index route</a>
+                  <a href="/patients" class="btn btn-secondary">Try /patients route</a>
+                </div>
+              </div>
+            `;
+          }
+        }, 3000);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <div style="padding: 20px; text-align: center; background: #f8f9fa; border: 2px dashed #dee2e6; margin: 20px;">
+        <h3>🔄 Loading React Dashboard...</h3>
+        <p>If you see this message for more than 5 seconds, there might be an issue with the React app.</p>
+        <div id="debug-info"></div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+/* FullCalendar Accessibility Fixes */
+.fc-icon-chevron-left[role="img"]::before {
+  content: "Previous month";
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.fc-icon-chevron-right[role="img"]::before {
+  content: "Next month";
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Add aria-label to navigation buttons */
+.fc-prev-button[aria-label=""] {
+  aria-label: "Previous month";
+}
+
+.fc-next-button[aria-label=""] {
+  aria-label: "Next month";
+}
+
+.fc-today-button[aria-label=""] {
+  aria-label: "Go to today";
+}
+
+/* Ensure FullCalendar navigation buttons are visible and styled */
+.fc-prev-button,
+.fc-next-button {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 0 2px;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.fc-prev-button:hover,
+.fc-next-button:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #000;
+}
+
+.fc-prev-button:focus,
+.fc-next-button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Ensure navigation buttons are properly styled */
+.fc-prev-button,
+.fc-next-button,
+.fc-today-button {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin: 0 2px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.fc-prev-button:hover,
+.fc-next-button:hover,
+.fc-today-button:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.fc-prev-button:focus,
+.fc-next-button:focus,
+.fc-today-button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+} 
