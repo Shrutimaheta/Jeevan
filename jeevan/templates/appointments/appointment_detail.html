@@ -1,0 +1,228 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Appointment Details - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<!-- ========================
+    Start Page Content
+========================= -->
+<div class="page-wrapper" id="main-content">
+    <!-- Start Content -->
+    <div class="content">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+            <div class="breadcrumb-arrow">
+                <h4 class="mb-1">Appointment Details</h4>
+                <p class="mb-0">
+                    View your appointment information
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                    <i class="ti ti-arrow-left me-1"></i>Back to Appointments
+                </a>
+            </div>
+        </div>
+        <!-- End Page Header -->
+        
+        <!-- Appointment Details -->
+        <div class="row">
+            <div class="col-xl-8 col-lg-10 mx-auto">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="fw-bold mb-0">
+                            <i class="ti ti-calendar me-2"></i>Appointment #{{ appointment.abha_id }}
+                        </h5>
+                        <div>
+                            {% if appointment.status == 'pending' %}
+                                <span class="badge badge-soft-warning fs-6">Pending</span>
+                            {% elif appointment.status == 'accepted' %}
+                                <span class="badge badge-soft-success fs-6">Accepted</span>
+                            {% elif appointment.status == 'rejected' %}
+                                <span class="badge badge-soft-danger fs-6">Rejected</span>
+                            {% elif appointment.status == 'completed' %}
+                                <span class="badge badge-soft-info fs-6">Completed</span>
+                            {% elif appointment.status == 'cancelled' %}
+                                <span class="badge badge-soft-secondary fs-6">Cancelled</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Doctor Information -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-semibold mb-3 text-primary">
+                                            <i class="ti ti-user me-2"></i>Doctor Information
+                                        </h6>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3">
+                                                <i class="ti ti-user-circle text-primary" style="font-size: 48px;"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-semibold mb-1 text-dark">{{ appointment.doctor.full_name }}</h6>
+                                                <small class="text-muted">
+                                                    {% for spec in appointment.doctor.specialization.all %}
+                                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                    {% empty %}
+                                                        General Practitioner
+                                                    {% endfor %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Experience</small>
+                                                <div class="fw-semibold">{{ appointment.doctor.experience }} years</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Rating</small>
+                                                <div class="fw-semibold">
+                                                    <i class="ti ti-star-filled text-warning"></i>
+                                                    <i class="ti ti-star-filled text-warning"></i>
+                                                    <i class="ti ti-star-filled text-warning"></i>
+                                                    <i class="ti ti-star-filled text-warning"></i>
+                                                    <i class="ti ti-star text-warning"></i>
+                                                    4.0
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hospital Information -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-semibold mb-3 text-primary">
+                                            <i class="ti ti-building me-2"></i>Hospital Information
+                                        </h6>
+                                        <div class="mb-3">
+                                            <h6 class="fw-semibold mb-1 text-dark">{{ appointment.hospital.name }}</h6>
+                                            <small class="text-muted">{{ appointment.hospital.location }}</small>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Phone</small>
+                                                <div class="fw-semibold text-dark">
+                                                    <i class="ti ti-phone me-1"></i>{{ appointment.hospital.contact_no }}
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Email</small>
+                                                <div class="fw-semibold">
+                                                    <i class="ti ti-mail me-1"></i>{{ appointment.hospital.email }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Appointment Details -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-semibold mb-3 text-primary">
+                                            <i class="ti ti-calendar-event me-2"></i>Appointment Details
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Date</small>
+                                                <div class="fw-semibold">{{ appointment.appointment_date|date:"M d, Y" }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Time</small>
+                                                <div class="fw-semibold">{{ appointment.appointment_time|time:"g:i A" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Payment Mode</small>
+                                                <div class="fw-semibold">{{ appointment.get_payment_mode_display }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Booked On</small>
+                                                <div class="fw-semibold">{{ appointment.created_at|date:"M d, Y" }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Patient Information -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-semibold mb-3 text-primary">
+                                            <i class="ti ti-user me-2"></i>Patient Information
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Name</small>
+                                                <div class="fw-semibold">{{ appointment.patient.full_name }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Email</small>
+                                                <div class="fw-semibold">{{ appointment.patient.email }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Phone</small>
+                                                <div class="fw-semibold">{{ appointment.patient.contact_number }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">ABHA ID</small>
+                                                <div class="fw-semibold">{{ appointment.patient.abha_id }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Symptoms/Reason -->
+                            {% if appointment.symptoms %}
+                            <div class="col-12 mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="fw-semibold mb-3 text-primary">
+                                            <i class="ti ti-notes me-2"></i>Reason for Visit
+                                        </h6>
+                                        <p class="mb-0">{{ appointment.symptoms }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                                <i class="ti ti-arrow-left me-1"></i>Back to List
+                            </a>
+                            {% if appointment.can_edit %}
+                            <a href="{% url 'appointments:appointment_update' appointment.id %}" class="btn btn-warning">
+                                <i class="ti ti-edit me-1"></i>Edit Appointment
+                            </a>
+                            {% endif %}
+                            {% if appointment.can_cancel %}
+                            <a href="{% url 'appointments:appointment_cancel' appointment.id %}" class="btn btn-danger">
+                                <i class="ti ti-x me-1"></i>Cancel Appointment
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Content -->
+</div>
+<!-- ========================
+    End Page Content
+========================= -->
+{% endblock %}
+

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 React Dashboard Debug Test</h1>
+        
+        <div class="test-item">
+            <h3>1. Static Files Test</h3>
+            <p>CSS: <a href="/static/assets/index-Ct1jLzce.css" target="_blank">Test CSS File</a></p>
+            <p>JS: <a href="/static/assets/js/index-5O_Laqqa.js" target="_blank">Test JS File</a></p>
+        </div>
+        
+        <div class="test-item">
+            <h3>2. React App Mount Test</h3>
+            <div id="root">
+                <p style="color: red; font-weight: bold;">❌ React app is NOT mounting. This text should be replaced by React.</p>
+            </div>
+        </div>
+        
+        <div class="test-item">
+            <h3>3. Console Test</h3>
+            <p>Open browser console (F12) and check for errors.</p>
+            <p>Look for messages starting with "✅" or "❌"</p>
+        </div>
+        
+        <div class="test-item">
+            <h3>4. Manual Test</h3>
+            <p>Try visiting: <a href="http://localhost:8000/" target="_blank">http://localhost:8000/</a></p>
+            <p>You should see a healthcare dashboard with statistics cards, charts, and tables.</p>
+        </div>
+    </div>
+    
+    <script>
+        console.log('🔧 Debug test page loaded');
+        
+        // Test if the main JS file loads
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/static/assets/js/index-5O_Laqqa.js';
+        script.onload = () => {
+            console.log('✅ Main JS file loaded successfully');
+            // Check if React mounted after a delay
+            setTimeout(() => {
+                const root = document.getElementById('root');
+                if (root && root.children.length > 0) {
+                    console.log('✅ React app appears to be mounted');
+                } else {
+                    console.log('❌ React app is not mounted - root div is empty');
+                }
+            }, 2000);
+        };
+        script.onerror = () => {
+            console.log('❌ Failed to load main JS file');
+        };
+        document.head.appendChild(script);
+        
+        // Test if CSS loads
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/static/assets/index-Ct1jLzce.css';
+        link.onload = () => console.log('✅ CSS file loaded successfully');
+        link.onerror = () => console.log('❌ Failed to load CSS file');
+        document.head.appendChild(link);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,95 @@
+@use "../variables" as *;
+@use "../utils/mixins" as *;
+
+//
+// modal.scss
+//
+
+.modal-content {
+    box-shadow: $box-shadow;
+    background: $white;
+    border-radius: $border-radius;
+}
+.modal-title {
+    color: inherit;
+}
+.modal-full-width {
+    width: 95%;
+    max-width: none;
+}
+.modal-top {
+    margin: 0 auto;
+}
+.modal {
+    &.show {
+        .modal-right,
+        .modal-left {
+            transform: translate(0, 0) !important;
+        }
+    }
+}
+.modal-bottom {
+    display: flex;
+    flex-flow: column nowrap;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    height: 100%;
+    margin: 0 auto;
+    align-content: center;
+}
+.modal-filled {
+    color: $white;
+    box-shadow: unset !important;
+    .modal-header {
+        background-color: rgba($white-rgb, 0.1);
+    }
+    .modal-title {
+        color: $white;
+    }
+    .modal-header,
+    .modal-footer {
+        border: none;
+    }
+    .modal-body ,.modal-footer  {
+        background: transparent;
+    }
+    p{
+        color: $white;
+    }
+}
+.modal-backdrop {
+    backdrop-filter: blur(10px);
+}
+.modal-header {
+    padding: 16px 20px;
+    background-color: $white;
+    border-color: $border-color;
+    .btn-close {
+        &.btn-close-modal {
+            background: none;
+            color: $gray-900;
+            opacity: 1;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: unset !important;
+            &:hover {
+                color: $danger;
+            }
+        }
+    }
+}
+.modal-body {
+    padding: 20px;
+    background-color: $white;
+    border-radius: $border-radius;
+}
+.modal-footer>* {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.modal-footer {
+    padding: 16px 20px;
+    background-color: $white;
+    border-color: $border-color;
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nurse Login | Jeevan Care PMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #e5e0fa, #7969f1);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .login-box {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1e3a8a;
+    }
+    .form-control:focus {
+      box-shadow: none;
+      border-color: #1e3a8a;
+    }
+    .btn-primary {
+      background-color: #1e3a8a;
+      border: none;
+    }
+    .text-link {
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-box">
+    <h2>Nurse Login</h2>
+    <form action="/nurse/login" method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="email" class="form-label">Email ID</label>
+        <input type="email" class="form-control" id="email" name="email" required placeholder="nurse@example.com">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+      </div>
+      <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-primary">Login</button>
+      </div>
+      <p class="text-link"><a href="/forgot-password">Forgot Password?</a></p>
+      <p class="text-link"><a href="/">← Back to Home</a></p>
+    </form>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+@use "../variables" as *;
+
+.patient-form-wizard .form-wizard-content {
+    display: none;
+    &.active {
+        display: block;
+    }
+}
+.vertical-tab {
+    .nav-pills {
+        .nav-link {
+            background: $light;
+            border: 1px solid $border-color;
+            padding: 10px 15px;
+            color: $body-color;
+            margin-bottom: 12px;
+            transition: 0.5s all;
+            background: $white;
+            position: relative;
+            &::after {
+                content: "";
+                width: 1px;
+                height: 100%;
+                background: $border-color;
+                position: absolute;
+                left: 12px;
+                top: 20px;
+                z-index: -1;
+            }
+            &:last-child {
+                &::after {
+                    display: none;
+                }
+            }
+            cursor: default;
+            i {
+                margin-right: 8px;
+            }
+            span {
+                width: 15px;
+                height: 15px;
+                border: 1px solid $primary;
+                border-radius: 50%;
+                margin-right: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: 0.5s all;
+                flex-shrink: 0;
+                &::after {
+                    content: "";
+                    width: 8px;
+                    height: 8px;
+                    background: $white;
+                    border-radius: 50%;
+                    opacity: 0;
+                    transition: 0.5s all;
+                }
+            }
+            &.active {
+                border-color: $primary;
+                color: $heading-color;
+                transition: 0.5s all;
+                span {
+                    background: $primary;
+                    &::after {
+                        opacity: 1;
+                    }
+                }
+            }
+            &.activated {
+                span {
+                    background: $primary;
+                    &::after {
+                        opacity: 1;
+                        content: "\ea5e";
+                        font-family: 'tabler-icons';
+                        background-color: transparent;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: $white;
+                        font-size: 10px;
+                    }
+                }
+            }
+        }
+    }
+}
+.drag-upload-btn input {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+}
+#chart-5 {
+    .apexcharts-bar-series {
+        .apexcharts-series:nth-child(1) path {
+            fill: $primary;
+          }
+    }
+}

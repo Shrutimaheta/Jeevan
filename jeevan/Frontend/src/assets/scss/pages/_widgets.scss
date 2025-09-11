@@ -1,0 +1,56 @@
+@use "../variables" as *;
+
+.text-truncate {
+    white-space: normal;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+}
+.text-truncate.line-clamb-2 {
+    -webkit-line-clamp: 2;
+}
+.text-truncate.line-clamb-3 {
+    -webkit-line-clamp: 3;
+}
+.hover-shadow{
+    &:hover {
+        box-shadow: $box-shadow-lg;
+        transition: .3s;
+    }
+}
+.yearpicker{
+    min-width: 80px;
+    width: 80px;
+}
+.reportrange-picker {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid $border-color;
+    background-color: transparent;
+    color: $heading-color;
+}
+.search-set {
+    .search-input {
+        position: relative;
+        input[type=search] {
+            padding-left: 32px;
+            color: $gray-300;
+            font-size: $font-size-base;
+            box-shadow: none;
+            &::placeholder{
+               color: $gray-300;
+               opacity: 1; 
+            }
+        }
+        .btn-searchset {
+            border-radius: 50px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 10px;
+            border: 0;
+            line-height: 0;
+             color: $gray-300;
+        }
+    }
+}

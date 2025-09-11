@@ -1,0 +1,25 @@
+{% extends "admin/change_form.html" %}
+{% block extrahead %}
+{{ block.super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    $('#id_user').change(function () {
+        var userId = $(this).val();
+        if (userId) {
+            $.ajax({
+                url: '/get_user_info/' + userId + '/',
+                method: 'GET',
+                success: function (data) {
+                    $('#id_full_name').val(data.full_name);
+                    $('#id_email').val(data.email);
+                },
+                error: function (xhr) {
+                    console.error("AJAX error:", xhr.responseText);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

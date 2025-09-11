@@ -1,0 +1,201 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Dashboard - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+    <div>
+        <a href="{% url 'patient:patient_profile' %}" class="btn btn-secondary me-2">
+            <i class="fas fa-user me-1"></i>Edit Profile
+        </a>
+        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+            <i class="fas fa-calendar-plus me-1"></i>Book Appointment
+        </a>
+    </div>
+</div>
+
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        {% if patient.profile_photo %}
+                            <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #007bff;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-user fa-lg text-white"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h4 class="card-title text-primary mb-1">
+                            Welcome, {{ patient.full_name }}!
+                        </h4>
+                        <p class="card-text text-muted mb-0">
+                            Manage your healthcare journey with ease. View your appointments, update your profile, and access your medical records.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number">{{ upcoming_appointments.count }}</div>
+            <div class="stats-label">Upcoming Appointments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number">{{ total_appointments }}</div>
+            <div class="stats-label">Total Appointments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number">0</div>
+            <div class="stats-label">Active Prescriptions</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number">0</div>
+            <div class="stats-label">Pending Bills</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'patient:patient_profile' %}" class="btn btn-secondary w-100">
+                            <i class="fas fa-user-edit me-2"></i>Update Profile
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'patient:change_password' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="#" class="btn btn-info w-100">
+                            <i class="fas fa-file-upload me-2"></i>Upload Documents
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="#" class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>Download Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Appointments -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th>Description</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-calendar-check text-success me-2"></i>Appointment Confirmed</td>
+                                <td>Your appointment with Dr. Smith has been confirmed for tomorrow at 2:00 PM.</td>
+                                <td>2 hours ago</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-user-edit text-info me-2"></i>Profile Updated</td>
+                                <td>You updated your contact information and emergency contact details.</td>
+                                <td>1 day ago</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-pills text-warning me-2"></i>Prescription Ready</td>
+                                <td>Your prescription for medication is ready for pickup at the pharmacy.</td>
+                                <td>3 days ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Appointments</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_appointments %}
+                    {% for appointment in upcoming_appointments %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ appointment.doctor.full_name }}</h6>
+                                <p class="text-muted small mb-1">
+                                    {% for spec in appointment.doctor.specialization.all %}
+                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        General Practice
+                                    {% endfor %}
+                                </p>
+                                <small class="text-info">
+                                    {{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.appointment_time|time:"g:i A" }}
+                                </small>
+                                <br>
+                                <small class="text-muted">{{ appointment.hospital.name }}</small>
+                            </div>
+                            <span class="badge 
+                                {% if appointment.status == 'confirmed' %}bg-success
+                                {% elif appointment.status == 'pending' %}bg-warning
+                                {% elif appointment.status == 'cancelled' %}bg-danger
+                                {% elif appointment.status == 'completed' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ appointment.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No upcoming appointments</p>
+                    </div>
+                {% endif %}
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-primary btn-sm w-100">View All Appointments</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

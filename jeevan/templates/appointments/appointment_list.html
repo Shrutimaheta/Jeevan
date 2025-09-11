@@ -1,0 +1,152 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}My Appointments - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<!-- ========================
+    Start Page Content
+========================= -->
+<div class="page-wrapper" id="main-content">
+    <!-- Start Content -->
+    <div class="content">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+            <div class="breadcrumb-arrow">
+                <h4 class="mb-1">My Appointments</h4>
+                <p class="mb-0">
+                    Manage your medical appointments and bookings
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>Book New Appointment
+                </a>
+            </div>
+        </div>
+        <!-- End Page Header -->
+        
+        <!-- Appointments Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <h5 class="fw-bold mb-0">Appointment History</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge badge-soft-primary">{{ appointments.count }} Total</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Appointment ID</th>
+                                        <th>Doctor</th>
+                                        <th>Hospital</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th>Payment Mode</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in appointments %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-semibold text-dark">#{{ appointment.id }}</span>
+                                                {% if appointment.abha_id %}
+                                                    <small class="text-muted ms-1">({{ appointment.abha_id }})</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i class="ti ti-user-circle text-primary" style="font-size: 24px;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold text-dark">{{ appointment.doctor.full_name }}</h6>
+                                                    <small class="text-muted">
+                                                        {% for spec in appointment.doctor.specialization.all %}
+                                                            {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                        {% empty %}
+                                                            General Practitioner
+                                                        {% endfor %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold text-dark">{{ appointment.hospital.name }}</h6>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold">{{ appointment.appointment_date|date:"M d, Y" }}</h6>
+                                                <small class="text-muted">{{ appointment.appointment_time|time:"g:i A" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if appointment.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif appointment.status == 'accepted' %}
+                                                <span class="badge bg-success text-white">Accepted</span>
+                                            {% elif appointment.status == 'rejected' %}
+                                                <span class="badge bg-danger text-white">Rejected</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge bg-info text-white">Completed</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-secondary text-white">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary text-white">{{ appointment.get_payment_mode_display }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <a href="{% url 'appointments:appointment_detail' appointment.id %}" class="btn btn-sm btn-primary" title="View Details">
+                                                    <i class="ti ti-eye me-1"></i>View
+                                                </a>
+                                                {% if appointment.can_edit %}
+                                                <a href="{% url 'appointments:appointment_update' appointment.id %}" class="btn btn-sm btn-warning" title="Edit Appointment">
+                                                    <i class="ti ti-edit me-1"></i>Edit
+                                                </a>
+                                                {% endif %}
+                                                {% if appointment.can_cancel %}
+                                                <a href="{% url 'appointments:appointment_cancel' appointment.id %}" class="btn btn-sm btn-danger" title="Cancel Appointment">
+                                                    <i class="ti ti-x me-1"></i>Cancel
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="ti ti-calendar-x fs-48 text-muted"></i>
+                            </div>
+                            <h5 class="fw-semibold mb-2">No Appointments Found</h5>
+                            <p class="text-muted mb-4">You haven't booked any appointments yet.</p>
+                            <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                                <i class="ti ti-plus me-1"></i>Book Your First Appointment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Content -->
+</div>
+<!-- ========================
+    End Page Content
+========================= -->
+{% endblock %}

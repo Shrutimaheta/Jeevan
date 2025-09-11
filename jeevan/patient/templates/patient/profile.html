@@ -1,0 +1,320 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Profile - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-edit me-2"></i>Edit Profile</h2>
+    <div class="text-muted">
+        <i class="fas fa-user-circle me-1"></i>{{ patient.full_name }}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">Basic Information</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name *</label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <div class="text-danger small">{{ form.full_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.contact_number.id_for_label }}" class="form-label">Contact Number *</label>
+                            {{ form.contact_number }}
+                            {% if form.contact_number.errors %}
+                                <div class="text-danger small">{{ form.contact_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Profile Photo -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3"><i class="fas fa-camera me-2"></i>Profile Photo</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.profile_photo.id_for_label }}" class="form-label">Upload New Photo</label>
+                            <div class="input-group">
+                                {{ form.profile_photo }}
+                                <label class="input-group-text" for="{{ form.profile_photo.id_for_label }}">
+                                    <i class="fas fa-upload"></i>
+                                </label>
+                            </div>
+                            {% if form.profile_photo.errors %}
+                                <div class="text-danger small mt-1">{{ form.profile_photo.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Supported formats: JPG, PNG, GIF. Max size: 5MB
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">Personal Details</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                                <div class="text-danger small">{{ form.gender.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.dob.id_for_label }}" class="form-label">Date of Birth</label>
+                            {{ form.dob }}
+                            {% if form.dob.errors %}
+                                <div class="text-danger small">{{ form.dob.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">Address Information</h6>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                            {{ form.city }}
+                            {% if form.city.errors %}
+                                <div class="text-danger small">{{ form.city.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode</label>
+                            {{ form.pincode }}
+                            {% if form.pincode.errors %}
+                                <div class="text-danger small">{{ form.pincode.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Health Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">Health Information</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
+                            {{ form.blood_group }}
+                            {% if form.blood_group.errors %}
+                                <div class="text-danger small">{{ form.blood_group.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.emergency_number.id_for_label }}" class="form-label">Emergency Contact</label>
+                            {{ form.emergency_number }}
+                            {% if form.emergency_number.errors %}
+                                <div class="text-danger small">{{ form.emergency_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.existing_condition.id_for_label }}" class="form-label">Existing Medical Conditions</label>
+                            {{ form.existing_condition }}
+                            {% if form.existing_condition.errors %}
+                                <div class="text-danger small">{{ form.existing_condition.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.allergies.id_for_label }}" class="form-label">Allergies</label>
+                            {{ form.allergies }}
+                            {% if form.allergies.errors %}
+                                <div class="text-danger small">{{ form.allergies.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
+                        <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Summary -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if patient.profile_photo %}
+                        <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #007bff;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-1">{{ patient.full_name }}</h5>
+                    <p class="text-muted mb-0">{{ patient.email }}</p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h6 class="text-primary mb-2">Account Information</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Patient ID:</span>
+                        <strong>#{{ patient.id }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Gender:</span>
+                        <strong>{{ patient.gender }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Date of Birth:</span>
+                        <strong>{{ patient.dob }}</strong>
+                    </div>
+                    {% if patient.abha_id %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">ABHA ID:</span>
+                        <strong>{{ patient.abha_id }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-primary mb-2">Health Summary</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Blood Group:</span>
+                        <strong>{{ patient.blood_group|default:"Not specified" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">City:</span>
+                        <strong>{{ patient.city|default:"Not specified" }}</strong>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Keep your profile information up to date for better healthcare services.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                    </a>
+                    <a href="#" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-medical me-2"></i>Upload Medical Records
+                    </a>
+                    <a href="{% url 'patient:change_password' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+{% if messages %}
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<script>
+// Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+    
+    // Form validation feedback
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Photo validation functionality
+    const photoInput = document.getElementById('{{ form.profile_photo.id_for_label }}');
+    
+    if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, GIF)');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validate file size (5MB max)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File size must be less than 5MB');
+                    this.value = '';
+                    return;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

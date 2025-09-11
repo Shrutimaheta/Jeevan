@@ -1,0 +1,1 @@
+import{j as e}from"./ui-CS7-p66C.js";import{L as r}from"./router-Bc9CUY7_.js";const o=()=>e.jsx("footer",{className:"footer text-center",role:"contentinfo",children:e.jsxs("p",{className:"mb-0 text-dark",children:["2025 ©",e.jsx(r,{to:"#",className:"link-primary ms-1","aria-label":"Dreams EMR website",children:"Dreams EMR"})," ","- All Rights Reserved."]})});export{o as C};

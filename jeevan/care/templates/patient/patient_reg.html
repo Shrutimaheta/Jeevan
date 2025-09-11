@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Registration | Jeevan Care</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #e5e0fa, #7969f1);
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .text-white {
+      color: white !important;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .registration-container {
+      max-width: 1100px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .outer-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      animation: fadeInUp 0.8s ease-out;
+    }
+    .inner-card {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .inner-card:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+    .section-title {
+      font-size: 1.3rem;
+      color: #4e4efe;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #2c9ae3;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-primary {
+      background-color: #3077e1;
+      border: none;
+      padding: 10px 25px;
+      font-size: 1.1rem;
+    }
+    .form-control, .form-select, textarea {
+      border-radius: 10px;
+      padding: 10px 15px;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script>
+    function validateForm() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm_password').value;
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return false;
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+
+<div class="registration-container">
+  <h2 class="text-center text-white mb-4"><i class="fas fa-user-plus me-2"></i>Patient Registration</h2>
+  <div class="outer-card">
+    <form method="POST" action="/patient/register/" onsubmit="return validateForm()">
+      <div class="row">
+
+        <!-- Left Column -->
+        <div class="col-md-6">
+          <div class="inner-card">
+            <div class="section-title"><i class="fas fa-user"></i> Personal Information</div>
+
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" name="first_name" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email ID</label>
+              <input type="email" class="form-control" name="email" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Contact Number</label>
+              <input type="tel" class="form-control" name="contact" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gender</label><br>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" value="Male" required>
+                <label class="form-check-label">Male</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" value="Female">
+                <label class="form-check-label">Female</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="gender" value="Other">
+                <label class="form-check-label">Other</label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" name="dob" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              <textarea class="form-control" name="address" rows="2" required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">City</label>
+              <input type="text" class="form-control" name="city" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Pincode</label>
+              <input type="number" class="form-control" name="pincode" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-6">
+          <div class="inner-card">
+            <div class="section-title"><i class="fas fa-heartbeat"></i> Medical & Account Information</div>
+
+            <div class="mb-3">
+              <label class="form-label">ABHA ID</label>
+              <input type="text" class="form-control" name="abha_id">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Emergency Contact</label>
+              <input type="text" class="form-control" name="emergency_contact" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Blood Group</label>
+              <select class="form-select" name="blood_group" required>
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option>
+                <option>AB+</option><option>AB-</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Existing Conditions</label>
+              <textarea class="form-control" name="conditions" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Allergies (if any)</label>
+              <textarea class="form-control" name="allergies" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-paper-plane me-2"></i>Register</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

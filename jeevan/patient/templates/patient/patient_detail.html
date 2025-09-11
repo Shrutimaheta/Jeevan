@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ patient.full_name }} - Patient Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .patient-header {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .patient-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .patient-id {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .info-section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #555;
+        }
+        .back-link {
+            display: inline-block;
+            background: #95a5a6;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .back-link:hover {
+            background: #7f8c8d;
+        }
+        .consent-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .consent-yes {
+            background: #d4edda;
+            color: #155724;
+        }
+        .consent-no {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .empty-field {
+            color: #95a5a6;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'patient:patient_list' %}" class="back-link">← Back to Patient List</a>
+        
+        <h1>Patient Details</h1>
+        
+        <div class="patient-header">
+            <div class="patient-name">{{ patient.full_name }}</div>
+            <div class="patient-id">Patient ID: {{ patient.id }}</div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title">Personal Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value">{{ patient.full_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ patient.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Contact Number</div>
+                    <div class="info-value">{{ patient.contact_number }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Gender</div>
+                    <div class="info-value">{{ patient.gender }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Date of Birth</div>
+                    <div class="info-value">{{ patient.dob }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Consent Given</div>
+                    <div class="info-value">
+                        <span class="consent-status {% if patient.consent_given %}consent-yes{% else %}consent-no{% endif %}">
+                            {% if patient.consent_given %}Yes{% else %}No{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title">Address Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Address</div>
+                    <div class="info-value">
+                        {% if patient.address %}
+                            {{ patient.address }}
+                        {% else %}
+                            <span class="empty-field">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">City</div>
+                    <div class="info-value">
+                        {% if patient.city %}
+                            {{ patient.city }}
+                        {% else %}
+                            <span class="empty-field">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pincode</div>
+                    <div class="info-value">
+                        {% if patient.pincode %}
+                            {{ patient.pincode }}
+                        {% else %}
+                            <span class="empty-field">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title">Health Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">ABHA ID</div>
+                    <div class="info-value">
+                        {% if patient.abha_id %}
+                            {{ patient.abha_id }}
+                        {% else %}
+                            <span class="empty-field">Not assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Emergency Number</div>
+                    <div class="info-value">
+                        {% if patient.emergency_number %}
+                            {{ patient.emergency_number }}
+                        {% else %}
+                            <span class="empty-field">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Blood Group</div>
+                    <div class="info-value">
+                        {% if patient.blood_group %}
+                            {{ patient.blood_group }}
+                        {% else %}
+                            <span class="empty-field">Not provided</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Existing Conditions</div>
+                    <div class="info-value">
+                        {% if patient.existing_condition %}
+                            {{ patient.existing_condition }}
+                        {% else %}
+                            <span class="empty-field">None reported</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Allergies</div>
+                    <div class="info-value">
+                        {% if patient.allergies %}
+                            {{ patient.allergies }}
+                        {% else %}
+                            <span class="empty-field">None reported</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Medical History File</div>
+                    <div class="info-value">
+                        {% if patient.medical_history %}
+                            <a href="{{ patient.medical_history.url }}" target="_blank">View File</a>
+                        {% else %}
+                            <span class="empty-field">No file uploaded</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
