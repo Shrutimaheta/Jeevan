@@ -1,0 +1,126 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}My Documents - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-folder-open me-2"></i>My Documents</h1>
+    <div>
+        <a href="{% url 'patient:document_upload' %}" class="btn btn-primary btn-lg" style="font-size: 16px;">
+            <i class="fas fa-plus me-1"></i>Upload New Document
+        </a>
+        <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-secondary btn-lg" style="font-size: 16px;">
+            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+
+<!-- Documents List -->
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-list me-2"></i>Document List</h4>
+    </div>
+    <div class="card-body">
+        {% if documents %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="font-size: 18px; font-weight: bold;">Document</th>
+                            <th style="font-size: 18px; font-weight: bold;">Type</th>
+                            <th style="font-size: 18px; font-weight: bold;">Size</th>
+                            <th style="font-size: 18px; font-weight: bold;">Uploaded</th>
+                            <th style="font-size: 18px; font-weight: bold;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        {% if document.is_image %}
+                                            <i class="fas fa-image fa-2x text-primary"></i>
+                                        {% elif document.is_pdf %}
+                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                        {% else %}
+                                            <i class="fas fa-file fa-2x text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1" style="font-size: 20px; font-weight: bold;">{{ document.title }}</h5>
+                                        <span class="text-muted" style="font-size: 16px;">{{ document.file_extension }}</span>
+                                        {% if document.description %}
+                                            <br><span class="text-muted" style="font-size: 16px;">{{ document.description|truncatechars:50 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info" style="font-size: 16px; padding: 8px 12px;">{{ document.get_document_type_display }}</span>
+                            </td>
+                            <td style="font-size: 18px; font-weight: 600;">{{ document.file_size }}</td>
+                            <td style="font-size: 18px; font-weight: 600;">{{ document.uploaded_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'patient:document_detail' document.id %}" class="btn btn-outline-primary" title="View Details" style="font-size: 16px; padding: 8px 12px;">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'patient:document_download' document.id %}" class="btn btn-outline-success" title="Download" style="font-size: 16px; padding: 8px 12px;">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <a href="{% url 'patient:document_delete' document.id %}" class="btn btn-outline-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this document?')" style="font-size: 16px; padding: 8px 12px;">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Document pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted" style="font-size: 24px;">No Documents Found</h3>
+                <p class="text-muted" style="font-size: 18px;">You haven't uploaded any documents yet.</p>
+                <a href="{% url 'patient:document_upload' %}" class="btn btn-primary btn-lg" style="font-size: 18px; padding: 12px 24px;">
+                    <i class="fas fa-plus me-2"></i>Upload Your First Document
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

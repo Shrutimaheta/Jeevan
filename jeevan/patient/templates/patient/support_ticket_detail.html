@@ -1,0 +1,201 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Ticket #{{ ticket.id }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-ticket-alt me-2"></i>Support Ticket #{{ ticket.id }}</h1>
+    <a href="{% url 'patient:support_tickets' %}" class="btn btn-secondary" style="font-size: 16px;">
+        <i class="fas fa-arrow-left me-1"></i>Back to Tickets
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Ticket Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-info-circle me-2"></i>Ticket Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="font-size: 18px; color: #333;">Subject:</h6>
+                        <p style="font-size: 16px;">{{ ticket.subject }}</p>
+                        
+                        <h6 style="font-size: 18px; color: #333;">Category:</h6>
+                        <p style="font-size: 16px;">{{ ticket.get_category_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="font-size: 18px; color: #333;">Priority:</h6>
+                        <span class="badge 
+                            {% if ticket.priority == 'urgent' %}bg-danger
+                            {% elif ticket.priority == 'high' %}bg-warning
+                            {% elif ticket.priority == 'medium' %}bg-info
+                            {% else %}bg-secondary{% endif %}" style="font-size: 16px;">
+                            {{ ticket.get_priority_display }}
+                        </span>
+                        
+                        <h6 style="font-size: 18px; color: #333; margin-top: 15px;">Status:</h6>
+                        <span class="badge 
+                            {% if ticket.status == 'open' %}bg-warning
+                            {% elif ticket.status == 'in_progress' %}bg-info
+                            {% elif ticket.status == 'resolved' %}bg-success
+                            {% elif ticket.status == 'closed' %}bg-secondary
+                            {% endif %}" style="font-size: 16px;">
+                            {{ ticket.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <h6 style="font-size: 18px; color: #333; margin-top: 20px;">Description:</h6>
+                <p style="font-size: 16px;">{{ ticket.description|linebreaks }}</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <small class="text-muted" style="font-size: 14px;">
+                            <i class="fas fa-calendar me-1"></i>Created: {{ ticket.created_at|date:"M d, Y \a\t g:i A" }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted" style="font-size: 14px;">
+                            <i class="fas fa-clock me-1"></i>Last Updated: {{ ticket.updated_at|date:"M d, Y \a\t g:i A" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-comments me-2"></i>Conversation</h4>
+            </div>
+            <div class="card-body">
+                {% if messages_list %}
+                    {% for message in messages_list %}
+                    <div class="mb-3 p-3 border rounded {% if message.is_admin_reply %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0" style="font-size: 16px;">
+                                {% if message.is_admin_reply %}
+                                    <i class="fas fa-user-shield text-primary me-1"></i>Support Team
+                                {% else %}
+                                    <i class="fas fa-user text-success me-1"></i>You
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted" style="font-size: 14px;">{{ message.created_at|date:"M d, Y \a\t g:i A" }}</small>
+                        </div>
+                        <p class="mb-0" style="font-size: 16px;">{{ message.message|linebreaks }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center" style="font-size: 16px;">No messages yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Add Message Form -->
+        {% if ticket.status != 'closed' %}
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-reply me-2"></i>Add Message</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.message.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.message.label }}</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            <div class="text-danger mt-2">
+                                {% for error in form.message.errors %}
+                                    <span style="font-size: 14px;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary" style="font-size: 16px;">
+                            <i class="fas fa-paper-plane me-1"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted" style="font-size: 20px;">This ticket is closed</h5>
+                <p class="text-muted" style="font-size: 16px;">You cannot add new messages to closed tickets.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-info-circle me-2"></i>Ticket Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 style="font-size: 18px;">Current Status:</h6>
+                    <span class="badge 
+                        {% if ticket.status == 'open' %}bg-warning
+                        {% elif ticket.status == 'in_progress' %}bg-info
+                        {% elif ticket.status == 'resolved' %}bg-success
+                        {% elif ticket.status == 'closed' %}bg-secondary
+                        {% endif %}" style="font-size: 16px;">
+                        {{ ticket.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 style="font-size: 18px;">Priority Level:</h6>
+                    <span class="badge 
+                        {% if ticket.priority == 'urgent' %}bg-danger
+                        {% elif ticket.priority == 'high' %}bg-warning
+                        {% elif ticket.priority == 'medium' %}bg-info
+                        {% else %}bg-secondary{% endif %}" style="font-size: 16px;">
+                        {{ ticket.get_priority_display }}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 style="font-size: 18px;">Created:</h6>
+                    <p class="mb-0" style="font-size: 16px;">{{ ticket.created_at|date:"M d, Y \a\t g:i A" }}</p>
+                </div>
+                
+                {% if ticket.resolved_at %}
+                <div class="mb-3">
+                    <h6 style="font-size: 18px;">Resolved:</h6>
+                    <p class="mb-0" style="font-size: 16px;">{{ ticket.resolved_at|date:"M d, Y \a\t g:i A" }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-question-circle me-2"></i>Need More Help?</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted" style="font-size: 16px;">
+                    If you need immediate assistance, please contact our support team directly.
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'patient:contact_info' %}" class="btn btn-outline-primary" style="font-size: 16px;">
+                        <i class="fas fa-phone me-1"></i>Contact Info
+                    </a>
+                    <a href="{% url 'patient:faq_list' %}" class="btn btn-outline-info" style="font-size: 16px;">
+                        <i class="fas fa-question-circle me-1"></i>View FAQs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

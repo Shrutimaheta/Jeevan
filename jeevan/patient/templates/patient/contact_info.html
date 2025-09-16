@@ -1,0 +1,140 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Contact Information - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-phone me-2"></i>Contact Information</h1>
+    <a href="{% url 'patient:help_support' %}" class="btn btn-secondary" style="font-size: 16px;">
+        <i class="fas fa-arrow-left me-1"></i>Back to Help
+    </a>
+</div>
+
+<!-- Emergency Contacts -->
+{% if emergency_contacts %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-exclamation-triangle me-2"></i>Emergency Contacts</h4>
+            </div>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    {% for contact in emergency_contacts %}
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center p-3 border border-danger rounded">
+                            <h5 style="font-size: 20px; color: #dc3545; text-align: center;">{{ contact.name }}</h5>
+                            <p class="text-muted" style="font-size: 16px; text-align: center;">{{ contact.department }}</p>
+                            <p class="mb-1" style="font-size: 18px; font-weight: bold; text-align: center;">
+                                <i class="fas fa-phone me-1"></i>{{ contact.phone }}
+                            </p>
+                            <p class="mb-0" style="font-size: 16px; text-align: center;">
+                                <i class="fas fa-envelope me-1"></i>{{ contact.email }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Regular Contacts -->
+{% if regular_contacts %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-address-book me-2"></i>General Contacts</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for contact in regular_contacts %}
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center p-3 border rounded">
+                            <h5 style="font-size: 20px; color: #333;">{{ contact.name }}</h5>
+                            <p class="text-muted" style="font-size: 16px;">{{ contact.department }}</p>
+                            <p class="mb-1" style="font-size: 16px;">
+                                <i class="fas fa-phone me-1"></i>{{ contact.phone }}
+                            </p>
+                            <p class="mb-0" style="font-size: 16px;">
+                                <i class="fas fa-envelope me-1"></i>{{ contact.email }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Contact Guidelines -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-info-circle me-2"></i>Contact Guidelines</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 style="font-size: 20px; color: #333;">When to Call Emergency:</h5>
+                        <ul class="list-unstyled">
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-danger me-2"></i>Life-threatening emergencies</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-danger me-2"></i>Severe chest pain or difficulty breathing</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-danger me-2"></i>Unconsciousness or severe injury</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-danger me-2"></i>Severe allergic reactions</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 style="font-size: 20px; color: #333;">For General Inquiries:</h5>
+                        <ul class="list-unstyled">
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-primary me-2"></i>Appointment scheduling</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-primary me-2"></i>Prescription refills</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-primary me-2"></i>General health questions</li>
+                            <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-primary me-2"></i>Billing inquiries</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Help -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-question-circle me-2"></i>Need More Help?</h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'patient:faq_list' %}" class="btn btn-outline-primary w-100" style="font-size: 16px;">
+                            <i class="fas fa-question-circle fa-2x mb-2 d-block"></i>
+                            View FAQs
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'patient:health_resources' %}" class="btn btn-outline-info w-100" style="font-size: 16px;">
+                            <i class="fas fa-heartbeat fa-2x mb-2 d-block"></i>
+                            Health Resources
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'patient:help_support' %}" class="btn btn-outline-warning w-100" style="font-size: 16px;">
+                            <i class="fas fa-home fa-2x mb-2 d-block"></i>
+                            Help Center
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

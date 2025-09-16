@@ -1,0 +1,35 @@
+INFO 2025-09-14 03:57:48,774 autoreload 12394 135233245910208 Watching for file changes with StatReloader
+INFO 2025-09-14 03:57:48,807 autoreload 12395 133298176734400 Watching for file changes with StatReloader
+INFO 2025-09-14 03:58:54,628 autoreload 12394 135233245910208 /home/turbo/project/Jeevan/jeevan/patient/views.py changed, reloading.
+INFO 2025-09-14 03:58:55,108 autoreload 12536 124606644966592 Watching for file changes with StatReloader
+INFO 2025-09-14 03:59:04,628 autoreload 12536 124606644966592 /home/turbo/project/Jeevan/jeevan/patient/views.py changed, reloading.
+INFO 2025-09-14 03:59:05,080 autoreload 12575 136228639470784 Watching for file changes with StatReloader
+INFO 2025-09-14 03:59:12,513 autoreload 12575 136228639470784 /home/turbo/project/Jeevan/jeevan/patient/views.py changed, reloading.
+INFO 2025-09-14 03:59:12,980 autoreload 12691 124986300060864 Watching for file changes with StatReloader
+INFO 2025-09-14 03:59:18,514 autoreload 12691 124986300060864 /home/turbo/project/Jeevan/jeevan/jeevan/settings.py changed, reloading.
+INFO 2025-09-14 03:59:18,939 autoreload 12711 130504223122624 Watching for file changes with StatReloader
+INFO 2025-09-14 03:59:27,466 autoreload 12711 130504223122624 /home/turbo/project/Jeevan/jeevan/patient/forms.py changed, reloading.
+INFO 2025-09-14 03:59:27,968 autoreload 12733 136670467790016 Watching for file changes with StatReloader
+INFO 2025-09-14 04:06:19,604 autoreload 12733 136670467790016 /home/turbo/project/Jeevan/jeevan/jeevan/urls.py changed, reloading.
+INFO 2025-09-14 04:06:20,015 autoreload 13366 138005451662528 Watching for file changes with StatReloader
+INFO 2025-09-14 04:07:57,836 autoreload 13366 138005451662528 /home/turbo/project/Jeevan/jeevan/jeevan/settings.py changed, reloading.
+INFO 2025-09-14 04:07:58,204 autoreload 13596 123916421682368 Watching for file changes with StatReloader
+INFO 2025-09-14 04:09:13,928 autoreload 14524 126155514303680 Watching for file changes with StatReloader
+INFO 2025-09-14 04:09:37,125 basehttp 14524 126155450480192 "GET /patient/dashboard/ HTTP/1.1" 302 0
+INFO 2025-09-14 04:09:37,141 basehttp 14524 126155450480192 "GET /patient/login/?next=/patient/dashboard/ HTTP/1.1" 200 8176
+INFO 2025-09-14 04:09:37,231 basehttp 14524 126155450480192 "GET /favicon.ico HTTP/1.1" 200 3414
+INFO 2025-09-14 04:09:46,031 autoreload 14524 126155514303680 /home/turbo/project/Jeevan/jeevan/patient/admin.py changed, reloading.
+INFO 2025-09-14 04:09:46,441 autoreload 14612 139705310414016 Watching for file changes with StatReloader
+INFO 2025-09-14 04:10:23,815 autoreload 14612 139705310414016 /home/turbo/project/Jeevan/jeevan/patient/admin.py changed, reloading.
+INFO 2025-09-14 04:10:24,222 autoreload 14710 139480023844032 Watching for file changes with StatReloader
+INFO 2025-09-14 04:10:28,883 basehttp 14710 139479959467584 "GET /patient/login/?next=/patient/dashboard/ HTTP/1.1" 200 8176
+INFO 2025-09-14 04:10:28,909 basehttp 14710 139479959467584 "GET /favicon.ico HTTP/1.1" 200 3414
+INFO 2025-09-14 04:10:30,211 basehttp 14710 139479959467584 "GET /patient/login/?next=/patient/dashboard/ HTTP/1.1" 200 8176
+INFO 2025-09-14 04:10:30,240 basehttp 14710 139479959467584 "GET /favicon.ico HTTP/1.1" 200 3414
+INFO 2025-09-14 04:10:40,187 basehttp 14710 139479959467584 "POST /patient/login/?next=/patient/dashboard/ HTTP/1.1" 200 8486
+INFO 2025-09-14 04:10:40,214 basehttp 14710 139479959467584 "GET /favicon.ico HTTP/1.1" 200 3414
+INFO 2025-09-14 04:10:47,230 session_utils 14710 139479959467584 Session created for user s@gmail.com - Session ID: None
+INFO 2025-09-14 04:10:47,233 basehttp 14710 139479959467584 "POST /patient/login/?next=/patient/dashboard/ HTTP/1.1" 302 0
+INFO 2025-09-14 04:10:47,241 basehttp 14710 139479959467584 "GET /patient/dashboard/ HTTP/1.1" 302 0
+INFO 2025-09-14 04:10:47,290 basehttp 14710 139479959467584 "GET /patient/login/?next=/patient/dashboard/ HTTP/1.1" 200 8888
+INFO 2025-09-14 04:10:47,363 basehttp 14710 139479959467584 "GET /favicon.ico HTTP/1.1" 200 3414

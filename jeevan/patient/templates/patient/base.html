@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,343 +7,388 @@
     <title>{% block title %}Jeevan Healthcare{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/healthcare-theme.css' %}" rel="stylesheet">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            line-height: 1.4;
+        /* Custom overrides for healthcare theme */
+        .healthcare-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-teal) 100%);
+            color: var(--text-white);
+            padding: 0 var(--space-6);
+            border-bottom: none;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .healthcare-header h1 {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-semibold);
             margin: 0;
-            padding: 0;
-        }
-        
-        /* Admin-like header */
-        .admin-header {
-            background: #417690;
-            color: white;
-            padding: 10px 20px;
-            border-bottom: 1px solid #205067;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-        
-        .admin-header h1 {
-            font-size: 18px;
-            font-weight: 400;
-            margin: 0;
-            display: inline-block;
-        }
-        
-        .admin-header .user-tools {
-            float: right;
-            margin-top: 2px;
-        }
-        
-        .admin-header .user-tools a {
-            color: #fff;
-            text-decoration: none;
-            margin-left: 15px;
-            font-size: 13px;
-        }
-        
-        .admin-header .user-tools a:hover {
-            color: #ffc;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            top: 60px;
-            left: 0;
-            width: 250px;
-            height: calc(100vh - 60px);
-            background: #2c3e50;
-            overflow-y: auto;
-            z-index: 999;
-        }
-        
-        .sidebar .nav-link {
-            color: #bdc3c7;
-            padding: 12px 20px;
-            border-bottom: 1px solid #34495e;
-            text-decoration: none;
-            display: block;
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar .nav-link:hover {
-            background-color: #34495e;
-            color: #fff;
-        }
-        
-        .sidebar .nav-link.active {
-            background-color: #417690;
-            color: #fff;
-        }
-        
-        .sidebar .nav-link i {
-            width: 20px;
-            margin-right: 10px;
-        }
-        
-        /* Sidebar Profile Section */
-        .sidebar-profile {
-            padding: 20px 15px;
-            border-bottom: 1px solid #ddd;
-            background: #f8f9fa;
             display: flex;
             align-items: center;
-            gap: 12px;
         }
         
-        .sidebar-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .healthcare-header .user-tools {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        
+        .healthcare-header .user-tools a {
+            color: var(--text-white);
+            text-decoration: none;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .healthcare-header .user-tools a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-white);
+        }
+        
+        .healthcare-sidebar {
+            background: var(--bg-sidebar);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--border-medium);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .healthcare-sidebar-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-full);
             object-fit: cover;
-            border: 2px solid #007bff;
+            border: 3px solid var(--primary-blue);
+            box-shadow: var(--shadow-md);
         }
         
-        .sidebar-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #007bff;
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 16px;
+            color: var(--text-white);
+            font-size: var(--font-size-lg);
+            box-shadow: var(--shadow-md);
         }
         
-        .sidebar-user-info {
+        .healthcare-sidebar-user-info {
             flex: 1;
             min-width: 0;
         }
         
-        .sidebar-user-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
+        .healthcare-sidebar-user-name {
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-white);
+            font-size: var(--font-size-sm);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: var(--space-1);
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: var(--text-light);
+            font-size: var(--font-size-xs);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         
-        .sidebar-user-email {
-            color: #666;
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .healthcare-main {
+            background: var(--bg-secondary);
+            min-height: calc(100vh - var(--header-height));
         }
         
-        /* Main content area */
-        .main-content {
-            margin-left: 250px;
-            margin-top: 60px;
-            padding: 20px;
-            min-height: calc(100vh - 60px);
-        }
-        
-        /* Card styling similar to admin */
+        /* Enhanced card styling */
         .card {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            background: white;
-            margin-bottom: 20px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         
         .card-header {
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-            padding: 15px 20px;
-            font-weight: 600;
-            color: #333;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            padding: var(--space-6);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
         }
         
         .card-body {
-            padding: 20px;
+            padding: var(--space-6);
         }
         
-        /* Dashboard stats cards */
+        /* Enhanced stats cards */
         .stats-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 20px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
             text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-teal));
+        }
+        
+        .stats-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
         }
         
         .stats-card .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #417690;
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
         }
         
         .stats-card .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 5px;
+            color: var(--text-muted);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         
-        /* Form styling */
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-            display: block;
-        }
-        
-        .form-control {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 14px;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        
-        .form-control:focus {
-            border-color: #417690;
-            box-shadow: 0 0 0 0.2rem rgba(65, 118, 144, 0.25);
-            outline: 0;
-        }
-        
-        /* Button styling */
+        /* Enhanced button styling */
         .btn {
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 400;
-            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            padding: var(--space-3) var(--space-6);
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             border: 1px solid transparent;
+            transition: all var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
         
         .btn-primary {
-            background-color: #417690;
-            border-color: #417690;
-            color: white;
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: var(--text-white);
         }
         
         .btn-primary:hover {
-            background-color: #205067;
-            border-color: #205067;
-            color: white;
+            background: var(--primary-blue-hover);
+            border-color: var(--primary-blue-hover);
+            color: var(--text-white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
         
         .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
+            background: var(--secondary-teal);
+            border-color: var(--secondary-teal);
+            color: var(--text-white);
         }
         
         .btn-secondary:hover {
-            background-color: #545b62;
-            border-color: #4e555b;
-            color: white;
+            background: var(--secondary-teal-hover);
+            border-color: var(--secondary-teal-hover);
+            color: var(--text-white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
         
         .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-            color: white;
+            background: var(--success-green);
+            border-color: var(--success-green);
+            color: var(--text-white);
         }
         
         .btn-success:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-            color: white;
+            background: var(--success-green-hover);
+            border-color: var(--success-green-hover);
+            color: var(--text-white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
         
         .btn-info {
-            background-color: #17a2b8;
-            border-color: #17a2b8;
-            color: white;
+            background: var(--info-cyan);
+            border-color: var(--info-cyan);
+            color: var(--text-white);
         }
         
         .btn-info:hover {
-            background-color: #138496;
-            border-color: #117a8b;
-            color: white;
+            background: var(--info-cyan-hover);
+            border-color: var(--info-cyan-hover);
+            color: var(--text-white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
         
-        /* Alert styling */
+        /* Enhanced form styling */
+        .form-group {
+            margin-bottom: var(--space-6);
+        }
+        
+        .form-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+            display: block;
+            font-size: var(--font-size-sm);
+        }
+        
+        .form-control {
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* Enhanced alert styling */
         .alert {
-            border-radius: 4px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
+            border-radius: var(--radius-md);
+            padding: var(--space-4) var(--space-6);
+            margin-bottom: var(--space-4);
+            border: 1px solid;
         }
         
         .alert-success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
+            background: var(--success-green-light);
+            border-color: var(--success-green);
+            color: var(--success-green);
         }
         
         .alert-danger {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+            background: var(--danger-red-light);
+            border-color: var(--danger-red);
+            color: var(--danger-red);
         }
         
-        /* Table styling */
+        .alert-warning {
+            background: var(--warning-amber-light);
+            border-color: var(--warning-amber);
+            color: var(--warning-amber);
+        }
+        
+        .alert-info {
+            background: var(--info-cyan-light);
+            border-color: var(--info-cyan);
+            color: var(--info-cyan);
+        }
+        
+        /* Enhanced table styling */
         .table {
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
         
         .table th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            font-weight: 600;
-            color: #333;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            padding: var(--space-4) var(--space-6);
+        }
+        
+        .table td {
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        
+        .table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
         }
         
         /* Text colors */
         .text-primary {
-            color: #417690 !important;
+            color: var(--primary-blue) !important;
         }
         
         .text-muted {
-            color: #6c757d !important;
+            color: var(--text-muted) !important;
         }
         
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .sidebar {
+            .healthcare-sidebar {
                 transform: translateX(-100%);
-                transition: transform 0.3s ease;
+                transition: transform var(--transition-normal);
             }
             
-            .sidebar.show {
+            .healthcare-sidebar.show {
                 transform: translateX(0);
             }
             
-            .main-content {
+            .healthcare-main {
                 margin-left: 0;
             }
             
-            .admin-header .user-tools {
-                float: none;
-                margin-top: 10px;
+            .healthcare-header .user-tools {
+                flex-direction: column;
+                gap: var(--space-2);
             }
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
+    <div class="healthcare-header">
         <h1><i class="fas fa-heartbeat me-2"></i>Jeevan Healthcare System</h1>
         <div class="user-tools">
             <span>Welcome, {{ user.get_full_name|default:user.username }}</span>
@@ -350,43 +396,57 @@
         </div>
     </div>
     
-    <div class="sidebar">
+    <div class="healthcare-sidebar">
         <!-- User Profile Section -->
-        <div class="sidebar-profile">
+        <div class="healthcare-sidebar-profile">
             {% if patient.profile_photo %}
-                <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="sidebar-avatar">
+                <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="healthcare-sidebar-avatar">
             {% else %}
-                <div class="sidebar-avatar-placeholder">
+                <div class="healthcare-sidebar-avatar-placeholder">
                     <i class="fas fa-user"></i>
                 </div>
             {% endif %}
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-name">{{ patient.full_name }}</div>
-                <div class="sidebar-user-email">{{ patient.email }}</div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">{{ patient.full_name }}</div>
+                <div class="healthcare-sidebar-user-email">{{ patient.email }}</div>
             </div>
         </div>
         
-        <a href="{% url 'patient:patient_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_dashboard' %}active{% endif %}">
-            <i class="fas fa-tachometer-alt"></i>Dashboard
-        </a>
-        <a href="{% url 'appointments:appointment_create' %}" class="nav-link {% if request.resolver_match.url_name == 'appointment_create' %}active{% endif %}">
-            <i class="fas fa-calendar-plus"></i>Book Appointment
-        </a>
-        <a href="{% url 'patient:patient_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_profile' %}active{% endif %}">
-            <i class="fas fa-user"></i>My Profile
-        </a>
-        <a href="#" class="nav-link">
-            <i class="fas fa-file-medical"></i>Medical Records
-        </a>
-        <a href="#" class="nav-link">
-            <i class="fas fa-pills"></i>Prescriptions
-        </a>
-        <a href="#" class="nav-link">
-            <i class="fas fa-question-circle"></i>Help & Support
-        </a>
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'patient:patient_dashboard' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'patient_dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'appointments:appointment_create' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'appointment_create' %}active{% endif %}">
+                    <i class="fas fa-calendar-plus"></i>Book Appointment
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'patient:patient_profile' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'patient_profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i>My Profile
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'patient:document_list' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'document_list' %}active{% endif %}">
+                    <i class="fas fa-folder-open"></i>View Documents
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="#" class="healthcare-nav-link">
+                    <i class="fas fa-pills"></i>Prescriptions
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'patient:help_support' %}" class="healthcare-nav-link {% if 'help' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-question-circle"></i>Help & Support
+                </a>
+            </div>
+        </nav>
     </div>
     
-    <div class="main-content">
+    <div class="healthcare-main">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">

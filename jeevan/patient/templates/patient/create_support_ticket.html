@@ -1,0 +1,136 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Create Support Ticket - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-plus-circle me-2"></i>Create Support Ticket</h1>
+    <a href="{% url 'patient:support_tickets' %}" class="btn btn-secondary" style="font-size: 16px;">
+        <i class="fas fa-arrow-left me-1"></i>Back to Tickets
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-ticket-alt me-2"></i>Ticket Details</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.subject.label }}</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger mt-2">
+                                    {% for error in form.subject.errors %}
+                                        <span style="font-size: 14px;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.category.label }}</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger mt-2">
+                                    {% for error in form.category.errors %}
+                                        <span style="font-size: 14px;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.priority.label }}</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="text-danger mt-2">
+                                    {% for error in form.priority.errors %}
+                                        <span style="font-size: 14px;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger mt-2">
+                                {% for error in form.description.errors %}
+                                    <span style="font-size: 14px;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text mt-2" style="font-size: 16px;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Please provide as much detail as possible to help us assist you better.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'patient:support_tickets' %}" class="btn btn-secondary me-md-2" style="font-size: 16px;">Cancel</a>
+                        <button type="submit" class="btn btn-success" style="font-size: 16px;">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-info-circle me-2"></i>Ticket Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <h6 style="font-size: 18px;">Before Creating a Ticket:</h6>
+                <ul class="list-unstyled">
+                    <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-success me-2"></i>Check our FAQ section first</li>
+                    <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-success me-2"></i>Be specific about your issue</li>
+                    <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-success me-2"></i>Include relevant details</li>
+                    <li style="font-size: 16px; margin-bottom: 8px;"><i class="fas fa-check text-success me-2"></i>Choose the right category</li>
+                </ul>
+                
+                <h6 style="font-size: 18px;">Response Times:</h6>
+                <ul class="list-unstyled">
+                    <li style="font-size: 16px; margin-bottom: 6px;"><i class="fas fa-clock text-warning me-2"></i>Urgent: Within 2 hours</li>
+                    <li style="font-size: 16px; margin-bottom: 6px;"><i class="fas fa-clock text-info me-2"></i>High: Within 4 hours</li>
+                    <li style="font-size: 16px; margin-bottom: 6px;"><i class="fas fa-clock text-primary me-2"></i>Medium: Within 24 hours</li>
+                    <li style="font-size: 16px; margin-bottom: 6px;"><i class="fas fa-clock text-secondary me-2"></i>Low: Within 48 hours</li>
+                </ul>
+                
+                <div class="alert alert-info" style="font-size: 16px;">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> The more details you provide, the faster we can help you!
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-phone me-2"></i>Need Immediate Help?</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted" style="font-size: 16px;">
+                    For urgent medical issues, please contact our emergency line or visit the nearest hospital.
+                </p>
+                <div class="text-center">
+                    <a href="{% url 'patient:contact_info' %}" class="btn btn-warning" style="font-size: 16px;">
+                        <i class="fas fa-phone me-1"></i>Emergency Contacts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

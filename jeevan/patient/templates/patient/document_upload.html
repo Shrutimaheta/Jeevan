@@ -1,0 +1,141 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}Upload Document - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-file-upload me-2"></i>Upload Document</h1>
+    <div>
+        <a href="{% url 'patient:document_list' %}" class="btn btn-secondary btn-lg" style="font-size: 16px;">
+            <i class="fas fa-arrow-left me-1"></i>Back to Documents
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-upload me-2"></i>Upload New Document</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.title.errors %}
+                                        <span style="font-size: 14px;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.document_type.label }}</label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.document_type.errors %}
+                                        <span style="font-size: 14px;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.file.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.file.label }}</label>
+                        {{ form.file }}
+                        {% if form.file.errors %}
+                            <div class="text-danger">
+                                {% for error in form.file.errors %}
+                                    <span style="font-size: 14px;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text" style="font-size: 16px;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Supported formats: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF, BMP, WEBP. Maximum size: 10MB.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label" style="font-size: 18px; font-weight: bold;">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <span style="font-size: 14px;">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'patient:document_list' %}" class="btn btn-secondary me-md-2 btn-lg" style="font-size: 16px;">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg" style="font-size: 16px;">
+                            <i class="fas fa-upload me-1"></i>Upload Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-info-circle me-2"></i>Upload Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <h6 style="font-size: 18px;">Supported File Types:</h6>
+                <ul class="list-unstyled">
+                    <li style="font-size: 16px;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF Documents</li>
+                    <li style="font-size: 16px;"><i class="fas fa-file-word text-primary me-2"></i>Word Documents (DOC, DOCX)</li>
+                    <li style="font-size: 16px;"><i class="fas fa-image text-success me-2"></i>Images (JPG, JPEG, PNG, GIF, BMP, WEBP)</li>
+                </ul>
+                
+                <h6 style="font-size: 18px;">File Size Limits:</h6>
+                <p class="text-muted" style="font-size: 16px;">Maximum file size: 10MB per document</p>
+                
+                <h6 style="font-size: 18px;">Document Types:</h6>
+                <ul class="list-unstyled">
+                    <li style="font-size: 16px;"><i class="fas fa-stethoscope me-2"></i>Medical Reports</li>
+                    <li style="font-size: 16px;"><i class="fas fa-prescription-bottle me-2"></i>Prescriptions</li>
+                    <li style="font-size: 16px;"><i class="fas fa-vial me-2"></i>Lab Results</li>
+                    <li style="font-size: 16px;"><i class="fas fa-x-ray me-2"></i>Scans/Imaging</li>
+                    <li style="font-size: 16px;"><i class="fas fa-shield-alt me-2"></i>Insurance Documents</li>
+                    <li style="font-size: 16px;"><i class="fas fa-id-card me-2"></i>ID Proof</li>
+                    <li style="font-size: 16px;"><i class="fas fa-file me-2"></i>Other Documents</li>
+                </ul>
+                
+                <div class="alert alert-info" style="font-size: 16px;">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> Use descriptive titles to easily find your documents later.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0" style="font-size: 20px;"><i class="fas fa-shield-alt me-2"></i>Privacy & Security</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted" style="font-size: 16px;">
+                    <i class="fas fa-lock me-1"></i>
+                    Your documents are securely stored and only accessible by you and authorized medical staff.
+                </p>
+                <p class="text-muted" style="font-size: 16px;">
+                    <i class="fas fa-user-shield me-1"></i>
+                    We maintain strict privacy standards and comply with healthcare data protection regulations.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

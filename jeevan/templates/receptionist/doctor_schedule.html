@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Schedules - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #417690;
+            --secondary-color: #205067;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #333;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: #2c3e50;
+            color: white;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .sidebar-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+        
+        .nav-link {
+            color: #bdc3c7;
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .nav-link:hover {
+            background-color: #34495e;
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background-color: #417690;
+            color: #fff;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        
+        .topbar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .topbar h2 {
+            margin: 0;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .content-area {
+            padding: 2rem;
+        }
+        
+        .filter-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .doctor-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .doctor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .doctor-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .doctor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+        
+        .doctor-info h5 {
+            margin: 0;
+            color: var(--dark-color);
+        }
+        
+        .doctor-info p {
+            margin: 0.25rem 0 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .appointment-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .appointment-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .appointment-time {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+        
+        .appointment-patient {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn {
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #417690;
+            border-color: #417690;
+        }
+        
+        .btn-primary:hover {
+            background-color: #205067;
+            border-color: #205067;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-heartbeat me-2"></i>Jeevan Healthcare</h4>
+            <p>Receptionist Portal</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointments
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="nav-link active">
+                    <i class="fas fa-user-md"></i>
+                    Doctor Schedules
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    Profile
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <h2>Doctor Schedules</h2>
+            <div class="user-info">
+                <div class="user-avatar">
+                    {% if receptionist.profile_picture %}
+                        <img src="{{ receptionist.profile_picture.url }}" alt="Profile">
+                    {% else %}
+                        {{ receptionist.full_name|first|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="fw-bold">{{ receptionist.full_name }}</div>
+                    <small class="text-muted">{{ receptionist.hospital.name }}</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Doctor Selection -->
+            <div class="filter-card">
+                <form method="get" class="row g-3">
+                    <div class="col-md-8">
+                        <label for="doctor_id" class="form-label">Select Doctor</label>
+                        <select name="doctor_id" id="doctor_id" class="form-select" onchange="this.form.submit()">
+                            <option value="">Choose a doctor to view their schedule</option>
+                            {% for doctor in doctors %}
+                                <option value="{{ doctor.id }}" {% if selected_doctor and selected_doctor.id == doctor.id %}selected{% endif %}>
+                                    {{ doctor.full_name }} - 
+                                    {% for spec in doctor.specialization.all %}
+                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>View Schedule
+                            </button>
+                            <a href="{% url 'receptionist:doctor_schedule' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Doctor Schedule -->
+            {% if selected_doctor %}
+                <div class="doctor-card">
+                    <div class="doctor-header">
+                        <div class="doctor-avatar">
+                            {{ selected_doctor.full_name|first|upper }}
+                        </div>
+                        <div class="doctor-info">
+                            <h5>{{ selected_doctor.full_name }}</h5>
+                            <p>
+                                {% for spec in selected_doctor.specialization.all %}
+                                    {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if appointments %}
+                        <h6 class="mb-3">
+                            <i class="fas fa-calendar-alt me-2"></i>Appointments
+                            <span class="badge bg-primary ms-2">{{ appointments.count }}</span>
+                        </h6>
+                        
+                        <div class="row">
+                            {% for appointment in appointments %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="appointment-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="appointment-time">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    {{ appointment.appointment_date }} at {{ appointment.appointment_time }}
+                                                </div>
+                                                <div class="appointment-patient">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ appointment.patient.full_name }}
+                                                </div>
+                                                {% if appointment.symptoms %}
+                                                    <div class="appointment-patient mt-1">
+                                                        <i class="fas fa-stethoscope me-1"></i>
+                                                        {{ appointment.symptoms|truncatechars:50 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                    {{ appointment.status|title }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h6>No appointments found</h6>
+                            <p>This doctor has no appointments scheduled.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-md"></i>
+                    <h6>Select a Doctor</h6>
+                    <p>Choose a doctor from the dropdown above to view their schedule and appointments.</p>
+                </div>
+            {% endif %}
+
+            <!-- All Doctors Overview -->
+            {% if not selected_doctor %}
+                <div class="row">
+                    {% for doctor in doctors %}
+                        <div class="col-md-6 mb-3">
+                            <div class="doctor-card">
+                                <div class="doctor-header">
+                                    <div class="doctor-avatar">
+                                        {{ doctor.full_name|first|upper }}
+                                    </div>
+                                    <div class="doctor-info">
+                                        <h5>{{ doctor.full_name }}</h5>
+                                        <p>
+                                            {% for spec in doctor.specialization.all %}
+                                                {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="?doctor_id={{ doctor.id }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Schedule
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -54,20 +54,20 @@
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <div class="stats-number">{{ total_appointments }}</div>
-            <div class="stats-label">Total Appointments</div>
+            <div class="stats-number">{{ accepted_appointments }}</div>
+            <div class="stats-label">Accepted Appointments</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <div class="stats-number">0</div>
-            <div class="stats-label">Active Prescriptions</div>
+            <div class="stats-number">{{ pending_appointments }}</div>
+            <div class="stats-label">Pending Appointments</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card">
-            <div class="stats-number">0</div>
-            <div class="stats-label">Pending Bills</div>
+            <div class="stats-number">{{ rejected_appointments }}</div>
+            <div class="stats-label">Rejected Appointments</div>
         </div>
     </div>
 </div>
@@ -97,13 +97,13 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-info w-100">
+                        <a href="{% url 'patient:document_upload' %}" class="btn btn-info w-100">
                             <i class="fas fa-file-upload me-2"></i>Upload Documents
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-success w-100">
-                            <i class="fas fa-download me-2"></i>Download Reports
+                        <a href="{% url 'patient:document_list' %}" class="btn btn-success w-100">
+                            <i class="fas fa-folder-open me-2"></i>View Documents
                         </a>
                     </div>
                 </div>
@@ -130,21 +130,35 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><i class="fas fa-calendar-check text-success me-2"></i>Appointment Confirmed</td>
-                                <td>Your appointment with Dr. Smith has been confirmed for tomorrow at 2:00 PM.</td>
-                                <td>2 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-user-edit text-info me-2"></i>Profile Updated</td>
-                                <td>You updated your contact information and emergency contact details.</td>
-                                <td>1 day ago</td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-pills text-warning me-2"></i>Prescription Ready</td>
-                                <td>Your prescription for medication is ready for pickup at the pharmacy.</td>
-                                <td>3 days ago</td>
-                            </tr>
+                            {% if recent_status_changes %}
+                                {% for appointment in recent_status_changes %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas 
+                                                {% if appointment.status == 'accepted' %}fa-calendar-check text-success
+                                                {% elif appointment.status == 'rejected' %}fa-calendar-times text-danger
+                                                {% elif appointment.status == 'completed' %}fa-check-circle text-info
+                                                {% else %}fa-clock text-warning{% endif %} me-2"></i>
+                                            Appointment {{ appointment.status|title }}
+                                        </td>
+                                        <td>
+                                            Your appointment with {{ appointment.doctor.full_name }} 
+                                            {% if appointment.status == 'accepted' %}has been accepted
+                                            {% elif appointment.status == 'rejected' %}has been rejected
+                                            {% elif appointment.status == 'completed' %}has been completed
+                                            {% else %}is pending{% endif %}
+                                            for {{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.appointment_time|time:"g:i A" }}.
+                                        </td>
+                                        <td>{{ appointment.updated_at|timesince }} ago</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+                                        <i class="fas fa-bell-slash me-2"></i>No recent updates
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -177,9 +191,9 @@
                                 <small class="text-muted">{{ appointment.hospital.name }}</small>
                             </div>
                             <span class="badge 
-                                {% if appointment.status == 'confirmed' %}bg-success
+                                {% if appointment.status == 'accepted' %}bg-success
                                 {% elif appointment.status == 'pending' %}bg-warning
-                                {% elif appointment.status == 'cancelled' %}bg-danger
+                                {% elif appointment.status == 'rejected' %}bg-danger
                                 {% elif appointment.status == 'completed' %}bg-info
                                 {% else %}bg-secondary{% endif %}">
                                 {{ appointment.status|title }}
@@ -191,6 +205,53 @@
                     <div class="text-center py-3">
                         <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
                         <p class="text-muted mb-0">No upcoming appointments</p>
+                    </div>
+                {% endif %}
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-primary btn-sm w-100">View All Appointments</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Appointments -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Appointments</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments %}
+                    {% for appointment in recent_appointments %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ appointment.doctor.full_name }}</h6>
+                                <small class="text-muted">
+                                    {% for spec in appointment.doctor.specialization.all %}
+                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </small>
+                                <div class="small text-muted">
+                                    {{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.appointment_time|time:"g:i A" }}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge 
+                                    {% if appointment.status == 'accepted' %}bg-success
+                                    {% elif appointment.status == 'pending' %}bg-warning
+                                    {% elif appointment.status == 'rejected' %}bg-danger
+                                    {% elif appointment.status == 'completed' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ appointment.status|title }}
+                                </span>
+                                <div class="small text-muted mt-1">
+                                    {{ appointment.hospital.name }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No recent appointments</p>
                     </div>
                 {% endif %}
                 <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-primary btn-sm w-100">View All Appointments</a>
