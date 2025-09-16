@@ -3,6 +3,47 @@
 {% block title %}Book Appointment - {{ patient.full_name }}{% endblock %}
 
 {% block content %}
+<style>
+#symptom-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+
+.suggestion-item:focus {
+    outline: none;
+    background-color: #e7f1ff;
+}
+
+#symptom-suggestions {
+    max-height: 120px;
+    overflow-y: auto;
+}
+</style>
 <!-- ========================
     Start Page Content
 ========================= -->
@@ -37,6 +78,8 @@
                     <div class="card-body">
                         <form method="post" id="appointmentForm">
                             {% csrf_token %}
+                            <!-- Hidden time field -->
+                            {{ form.appointment_time }}
                             
                             <!-- Patient Info Display -->
                             <div class="row mb-4">
@@ -50,6 +93,7 @@
                                 </div>
                             </div>
                             
+                            
                             <!-- ABHA ID -->
                             <div class="row mb-3">
                                 <div class="col-md-12">
@@ -61,7 +105,9 @@
                                         <div class="form-text">{{ form.abha_id.help_text }}</div>
                                     {% endif %}
                                     {% if form.abha_id.errors %}
-                                        <div class="text-danger small">{{ form.abha_id.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.abha_id.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -77,7 +123,9 @@
                                         <div class="form-text">{{ form.hospital.help_text }}</div>
                                     {% endif %}
                                     {% if form.hospital.errors %}
-                                        <div class="text-danger small">{{ form.hospital.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.hospital.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                                 <div class="col-md-6">
@@ -89,7 +137,9 @@
                                         <div class="form-text">{{ form.doctor.help_text }}</div>
                                     {% endif %}
                                     {% if form.doctor.errors %}
-                                        <div class="text-danger small">{{ form.doctor.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.doctor.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -101,18 +151,57 @@
                                         {{ form.appointment_date.label }} <span class="text-danger">*</span>
                                     </label>
                                     {{ form.appointment_date }}
+                                    {% if form.appointment_date.help_text %}
+                                        <div class="form-text">{{ form.appointment_date.help_text }}</div>
+                                    {% endif %}
                                     {% if form.appointment_date.errors %}
-                                        <div class="text-danger small">{{ form.appointment_date.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.appointment_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    {% if form.appointment_date.errors %}
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.appointment_date.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="{{ form.appointment_time.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.appointment_time.label }} <span class="text-danger">*</span>
+                                    <label class="form-label fw-semibold">
+                                        Appointment Time <span class="text-danger">*</span>
                                     </label>
-                                    {{ form.appointment_time }}
-                                    {% if form.appointment_time.errors %}
-                                        <div class="text-danger small">{{ form.appointment_time.errors.0 }}</div>
-                                    {% endif %}
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <label for="{{ form.hour.id_for_label }}" class="form-label small">Hour</label>
+                                            {{ form.hour }}
+                                            {% if form.hour.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    <i class="ti ti-alert-circle me-1"></i>{{ form.hour.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="{{ form.minute.id_for_label }}" class="form-label small">Minute</label>
+                                            {{ form.minute }}
+                                            {% if form.minute.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    <i class="ti ti-alert-circle me-1"></i>{{ form.minute.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-4">
+                                            <label for="{{ form.am_pm.id_for_label }}" class="form-label small">AM/PM</label>
+                                            {{ form.am_pm }}
+                                            {% if form.am_pm.errors %}
+                                                <div class="text-danger small fw-bold mt-1">
+                                                    <i class="ti ti-alert-circle me-1"></i>{{ form.am_pm.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="ti ti-clock me-1"></i>
+                                        Available hours: 8:00 AM - 6:00 PM
+                                    </div>
                                 </div>
                             </div>
                             
@@ -124,7 +213,9 @@
                                     </label>
                                     {{ form.payment_mode }}
                                     {% if form.payment_mode.errors %}
-                                        <div class="text-danger small">{{ form.payment_mode.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.payment_mode.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -136,11 +227,23 @@
                                         {{ form.symptoms.label }}
                                     </label>
                                     {{ form.symptoms }}
+                                    
+                                    <!-- Symptom Autocomplete Dropdown -->
+                                    <div class="mt-2 position-relative">
+                                        <small class="text-muted fw-semibold">Start typing for suggestions:</small>
+                                        <div id="symptom-dropdown" class="dropdown-menu w-100" style="display: none; max-height: 200px; overflow-y: auto;">
+                                            <!-- Suggestions will be populated here -->
+                                        </div>
+                                    </div>
+                                    
                                     {% if form.symptoms.errors %}
-                                        <div class="text-danger small">{{ form.symptoms.errors.0 }}</div>
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-circle me-1"></i>{{ form.symptoms.errors.0 }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
+                            
                             
                             <!-- Form Actions -->
                             <div class="d-flex justify-content-end gap-2">
@@ -159,6 +262,54 @@
     </div>
     <!-- End Content -->
 </div>
+
+<!-- Privacy Consent Modal -->
+<div class="modal fade" id="privacyConsentModal" tabindex="-1" aria-labelledby="privacyConsentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="privacyConsentModalLabel">
+                    <i class="fas fa-shield-alt me-2"></i>Privacy Consent Required
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Medical Information Sharing Consent</strong>
+                </div>
+                <p class="mb-3">
+                    To book this appointment, we need your consent to share your medical reports, documents, and health information with the selected doctor for treatment purposes.
+                </p>
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-lock me-2 text-warning"></i>Your Information Will Be:
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>Kept strictly confidential</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Used only for your medical care</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Shared only with your selected doctor</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Protected according to medical privacy standards</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="mt-3 mb-0 text-muted">
+                    <small>By clicking "I Agree", you consent to sharing your medical information for treatment purposes.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning" id="agreeConsent">
+                    <i class="fas fa-check me-1"></i>I Agree - Book Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ========================
     End Page Content
 ========================= -->
@@ -167,12 +318,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     const hospitalSelect = document.getElementById('hospital-select');
     const doctorSelect = document.getElementById('doctor-select');
-    const dateInput = document.getElementById('id_appointment_date');
-    const timeInput = document.getElementById('id_appointment_time');
+    const dateInput = document.getElementById('appointment-date');
+    const hourSelect = document.getElementById('hour-select');
+    const minuteSelect = document.getElementById('minute-select');
+    const amPmSelect = document.getElementById('am-pm-select');
     
-    // Set minimum date to today
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.setAttribute('min', today);
+    // Set date restrictions (today to 6 months)
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 6);
+    
+    dateInput.setAttribute('min', today.toISOString().split('T')[0]);
+    dateInput.setAttribute('max', maxDate.toISOString().split('T')[0]);
+    
+    // Set PM as default for AM/PM dropdown
+    amPmSelect.value = 'PM';
     
     // Hospital change handler
     hospitalSelect.addEventListener('change', function() {
@@ -213,64 +373,317 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please select a future date for your appointment.');
             this.value = today.toISOString().split('T')[0];
         }
+        
+        if (selectedDate > maxDate) {
+            alert('Please select a date within the next 6 months.');
+            this.value = maxDate.toISOString().split('T')[0];
+        }
     });
     
-    // Time validation
-    timeInput.addEventListener('change', function() {
-        const selectedTime = this.value;
-        const selectedDate = new Date(dateInput.value);
-        const today = new Date();
+    // Function to show error message
+    function showError(element, message) {
+        // Remove existing error
+        const existingError = element.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
         
-        // Check if selected date is today
-        if (selectedDate.toDateString() === today.toDateString()) {
-            const now = new Date();
-            const selectedDateTime = new Date(selectedDate);
-            const [hours, minutes] = selectedTime.split(':');
-            selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-            
-            if (selectedDateTime <= now) {
-                alert('Please select a future time for today\'s appointment.');
-                this.value = '';
-                return;
-            }
+        // Add new error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error text-danger small fw-bold mt-1';
+        errorDiv.innerHTML = `<i class="ti ti-alert-circle me-1"></i>${message}`;
+        element.parentNode.appendChild(errorDiv);
+    }
+    
+    // Function to clear error message
+    function clearError(element) {
+        const existingError = element.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+    
+    // Time validation function
+    function validateTime() {
+        const hour = parseInt(hourSelect.value);
+        const minute = parseInt(minuteSelect.value);
+        const amPm = amPmSelect.value;
+        
+        console.log('Validating time:', { hour, minute, amPm });
+        
+        // Clear previous errors
+        clearError(hourSelect);
+        clearError(minuteSelect);
+        clearError(amPmSelect);
+        
+        if (!hour || !minute || !amPm) {
+            console.log('Time validation failed: missing values');
+            showError(hourSelect, 'Please select hour, minute, and AM/PM for appointment time.');
+            return false;
+        }
+        
+        // Convert to 24-hour format
+        let hour24 = hour;
+        if (amPm === 'PM' && hour !== 12) {
+            hour24 += 12;
+        } else if (amPm === 'AM' && hour === 12) {
+            hour24 = 0;
         }
         
         // Check business hours (8 AM to 6 PM)
-        const [hours, minutes] = selectedTime.split(':');
-        const timeInMinutes = parseInt(hours) * 60 + parseInt(minutes);
+        const timeInMinutes = hour24 * 60 + minute;
         const businessStart = 8 * 60; // 8:00 AM
         const businessEnd = 18 * 60;  // 6:00 PM
         
         if (timeInMinutes < businessStart || timeInMinutes > businessEnd) {
             alert('Appointment time must be between 8:00 AM and 6:00 PM.');
-            this.value = '';
+            hourSelect.value = '';
+            minuteSelect.value = '';
+            amPmSelect.value = '';
+            return false;
         }
+        
+        // Check if time is in the past for today's date
+        const selectedDate = new Date(dateInput.value);
+        const today = new Date();
+        
+        if (selectedDate.toDateString() === today.toDateString()) {
+            const now = new Date();
+            const selectedDateTime = new Date(selectedDate);
+            selectedDateTime.setHours(hour24, minute, 0, 0);
+            
+            if (selectedDateTime <= now) {
+                alert('Please select a future time for today\'s appointment.');
+                hourSelect.value = '';
+                minuteSelect.value = '';
+                amPmSelect.value = '';
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Add event listeners to time fields
+    [hourSelect, minuteSelect, amPmSelect].forEach(select => {
+        select.addEventListener('change', validateTime);
     });
     
     // Form submission validation
     const form = document.querySelector('form');
+    const hiddenTimeField = document.getElementById('appointment-time-hidden');
+    
     form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Always prevent default submission
+        
         const selectedDate = new Date(dateInput.value);
-        const selectedTime = timeInput.value;
         const today = new Date();
         
-        // Final validation before submission
+        // Final validation before showing modal
         if (selectedDate < today) {
-            e.preventDefault();
-            alert('Please select a future date for your appointment.');
+            showError(dateInput, 'Please select a future date for your appointment.');
             return;
         }
         
-        if (selectedDate.toDateString() === today.toDateString() && selectedTime) {
-            const [hours, minutes] = selectedTime.split(':');
-            const selectedDateTime = new Date(selectedDate);
-            selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-            
-            if (selectedDateTime <= today) {
-                e.preventDefault();
-                alert('Please select a future time for today\'s appointment.');
-                return;
+        if (selectedDate > maxDate) {
+            showError(dateInput, 'Please select a date within the next 6 months.');
+            return;
+        }
+        
+        // Validate required fields
+        const hospitalSelect = document.getElementById('hospital-select');
+        const doctorSelect = document.getElementById('doctor-select');
+        const abhaField = document.getElementById('id_abha_id');
+        const paymentSelect = document.getElementById('id_payment_mode');
+        
+        // Clear previous errors
+        clearError(hospitalSelect);
+        clearError(doctorSelect);
+        clearError(abhaField);
+        clearError(paymentSelect);
+        
+        let hasErrors = false;
+        
+        // Check required fields
+        if (!hospitalSelect.value) {
+            showError(hospitalSelect, 'Please select a hospital.');
+            hasErrors = true;
+        }
+        
+        if (!doctorSelect.value) {
+            showError(doctorSelect, 'Please select a doctor.');
+            hasErrors = true;
+        }
+        
+        if (!abhaField.value.trim()) {
+            showError(abhaField, 'Please enter your ABHA ID.');
+            hasErrors = true;
+        }
+        
+        if (!paymentSelect.value) {
+            showError(paymentSelect, 'Please select a payment mode.');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            return;
+        }
+        
+        // If all validations pass, show the privacy consent modal
+        const privacyModal = new bootstrap.Modal(document.getElementById('privacyConsentModal'));
+        privacyModal.show();
+    });
+    
+    // Handle privacy consent agreement
+    document.getElementById('agreeConsent').addEventListener('click', function() {
+        // Convert custom time fields to 24-hour format and set hidden field
+        const hour = parseInt(hourSelect.value);
+        const minute = parseInt(minuteSelect.value);
+        const amPm = amPmSelect.value;
+        
+        console.log('Time values:', { hour, minute, amPm });
+        
+        // Set a default time if no time is selected
+        if (!hour || !minute || !amPm) {
+            console.log('No time selected, using default 9:00 AM');
+            hiddenTimeField.value = '09:00';
+        } else {
+            let hour24 = hour;
+            if (amPm === 'PM' && hour !== 12) {
+                hour24 += 12;
+            } else if (amPm === 'AM' && hour === 12) {
+                hour24 = 0;
             }
+            
+            // Format as HH:MM for the hidden field
+            const timeString = `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            hiddenTimeField.value = timeString;
+            console.log('Set hidden time field to:', timeString);
+        }
+        
+        // Close the modal
+        const privacyModal = bootstrap.Modal.getInstance(document.getElementById('privacyConsentModal'));
+        privacyModal.hide();
+        
+        // Now submit the form
+        form.submit();
+    });
+    
+    // Symptom autocomplete functionality
+    const symptomsTextarea = document.getElementById('id_symptoms');
+    const dropdown = document.getElementById('symptom-dropdown');
+    
+    const symptoms = [
+        'Fever', 'Headache', 'Cough', 'Chest pain', 'Shortness of breath',
+        'Nausea', 'Vomiting', 'Diarrhea', 'Abdominal pain', 'Back pain',
+        'Joint pain', 'Fatigue', 'Dizziness', 'Rash', 'Sore throat',
+        'Runny nose', 'Body aches', 'Loss of appetite', 'Sleep problems', 'Anxiety',
+        'Cold', 'Flu', 'Allergies', 'Constipation', 'Heartburn', 'Insomnia',
+        'Depression', 'Stress', 'Memory problems', 'Vision problems', 'Hearing problems'
+    ];
+    
+    let currentWord = '';
+    let wordStart = 0;
+    
+    symptomsTextarea.addEventListener('input', function(e) {
+        const cursorPos = e.target.selectionStart;
+        const text = e.target.value;
+        
+        // Find the current word being typed
+        const beforeCursor = text.substring(0, cursorPos);
+        const words = beforeCursor.split(/[,\n]/);
+        currentWord = words[words.length - 1].trim();
+        wordStart = beforeCursor.lastIndexOf(currentWord);
+        
+        if (currentWord.length >= 2) {
+            showSuggestions(currentWord);
+        } else {
+            hideSuggestions();
+        }
+    });
+    
+    symptomsTextarea.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const firstSuggestion = dropdown.querySelector('.suggestion-item');
+            if (firstSuggestion) {
+                firstSuggestion.classList.add('active');
+                firstSuggestion.focus();
+            }
+        }
+    });
+    
+    function showSuggestions(query) {
+        const filtered = symptoms.filter(symptom => 
+            symptom.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (filtered.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(symptom => 
+            `<div class="dropdown-item suggestion-item" data-symptom="${symptom}">
+                <i class="fas fa-stethoscope me-2 text-primary"></i>${symptom}
+            </div>`
+        ).join('');
+        
+        dropdown.style.display = 'block';
+        
+        // Add click handlers to suggestions
+        dropdown.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                selectSuggestion(this.getAttribute('data-symptom'));
+            });
+            
+            item.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    selectSuggestion(this.getAttribute('data-symptom'));
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = this.nextElementSibling;
+                    if (next) {
+                        this.classList.remove('active');
+                        next.classList.add('active');
+                        next.focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = this.previousElementSibling;
+                    if (prev) {
+                        this.classList.remove('active');
+                        prev.classList.add('active');
+                        prev.focus();
+                    }
+                }
+            });
+        });
+    }
+    
+    function hideSuggestions() {
+        dropdown.style.display = 'none';
+    }
+    
+    function selectSuggestion(symptom) {
+        const text = symptomsTextarea.value;
+        const beforeWord = text.substring(0, wordStart);
+        const afterCursor = text.substring(symptomsTextarea.selectionStart);
+        
+        // Check if symptom already exists
+        const existingSymptoms = text.split(/[,\n]/).map(s => s.trim());
+        if (!existingSymptoms.includes(symptom)) {
+            symptomsTextarea.value = beforeWord + symptom + ', ' + afterCursor;
+            symptomsTextarea.focus();
+        }
+        
+        hideSuggestions();
+    }
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!symptomsTextarea.contains(e.target) && !dropdown.contains(e.target)) {
+            hideSuggestions();
         }
     });
 });

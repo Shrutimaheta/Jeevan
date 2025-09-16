@@ -1,0 +1,83 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}FAQ - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 style="font-size: 28px;"><i class="fas fa-question-circle me-2"></i>Frequently Asked Questions</h1>
+    <a href="{% url 'patient:help_support' %}" class="btn btn-secondary" style="font-size: 16px;">
+        <i class="fas fa-arrow-left me-1"></i>Back to Help
+    </a>
+</div>
+
+
+<!-- FAQ List -->
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0" style="font-size: 22px;"><i class="fas fa-list me-2"></i>FAQ Results</h4>
+    </div>
+    <div class="card-body">
+        {% if faqs %}
+            {% for faq in faqs %}
+            <div class="accordion mb-3" id="faqAccordion{{ faq.id }}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ faq.id }}">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#collapse{{ faq.id }}" 
+                                aria-expanded="false" aria-controls="collapse{{ faq.id }}">
+                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                <span style="font-size: 18px; font-weight: bold;">{{ faq.question }}</span>
+                                <span class="badge bg-info" style="font-size: 14px;">{{ faq.get_category_display }}</span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ faq.id }}" class="accordion-collapse collapse" 
+                         aria-labelledby="heading{{ faq.id }}" data-bs-parent="#faqAccordion{{ faq.id }}">
+                        <div class="accordion-body" style="font-size: 16px;">
+                            {{ faq.answer|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="FAQ pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted" style="font-size: 24px;">No FAQs Found</h3>
+                <p class="text-muted" style="font-size: 18px;">No FAQs are available at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

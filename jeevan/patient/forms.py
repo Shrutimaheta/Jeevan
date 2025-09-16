@@ -2,8 +2,10 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
-from .models import Patient
+from .models import Patient, PatientDocument
 from care.models import CustomUser
+import random
+import string
 
 
 class PatientRegistrationForm(forms.ModelForm):
@@ -14,7 +16,7 @@ class PatientRegistrationForm(forms.ModelForm):
     
     class Meta:
         model = Patient
-        fields = ['full_name', 'email', 'contact_number']
+        fields = ['full_name', 'email']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -23,10 +25,6 @@ class PatientRegistrationForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Email Address'
-            }),
-            'contact_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Contact Number'
             }),
         }
     
@@ -47,11 +45,6 @@ class PatientRegistrationForm(forms.ModelForm):
             raise ValidationError("A patient with this email already exists.")
         return email
     
-    def clean_contact_number(self):
-        contact_number = self.cleaned_data.get('contact_number')
-        if Patient.objects.filter(contact_number=contact_number).exists():
-            raise ValidationError("A patient with this contact number already exists.")
-        return contact_number
     
     def clean(self):
         cleaned_data = super().clean()
@@ -245,7 +238,14 @@ class PatientProfileForm(forms.ModelForm):
             
             # Check file type
             allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-            if profile_photo.content_type not in allowed_types:
+            # Get content type from the file object
+            content_type = getattr(profile_photo, 'content_type', None)
+            if not content_type:
+                # Fallback: check file extension
+                file_name = profile_photo.name.lower()
+                if not any(file_name.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                    raise ValidationError("Invalid file type. Please upload a JPG, PNG, or GIF image.")
+            elif content_type not in allowed_types:
                 raise ValidationError("Invalid file type. Please upload a JPG, PNG, or GIF image.")
         
         return profile_photo
@@ -293,5 +293,144 @@ class ChangePasswordForm(forms.Form):
         if new_password and confirm_password:
             if new_password != confirm_password:
                 raise ValidationError("New passwords don't match.")
+        
+        return cleaned_data
+
+
+class PatientDocumentForm(forms.ModelForm):
+    class Meta:
+        model = PatientDocument
+        fields = ['title', 'document_type', 'file', 'description']
+        labels = {
+            'title': 'Document Title',
+            'document_type': 'Document Type',
+            'file': 'Select File',
+            'description': 'Description (Optional)'
+        }
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter document title'
+            }),
+            'document_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'file': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Add any additional notes about this document',
+                'rows': 3
+            }),
+        }
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            # Check file size (10MB max)
+            if file.size > 10 * 1024 * 1024:
+                raise ValidationError("File too large. Maximum size is 10MB.")
+            
+            # Check file type
+            allowed_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+            file_extension = '.' + file.name.split('.')[-1].lower()
+            if file_extension not in allowed_extensions:
+                raise ValidationError("Invalid file type. Please upload PDF, DOC, DOCX, or image files.")
+        
+        return file
+
+
+class ForgotPasswordForm(forms.Form):
+    RECOVERY_METHOD_CHOICES = [
+        ('email', 'Email Address'),
+        ('phone', 'Phone Number'),
+    ]
+    
+    recovery_method = forms.ChoiceField(
+        choices=RECOVERY_METHOD_CHOICES,
+        widget=forms.RadioSelect(attrs={
+            'class': 'form-check-input'
+        }),
+        label='Recovery Method'
+    )
+    
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address',
+            'id': 'id_email'
+        }),
+        label='Email Address'
+    )
+    
+    contact_number = forms.CharField(
+        required=False,
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your phone number',
+            'id': 'id_contact_number'
+        }),
+        label='Phone Number'
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        recovery_method = cleaned_data.get('recovery_method')
+        email = cleaned_data.get('email')
+        contact_number = cleaned_data.get('contact_number')
+        
+        if recovery_method == 'email':
+            if not email:
+                raise ValidationError("Please enter your email address.")
+            # Check if patient exists with this email
+            try:
+                patient = Patient.objects.get(email=email)
+                cleaned_data['patient'] = patient
+            except Patient.DoesNotExist:
+                raise ValidationError("No account found with this email address.")
+        elif recovery_method == 'phone':
+            if not contact_number:
+                raise ValidationError("Please enter your phone number.")
+            # Check if patient exists with this contact number
+            try:
+                patient = Patient.objects.get(contact_number=contact_number)
+                cleaned_data['patient'] = patient
+            except Patient.DoesNotExist:
+                raise ValidationError("No account found with this phone number.")
+        
+        return cleaned_data
+
+
+class ResetPasswordForm(forms.Form):
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        }),
+        label='New Password',
+        min_length=8,
+        help_text='Password must be at least 8 characters long.'
+    )
+    
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        }),
+        label='Confirm New Password'
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+        
+        if new_password and confirm_password:
+            if new_password != confirm_password:
+                raise ValidationError("Passwords don't match.")
         
         return cleaned_data

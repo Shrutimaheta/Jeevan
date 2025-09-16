@@ -21,4 +21,26 @@ urlpatterns = [
     path('api/profile/', views.api_profile, name='api_profile'),
     path('api/profile/update/', views.api_update_profile, name='api_update_profile'),
     path('api/patients/', views.api_patients, name='api_patients'),
+    
+    # Document Management
+    path('documents/', views.document_list, name='document_list'),
+    path('documents/upload/', views.document_upload, name='document_upload'),
+    path('documents/<int:document_id>/', views.document_detail, name='document_detail'),
+    path('documents/<int:document_id>/delete/', views.document_delete, name='document_delete'),
+    path('documents/<int:document_id>/download/', views.document_download, name='document_download'),
+    
+    # Help & Support
+    path('help/', views.help_support, name='help_support'),
+    path('help/faq/', views.faq_list, name='faq_list'),
+    path('help/tickets/', views.support_tickets, name='support_tickets'),
+    path('help/tickets/create/', views.create_support_ticket, name='create_support_ticket'),
+    path('help/tickets/<int:ticket_id>/', views.support_ticket_detail, name='support_ticket_detail'),
+    path('help/resources/', views.health_resources, name='health_resources'),
+    path('help/contact/', views.contact_info, name='contact_info'),
+    
+    # Password Reset
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('verify-otp/<int:patient_id>/', views.verify_otp, name='verify_otp'),
+    path('reset-password/<uuid:token>/', views.reset_password, name='reset_password'),
+    path('forgot-password-sent/', views.forgot_password_sent, name='forgot_password_sent'),
 ]

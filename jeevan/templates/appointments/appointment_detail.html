@@ -2,224 +2,382 @@
 
 {% block title %}Appointment Details - {{ patient.full_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Custom styles for appointment detail page */
+    .appointment-detail-card {
+        box-shadow: var(--shadow-xl);
+        border: none;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+    
+    .appointment-detail-card .healthcare-card-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-teal) 100%);
+        color: var(--text-white);
+        border: none;
+        padding: var(--space-8);
+    }
+    
+    .appointment-detail-card .healthcare-card-header h3 {
+        color: var(--text-white);
+    }
+    
+    .info-card {
+        transition: all var(--transition-normal);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .info-card .healthcare-card-body {
+        padding: var(--space-8);
+    }
+    
+    .section-title {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        margin-bottom: var(--space-6);
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        margin-right: var(--space-3);
+        font-size: var(--font-size-xl);
+    }
+    
+    .detail-item {
+        margin-bottom: var(--space-4);
+    }
+    
+    .detail-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+        font-weight: var(--font-weight-medium);
+        margin-bottom: var(--space-1);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .detail-value {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-bold);
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+    }
+    
+    .detail-value i {
+        margin-right: var(--space-2);
+        color: var(--primary-blue);
+        font-size: var(--font-size-base);
+    }
+    
+    .status-badge {
+        padding: var(--space-3) var(--space-6);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .action-buttons {
+        background: var(--bg-tertiary);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-8);
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+        padding: var(--space-8);
+        border-radius: var(--radius-xl);
+        margin-bottom: var(--space-8);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .page-header h2 {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .info-card .healthcare-card-body {
+            padding: var(--space-6);
+        }
+        
+        .page-header {
+            padding: var(--space-6);
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .action-buttons .healthcare-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- ========================
     Start Page Content
 ========================= -->
-<div class="page-wrapper" id="main-content">
-    <!-- Start Content -->
-    <div class="content">
-        <!-- Page Header -->
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-            <div class="breadcrumb-arrow">
-                <h4 class="mb-1">Appointment Details</h4>
-                <p class="mb-0">
-                    View your appointment information
+<div class="healthcare-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+                <h2 class="mb-3" style="font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold);">
+                    <i class="fas fa-calendar-check me-3"></i>Appointment Details
+                </h2>
+                <p class="mb-0" style="font-size: var(--font-size-lg); color: var(--text-muted); font-weight: var(--font-weight-medium);">
+                    View your appointment information and details
                 </p>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                    <i class="ti ti-arrow-left me-1"></i>Back to Appointments
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'appointments:appointment_list' %}" class="healthcare-btn healthcare-btn-outline">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Appointments
                 </a>
             </div>
         </div>
-        <!-- End Page Header -->
+    </div>
+    <!-- End Page Header -->
         
-        <!-- Appointment Details -->
-        <div class="row">
-            <div class="col-xl-8 col-lg-10 mx-auto">
-                <div class="card">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <h5 class="fw-bold mb-0">
-                            <i class="ti ti-calendar me-2"></i>Appointment #{{ appointment.abha_id }}
-                        </h5>
-                        <div>
-                            {% if appointment.status == 'pending' %}
-                                <span class="badge badge-soft-warning fs-6">Pending</span>
-                            {% elif appointment.status == 'accepted' %}
-                                <span class="badge badge-soft-success fs-6">Accepted</span>
-                            {% elif appointment.status == 'rejected' %}
-                                <span class="badge badge-soft-danger fs-6">Rejected</span>
-                            {% elif appointment.status == 'completed' %}
-                                <span class="badge badge-soft-info fs-6">Completed</span>
-                            {% elif appointment.status == 'cancelled' %}
-                                <span class="badge badge-soft-secondary fs-6">Cancelled</span>
-                            {% endif %}
-                        </div>
+    <!-- Appointment Details -->
+    <div class="row">
+        <div class="col-xl-10 col-lg-12 mx-auto">
+            <div class="healthcare-card appointment-detail-card healthcare-fade-in">
+                <div class="healthcare-card-header d-flex align-items-center justify-content-between">
+                    <h3 class="mb-0" style="font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold);">
+                        <i class="fas fa-calendar-alt me-3"></i>Appointment #{{ appointment.abha_id }}
+                    </h3>
+                    <div>
+                        {% if appointment.status == 'pending' %}
+                            <span class="status-badge healthcare-badge-warning">Pending</span>
+                        {% elif appointment.status == 'accepted' %}
+                            <span class="status-badge healthcare-badge-success">Accepted</span>
+                        {% elif appointment.status == 'rejected' %}
+                            <span class="status-badge healthcare-badge-danger">Rejected</span>
+                        {% elif appointment.status == 'completed' %}
+                            <span class="status-badge healthcare-badge-info">Completed</span>
+                        {% elif appointment.status == 'cancelled' %}
+                            <span class="status-badge" style="background: var(--gray-400); color: var(--text-white);">Cancelled</span>
+                        {% endif %}
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Doctor Information -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3 text-primary">
-                                            <i class="ti ti-user me-2"></i>Doctor Information
-                                        </h6>
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="me-3">
-                                                <i class="ti ti-user-circle text-primary" style="font-size: 48px;"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="fw-semibold mb-1 text-dark">{{ appointment.doctor.full_name }}</h6>
-                                                <small class="text-muted">
-                                                    {% for spec in appointment.doctor.specialization.all %}
-                                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
-                                                    {% empty %}
-                                                        General Practitioner
-                                                    {% endfor %}
-                                                </small>
+                </div>
+                <div class="healthcare-card-body">
+                    <div class="row">
+                        <!-- Doctor Information -->
+                        <div class="col-md-6 mb-5">
+                            <div class="healthcare-card info-card" style="background: var(--primary-blue-light); border-left: 4px solid var(--primary-blue);">
+                                <div class="healthcare-card-body">
+                                    <h5 class="section-title" style="color: var(--primary-blue);">
+                                        <i class="fas fa-user-md"></i>Doctor Information
+                                    </h5>
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="me-4">
+                                            <div style="width: 60px; height: 60px; background: var(--primary-blue); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-user-md" style="font-size: var(--font-size-2xl); color: var(--text-white);"></i>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Experience</small>
-                                                <div class="fw-semibold">{{ appointment.doctor.experience }} years</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Rating</small>
-                                                <div class="fw-semibold">
-                                                    <i class="ti ti-star-filled text-warning"></i>
-                                                    <i class="ti ti-star-filled text-warning"></i>
-                                                    <i class="ti ti-star-filled text-warning"></i>
-                                                    <i class="ti ti-star-filled text-warning"></i>
-                                                    <i class="ti ti-star text-warning"></i>
-                                                    4.0
+                                        <div>
+                                            <h4 class="mb-2" style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                {{ appointment.doctor.full_name }}
+                                            </h4>
+                                            <p class="mb-0" style="font-size: var(--font-size-base); color: var(--text-muted); font-weight: var(--font-weight-medium);">
+                                                {% for spec in appointment.doctor.specialization.all %}
+                                                    {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                {% empty %}
+                                                    General Practitioner
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Experience</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--text-primary);">{{ appointment.doctor.experience }} years</h6>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Rating</p>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i class="fas fa-star" style="color: var(--warning-amber); font-size: var(--font-size-sm);"></i>
+                                                    <i class="fas fa-star" style="color: var(--warning-amber); font-size: var(--font-size-sm);"></i>
+                                                    <i class="fas fa-star" style="color: var(--warning-amber); font-size: var(--font-size-sm);"></i>
+                                                    <i class="fas fa-star" style="color: var(--warning-amber); font-size: var(--font-size-sm);"></i>
+                                                    <i class="far fa-star" style="color: var(--warning-amber); font-size: var(--font-size-sm);"></i>
                                                 </div>
+                                                <span style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">4.0</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Hospital Information -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3 text-primary">
-                                            <i class="ti ti-building me-2"></i>Hospital Information
-                                        </h6>
-                                        <div class="mb-3">
-                                            <h6 class="fw-semibold mb-1 text-dark">{{ appointment.hospital.name }}</h6>
-                                            <small class="text-muted">{{ appointment.hospital.location }}</small>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Phone</small>
-                                                <div class="fw-semibold text-dark">
-                                                    <i class="ti ti-phone me-1"></i>{{ appointment.hospital.contact_no }}
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Email</small>
-                                                <div class="fw-semibold">
-                                                    <i class="ti ti-mail me-1"></i>{{ appointment.hospital.email }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Appointment Details -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3 text-primary">
-                                            <i class="ti ti-calendar-event me-2"></i>Appointment Details
-                                        </h6>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Date</small>
-                                                <div class="fw-semibold">{{ appointment.appointment_date|date:"M d, Y" }}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Time</small>
-                                                <div class="fw-semibold">{{ appointment.appointment_time|time:"g:i A" }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small class="text-muted">Payment Mode</small>
-                                                <div class="fw-semibold">{{ appointment.get_payment_mode_display }}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Booked On</small>
-                                                <div class="fw-semibold">{{ appointment.created_at|date:"M d, Y" }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Patient Information -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3 text-primary">
-                                            <i class="ti ti-user me-2"></i>Patient Information
-                                        </h6>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Name</small>
-                                                <div class="fw-semibold">{{ appointment.patient.full_name }}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Email</small>
-                                                <div class="fw-semibold">{{ appointment.patient.email }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small class="text-muted">Phone</small>
-                                                <div class="fw-semibold">{{ appointment.patient.contact_number }}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">ABHA ID</small>
-                                                <div class="fw-semibold">{{ appointment.patient.abha_id }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Symptoms/Reason -->
-                            {% if appointment.symptoms %}
-                            <div class="col-12 mb-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3 text-primary">
-                                            <i class="ti ti-notes me-2"></i>Reason for Visit
-                                        </h6>
-                                        <p class="mb-0">{{ appointment.symptoms }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
                         </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                                <i class="ti ti-arrow-left me-1"></i>Back to List
-                            </a>
-                            {% if appointment.can_edit %}
-                            <a href="{% url 'appointments:appointment_update' appointment.id %}" class="btn btn-warning">
-                                <i class="ti ti-edit me-1"></i>Edit Appointment
-                            </a>
-                            {% endif %}
-                            {% if appointment.can_cancel %}
-                            <a href="{% url 'appointments:appointment_cancel' appointment.id %}" class="btn btn-danger">
-                                <i class="ti ti-x me-1"></i>Cancel Appointment
-                            </a>
-                            {% endif %}
+                            
+                        <!-- Hospital Information -->
+                        <div class="col-md-6 mb-5">
+                            <div class="healthcare-card" style="background: var(--secondary-teal-light); border-left: 4px solid var(--secondary-teal);">
+                                <div class="healthcare-card-body">
+                                    <h5 class="mb-4" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--secondary-teal);">
+                                        <i class="fas fa-hospital me-2"></i>Hospital Information
+                                    </h5>
+                                    <div class="mb-4">
+                                        <h4 class="mb-2" style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                            {{ appointment.hospital.name }}
+                                        </h4>
+                                        <p class="mb-0" style="font-size: var(--font-size-base); color: var(--text-muted); font-weight: var(--font-weight-medium);">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ appointment.hospital.location }}
+                                        </p>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Phone</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-phone me-1"></i>{{ appointment.hospital.contact_no }}
+                                            </h6>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Email</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-envelope me-1"></i>{{ appointment.hospital.email }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                            
+                        <!-- Appointment Details -->
+                        <div class="col-md-6 mb-5">
+                            <div class="healthcare-card" style="background: var(--info-cyan-light); border-left: 4px solid var(--info-cyan);">
+                                <div class="healthcare-card-body">
+                                    <h5 class="mb-4" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--info-cyan);">
+                                        <i class="fas fa-calendar-alt me-2"></i>Appointment Details
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Date</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-calendar me-1"></i>{{ appointment.appointment_date|date:"M d, Y" }}
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Time</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-clock me-1"></i>{{ appointment.appointment_time|time:"g:i A" }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Payment Mode</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-credit-card me-1"></i>{{ appointment.get_payment_mode_display }}
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Booked On</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-calendar-plus me-1"></i>{{ appointment.created_at|date:"M d, Y" }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            
+                        <!-- Patient Information -->
+                        <div class="col-md-6 mb-5">
+                            <div class="healthcare-card" style="background: var(--success-green-light); border-left: 4px solid var(--success-green);">
+                                <div class="healthcare-card-body">
+                                    <h5 class="mb-4" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--success-green);">
+                                        <i class="fas fa-user me-2"></i>Patient Information
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Name</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-user me-1"></i>{{ appointment.patient.full_name }}
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Email</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-envelope me-1"></i>{{ appointment.patient.email }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">Phone</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-phone me-1"></i>{{ appointment.patient.contact_number }}
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <p class="mb-1" style="font-size: var(--font-size-sm); color: var(--text-muted); font-weight: var(--font-weight-medium);">ABHA ID</p>
+                                            <h6 class="mb-0" style="font-size: var(--font-size-base); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                                                <i class="fas fa-id-card me-1"></i>{{ appointment.patient.abha_id }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            
+                        <!-- Symptoms/Reason -->
+                        {% if appointment.symptoms %}
+                        <div class="col-12 mb-5">
+                            <div class="healthcare-card" style="background: var(--warning-amber-light); border-left: 4px solid var(--warning-amber);">
+                                <div class="healthcare-card-body">
+                                    <h5 class="mb-4" style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--warning-amber);">
+                                        <i class="fas fa-stethoscope me-2"></i>Reason for Visit
+                                    </h5>
+                                    <p class="mb-0" style="font-size: var(--font-size-base); color: var(--text-primary); line-height: var(--line-height-relaxed);">
+                                        {{ appointment.symptoms }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons d-flex justify-content-end gap-3">
+                        <a href="{% url 'appointments:appointment_list' %}" class="healthcare-btn healthcare-btn-outline">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                        {% if appointment.can_edit %}
+                        <a href="{% url 'appointments:appointment_update' appointment.id %}" class="healthcare-btn healthcare-btn-warning">
+                            <i class="fas fa-edit me-2"></i>Edit Appointment
+                        </a>
+                        {% endif %}
+                        {% if appointment.can_cancel %}
+                        <a href="{% url 'appointments:appointment_cancel' appointment.id %}" class="healthcare-btn healthcare-btn-danger">
+                            <i class="fas fa-times me-2"></i>Cancel Appointment
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- End Content -->
 </div>
 <!-- ========================
     End Page Content

@@ -14,10 +14,10 @@ import json
 
 @login_required
 def appointment_list(request):
-    """Display list of appointments for the logged-in patient"""
+    """Display list of appointments for the logged-in patient (exclude cancelled)"""
     try:
         patient = Patient.objects.get(user=request.user)
-        appointments = Appointment.objects.filter(patient=patient).order_by('-created_at')
+        appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled').order_by('-created_at')
         
         context = {
             'appointments': appointments,
@@ -50,6 +50,10 @@ def appointment_create(request):
                 appointment.save()
                 messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
                 return redirect('appointments:appointment_list')
+            else:
+                # Debug: Print form errors
+                print("Form errors:", form.errors)
+                print("Form data:", form.data)
         else:
             form = AppointmentForm(patient=patient)
         
@@ -79,6 +83,10 @@ def appointment_update(request, appointment_id):
                 form.save()
                 messages.success(request, 'Appointment updated successfully!')
                 return redirect('appointments:appointment_list')
+            else:
+                # Debug: Print form errors
+                print("Update form errors:", form.errors)
+                print("Update form data:", form.data)
         else:
             form = AppointmentUpdateForm(instance=appointment)
         

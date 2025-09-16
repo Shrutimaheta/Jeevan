@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -14,9 +14,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 import json
-from .models import Patient
-from .forms import PatientRegistrationForm, PatientLoginForm, PatientProfileForm, ChangePasswordForm
+from .models import Patient, PatientDocument
+from .forms import PatientRegistrationForm, PatientLoginForm, PatientProfileForm, ChangePasswordForm, PatientDocumentForm
 from .serializers import PatientSerializer, PatientRegistrationSerializer, PatientLoginSerializer
+from .help_views import *
+from .forgot_password_views import *
 
 
 def patient_list(request):
@@ -119,7 +121,7 @@ def patient_dashboard(request):
         messages.error(request, 'Patient profile not found.')
         return redirect('patient:patient_login')
     
-    # Get upcoming appointments (today and future)
+    # Get upcoming appointments (today and future) - exclude cancelled
     from datetime import date, datetime
     from appointments.models import Appointment
     
@@ -127,15 +129,38 @@ def patient_dashboard(request):
     upcoming_appointments = Appointment.objects.filter(
         patient=patient,
         appointment_date__gte=today
-    ).order_by('appointment_date', 'appointment_time')[:5]  # Limit to 5 upcoming appointments
+    ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:5]  # Limit to 5 upcoming appointments
     
-    # Get total appointment count for stats
-    total_appointments = Appointment.objects.filter(patient=patient).count()
+    # Get all appointments for stats (exclude cancelled)
+    all_appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
+    total_appointments = all_appointments.count()
+    
+    # Get appointment counts by status
+    accepted_appointments = all_appointments.filter(status='accepted').count()
+    pending_appointments = all_appointments.filter(status='pending').count()
+    rejected_appointments = all_appointments.filter(status='rejected').count()
+    completed_appointments = all_appointments.filter(status='completed').count()
+    
+    # Get recent appointments (last 5)
+    recent_appointments = all_appointments.order_by('-created_at')[:5]
+    
+    # Check for recent status changes (last 24 hours)
+    from datetime import timedelta
+    yesterday = today - timedelta(days=1)
+    recent_status_changes = all_appointments.filter(
+        updated_at__gte=yesterday
+    ).exclude(status='pending').order_by('-updated_at')[:3]
     
     context = {
         'patient': patient,
         'upcoming_appointments': upcoming_appointments,
+        'recent_appointments': recent_appointments,
+        'recent_status_changes': recent_status_changes,
         'total_appointments': total_appointments,
+        'accepted_appointments': accepted_appointments,
+        'pending_appointments': pending_appointments,
+        'rejected_appointments': rejected_appointments,
+        'completed_appointments': completed_appointments,
     }
     return render(request, 'patient/dashboard.html', context)
 
@@ -155,8 +180,8 @@ def patient_profile(request):
             # Save the form data
             updated_patient = form.save()
             messages.success(request, 'Profile updated successfully!')
-            # Redirect to refresh the page with updated data
-            return redirect('patient:patient_profile')
+            # Refresh the form with updated data instead of redirecting
+            form = PatientProfileForm(instance=updated_patient)
         else:
             # If form is invalid, show errors
             messages.error(request, 'Please correct the errors below.')
@@ -295,3 +320,117 @@ def api_patients(request):
         'patients': serializer.data,
         'count': len(serializer.data)
     }, status=status.HTTP_200_OK)
+
+
+# Document Management Views
+@login_required
+def document_list(request):
+    """View to list all patient documents"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    documents = PatientDocument.objects.filter(patient=patient)
+    
+    # Add pagination
+    paginator = Paginator(documents, 10)  # Show 10 documents per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'patient': patient,
+        'documents': page_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'patient/document_list.html', context)
+
+
+@login_required
+def document_upload(request):
+    """View to upload new documents"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    if request.method == 'POST':
+        form = PatientDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.patient = patient
+            document.save()
+            messages.success(request, 'Document uploaded successfully!')
+            return redirect('patient:document_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PatientDocumentForm()
+    
+    context = {
+        'patient': patient,
+        'form': form,
+    }
+    return render(request, 'patient/document_upload.html', context)
+
+
+@login_required
+def document_detail(request, document_id):
+    """View to show document details"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    try:
+        document = PatientDocument.objects.get(id=document_id, patient=patient)
+    except PatientDocument.DoesNotExist:
+        messages.error(request, 'Document not found.')
+        return redirect('patient:document_list')
+    
+    context = {
+        'patient': patient,
+        'document': document,
+    }
+    return render(request, 'patient/document_detail.html', context)
+
+
+@login_required
+def document_delete(request, document_id):
+    """View to delete a document"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    try:
+        document = PatientDocument.objects.get(id=document_id, patient=patient)
+        document.delete()
+        messages.success(request, 'Document deleted successfully!')
+    except PatientDocument.DoesNotExist:
+        messages.error(request, 'Document not found.')
+    
+    return redirect('patient:document_list')
+
+
+@login_required
+def document_download(request, document_id):
+    """View to download a document"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    try:
+        document = PatientDocument.objects.get(id=document_id, patient=patient)
+        response = HttpResponse(document.file.read(), content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{document.title}.{document.file_extension.lower()}"'
+        return response
+    except PatientDocument.DoesNotExist:
+        messages.error(request, 'Document not found.')
+        return redirect('patient:document_list')

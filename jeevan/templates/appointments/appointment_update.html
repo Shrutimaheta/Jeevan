@@ -2,118 +2,308 @@
 
 {% block title %}Update Appointment - {{ patient.full_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Custom styles for appointment update page */
+    .appointment-update-header {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+        padding: var(--space-8);
+    }
+    
+    /* Symptom autocomplete styling */
+    #symptom-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .suggestion-item {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
+
+    .suggestion-item:focus {
+        outline: none;
+        background-color: #e7f1ff;
+    }
+    
+    .appointment-update-header h2 {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-teal));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: var(--font-size-4xl);
+        font-weight: var(--font-weight-bold);
+    }
+    
+    .current-appointment-info {
+        background: var(--info-cyan-light);
+        border: 1px solid var(--info-cyan);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        margin-bottom: var(--space-6);
+    }
+    
+    .current-appointment-info h6 {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--space-4);
+    }
+    
+    .current-appointment-info strong {
+        font-size: var(--font-size-base);
+        color: var(--text-primary);
+    }
+    
+    .form-label {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: var(--space-3);
+    }
+    
+    .form-control {
+        font-size: var(--font-size-base);
+        padding: var(--space-4) var(--space-5);
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-medium);
+        transition: all var(--transition-fast);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+    
+    .form-actions {
+        background: var(--bg-tertiary);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-8);
+    }
+    
+    .form-actions .btn {
+        font-size: var(--font-size-lg);
+        padding: var(--space-4) var(--space-8);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- ========================
     Start Page Content
 ========================= -->
-<div class="page-wrapper" id="main-content">
-    <!-- Start Content -->
-    <div class="content">
-        <!-- Page Header -->
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-            <div class="breadcrumb-arrow">
-                <h4 class="mb-1">Update Appointment</h4>
-                <p class="mb-0">
+<div class="healthcare-container">
+    <!-- Page Header -->
+    <div class="appointment-update-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+                <h2 class="mb-3">
+                    <i class="fas fa-edit me-3"></i>Update Appointment
+                </h2>
+                <p class="mb-0" style="font-size: var(--font-size-lg); color: var(--text-muted); font-weight: var(--font-weight-medium);">
                     Modify your appointment details
                 </p>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                    <i class="ti ti-arrow-left me-1"></i>Back to Appointments
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'appointments:appointment_list' %}" class="healthcare-btn healthcare-btn-outline">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Appointments
                 </a>
             </div>
         </div>
-        <!-- End Page Header -->
+    </div>
+    <!-- End Page Header -->
         
-        <!-- Appointment Update Form -->
-        <div class="row">
-            <div class="col-xl-8 col-lg-10 mx-auto">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="fw-bold mb-0">
-                            <i class="ti ti-edit me-2"></i>Update Appointment #{{ appointment.abha_id }}
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" id="appointmentUpdateForm">
-                            {% csrf_token %}
-                            
-                            <!-- Current Appointment Info -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="alert alert-info">
-                                        <h6 class="fw-semibold mb-2">Current Appointment Details:</h6>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <strong>Doctor:</strong> {{ appointment.doctor.full_name }}<br>
+    <!-- Appointment Update Form -->
+    <div class="row">
+        <div class="col-xl-10 col-lg-12 mx-auto">
+            <div class="healthcare-card">
+                <div class="healthcare-card-header">
+                    <h3 class="mb-0" style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--text-primary);">
+                        <i class="fas fa-edit me-3" style="color: var(--primary-blue);"></i>Update Appointment #{{ appointment.abha_id }}
+                    </h3>
+                </div>
+                <div class="healthcare-card-body">
+                    <form method="post" id="appointmentUpdateForm">
+                        {% csrf_token %}
+                        
+                        <!-- Current Appointment Info -->
+                        <div class="row mb-6">
+                            <div class="col-12">
+                                <div class="current-appointment-info">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Current Appointment Details:</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-2">
+                                                <i class="fas fa-user-md me-2" style="color: var(--primary-blue);"></i>
+                                                <strong>Doctor:</strong> {{ appointment.doctor.full_name }}
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-hospital me-2" style="color: var(--secondary-teal);"></i>
                                                 <strong>Hospital:</strong> {{ appointment.hospital.name }}
                                             </div>
-                                            <div class="col-md-6">
-                                                <strong>Date:</strong> {{ appointment.appointment_date|date:"M d, Y" }}<br>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-2">
+                                                <i class="fas fa-calendar me-2" style="color: var(--info-cyan);"></i>
+                                                <strong>Date:</strong> {{ appointment.appointment_date|date:"M d, Y" }}
+                                            </div>
+                                            <div class="mb-2">
+                                                <i class="fas fa-clock me-2" style="color: var(--warning-amber);"></i>
                                                 <strong>Time:</strong> {{ appointment.appointment_time|time:"g:i A" }}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Date and Time -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.appointment_date.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.appointment_date.label }} <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.appointment_date }}
-                                    {% if form.appointment_date.errors %}
-                                        <div class="text-danger small">{{ form.appointment_date.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.appointment_time.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.appointment_time.label }} <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.appointment_time }}
-                                    {% if form.appointment_time.errors %}
-                                        <div class="text-danger small">{{ form.appointment_time.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Payment Mode -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.payment_mode.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.payment_mode.label }} <span class="text-danger">*</span>
-                                    </label>
-                                    {{ form.payment_mode }}
-                                    {% if form.payment_mode.errors %}
-                                        <div class="text-danger small">{{ form.payment_mode.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Symptoms -->
+                        </div>
+                        
+                        <!-- Form Errors Display -->
+                        {% if form.errors %}
                             <div class="row mb-4">
                                 <div class="col-12">
-                                    <label for="{{ form.symptoms.id_for_label }}" class="form-label fw-semibold">
-                                        {{ form.symptoms.label }}
-                                    </label>
-                                    {{ form.symptoms }}
-                                    {% if form.symptoms.errors %}
-                                        <div class="text-danger small">{{ form.symptoms.errors.0 }}</div>
-                                    {% endif %}
+                                    <div class="alert alert-danger" role="alert">
+                                        <h6 class="alert-heading">
+                                            <i class="ti ti-alert-circle me-2"></i>Please correct the following errors:
+                                        </h6>
+                                        <ul class="mb-0">
+                                            {% for field, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li class="text-danger fw-bold">
+                                                        <i class="ti ti-x me-1"></i>{{ error }}
+                                                    </li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
+                        {% endif %}
                             
-                            <!-- Form Actions -->
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                                    <i class="ti ti-x me-1"></i>Cancel
-                                </a>
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="ti ti-device-floppy me-1"></i>Update Appointment
-                                </button>
+                        <!-- Date and Time -->
+                        <div class="row mb-6">
+                            <div class="col-md-6">
+                                <label for="{{ form.appointment_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar me-2"></i>{{ form.appointment_date.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.appointment_date }}
+                                {% if form.appointment_date.errors %}
+                                    <div class="text-danger small fw-bold mt-1">
+                                        <i class="ti ti-alert-circle me-1"></i>{{ form.appointment_date.errors.0 }}
+                                    </div>
+                                {% endif %}
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-clock me-2"></i>Appointment Time <span class="text-danger">*</span>
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label for="{{ form.hour.id_for_label }}" class="form-label small">Hour</label>
+                                        {{ form.hour }}
+                                        {% if form.hour.errors %}
+                                            <div class="text-danger small fw-bold mt-1">
+                                                <i class="ti ti-alert-circle me-1"></i>{{ form.hour.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="{{ form.minute.id_for_label }}" class="form-label small">Minute</label>
+                                        {{ form.minute }}
+                                        {% if form.minute.errors %}
+                                            <div class="text-danger small fw-bold mt-1">
+                                                <i class="ti ti-alert-circle me-1"></i>{{ form.minute.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="{{ form.am_pm.id_for_label }}" class="form-label small">AM/PM</label>
+                                        {{ form.am_pm }}
+                                        {% if form.am_pm.errors %}
+                                            <div class="text-danger small fw-bold mt-1">
+                                                <i class="ti ti-alert-circle me-1"></i>{{ form.am_pm.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="form-text">
+                                    <i class="ti ti-clock me-1"></i>
+                                    Available hours: 8:00 AM - 6:00 PM
+                                </div>
+                                <!-- Hidden time field -->
+                                {{ form.appointment_time }}
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Mode -->
+                        <div class="row mb-6">
+                            <div class="col-md-6">
+                                <label for="{{ form.payment_mode.id_for_label }}" class="form-label">
+                                    <i class="fas fa-credit-card me-2"></i>{{ form.payment_mode.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.payment_mode }}
+                                {% if form.payment_mode.errors %}
+                                    <div class="text-danger small fw-bold mt-1">
+                                        <i class="ti ti-alert-circle me-1"></i>{{ form.payment_mode.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Symptoms -->
+                        <div class="row mb-6">
+                            <div class="col-12">
+                                <label for="{{ form.symptoms.id_for_label }}" class="form-label">
+                                    <i class="fas fa-stethoscope me-2"></i>{{ form.symptoms.label }}
+                                </label>
+                                {{ form.symptoms }}
+                                
+                                <!-- Symptom Autocomplete Dropdown -->
+                                <div class="mt-2 position-relative">
+                                    <small class="text-muted fw-semibold">Start typing for suggestions:</small>
+                                    <div id="symptom-dropdown" class="dropdown-menu w-100" style="display: none; max-height: 200px; overflow-y: auto;">
+                                        <!-- Suggestions will be populated here -->
+                                    </div>
+                                </div>
+                                
+                                {% if form.symptoms.errors %}
+                                    <div class="text-danger small fw-bold mt-1">
+                                        <i class="ti ti-alert-circle me-1"></i>{{ form.symptoms.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-actions d-flex justify-content-end gap-3">
+                            <a href="{% url 'appointments:appointment_list' %}" class="healthcare-btn healthcare-btn-outline">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="healthcare-btn healthcare-btn-warning">
+                                <i class="fas fa-save me-2"></i>Update Appointment
+                            </button>
+                        </div>
                         </form>
                     </div>
                 </div>
@@ -125,5 +315,287 @@
 <!-- ========================
     End Page Content
 ========================= -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('appointmentUpdateForm');
+    const dateInput = document.getElementById('appointment-date');
+    const hourSelect = document.getElementById('hour-select');
+    const minuteSelect = document.getElementById('minute-select');
+    const amPmSelect = document.getElementById('am-pm-select');
+    const hiddenTimeField = document.getElementById('appointment-time-hidden');
+    
+    // Set date restrictions (current date to 6 months)
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 6);
+    
+    dateInput.min = today.toISOString().split('T')[0];
+    dateInput.max = maxDate.toISOString().split('T')[0];
+    
+    // Date validation
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const today = new Date();
+        
+        if (selectedDate < today) {
+            alert('Please select a future date for your appointment.');
+            this.value = today.toISOString().split('T')[0];
+        }
+        
+        if (selectedDate > maxDate) {
+            alert('Please select a date within the next 6 months.');
+            this.value = maxDate.toISOString().split('T')[0];
+        }
+    });
+    
+    // Function to show error message below field
+    function showFieldError(field, message) {
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add new error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error text-danger small fw-bold mt-1';
+        errorDiv.innerHTML = `<i class="ti ti-alert-circle me-1"></i>${message}`;
+        field.parentNode.appendChild(errorDiv);
+    }
+    
+    // Function to clear error message
+    function clearFieldError(field) {
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+    
+    // Time validation function
+    function validateTime() {
+        const hour = parseInt(hourSelect.value);
+        const minute = parseInt(minuteSelect.value);
+        const amPm = amPmSelect.value;
+        
+        // Clear previous errors
+        clearFieldError(hourSelect);
+        clearFieldError(minuteSelect);
+        clearFieldError(amPmSelect);
+        
+        if (!hour || !minute || !amPm) {
+            showFieldError(hourSelect, 'Please select hour, minute, and AM/PM for appointment time.');
+            return false;
+        }
+        
+        // Convert to 24-hour format
+        let hour24 = hour;
+        if (amPm === 'PM' && hour !== 12) {
+            hour24 += 12;
+        } else if (amPm === 'AM' && hour === 12) {
+            hour24 = 0;
+        }
+        
+        // Check business hours (8 AM to 6 PM)
+        const businessStart = 8;
+        const businessEnd = 18;
+        
+        if (hour24 < businessStart || hour24 >= businessEnd) {
+            showFieldError(hourSelect, 'Appointment time must be between 8:00 AM and 6:00 PM.');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const selectedDate = new Date(dateInput.value);
+        const today = new Date();
+        const paymentSelect = document.getElementById('id_payment_mode');
+        
+        // Clear all previous errors
+        clearFieldError(dateInput);
+        clearFieldError(hourSelect);
+        clearFieldError(minuteSelect);
+        clearFieldError(amPmSelect);
+        clearFieldError(paymentSelect);
+        
+        let hasErrors = false;
+        
+        // Validate required fields
+        if (!dateInput.value) {
+            showFieldError(dateInput, 'Please select an appointment date.');
+            hasErrors = true;
+        }
+        
+        if (!paymentSelect.value) {
+            showFieldError(paymentSelect, 'Please select a payment mode.');
+            hasErrors = true;
+        }
+        
+        // Final validation before submission
+        if (selectedDate < today) {
+            e.preventDefault();
+            showFieldError(dateInput, 'Please select a future date for your appointment.');
+            hasErrors = true;
+        }
+        
+        if (selectedDate > maxDate) {
+            e.preventDefault();
+            showFieldError(dateInput, 'Please select a date within the next 6 months.');
+            hasErrors = true;
+        }
+        
+        if (!validateTime()) {
+            e.preventDefault();
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Convert custom time fields to 24-hour format and set hidden field
+        const hour = parseInt(hourSelect.value);
+        const minute = parseInt(minuteSelect.value);
+        const amPm = amPmSelect.value;
+        
+        if (hour && minute && amPm) {
+            let hour24 = hour;
+            if (amPm === 'PM' && hour !== 12) {
+                hour24 += 12;
+            } else if (amPm === 'AM' && hour === 12) {
+                hour24 = 0;
+            }
+            
+            // Format as HH:MM for the hidden field
+            const timeString = `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            hiddenTimeField.value = timeString;
+        }
+    });
+    
+    // Symptom autocomplete functionality
+    const symptomsTextarea = document.getElementById('id_symptoms');
+    const dropdown = document.getElementById('symptom-dropdown');
+    
+    const symptoms = [
+        'Fever', 'Headache', 'Cough', 'Chest pain', 'Shortness of breath',
+        'Nausea', 'Vomiting', 'Diarrhea', 'Abdominal pain', 'Back pain',
+        'Joint pain', 'Fatigue', 'Dizziness', 'Rash', 'Sore throat',
+        'Runny nose', 'Body aches', 'Loss of appetite', 'Sleep problems', 'Anxiety',
+        'Cold', 'Flu', 'Allergies', 'Constipation', 'Heartburn', 'Insomnia',
+        'Depression', 'Stress', 'Memory problems', 'Vision problems', 'Hearing problems'
+    ];
+    
+    let currentWord = '';
+    let wordStart = 0;
+    
+    symptomsTextarea.addEventListener('input', function(e) {
+        const cursorPos = e.target.selectionStart;
+        const text = e.target.value;
+        
+        // Find the current word being typed
+        const beforeCursor = text.substring(0, cursorPos);
+        const words = beforeCursor.split(/[,\n]/);
+        currentWord = words[words.length - 1].trim();
+        wordStart = beforeCursor.lastIndexOf(currentWord);
+        
+        if (currentWord.length >= 2) {
+            showSuggestions(currentWord);
+        } else {
+            hideSuggestions();
+        }
+    });
+    
+    symptomsTextarea.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const firstSuggestion = dropdown.querySelector('.suggestion-item');
+            if (firstSuggestion) {
+                firstSuggestion.classList.add('active');
+                firstSuggestion.focus();
+            }
+        }
+    });
+    
+    function showSuggestions(query) {
+        const filtered = symptoms.filter(symptom => 
+            symptom.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (filtered.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(symptom => 
+            `<div class="dropdown-item suggestion-item" data-symptom="${symptom}">
+                <i class="fas fa-stethoscope me-2 text-primary"></i>${symptom}
+            </div>`
+        ).join('');
+        
+        dropdown.style.display = 'block';
+        
+        // Add click handlers to suggestions
+        dropdown.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                selectSuggestion(this.getAttribute('data-symptom'));
+            });
+            
+            item.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    selectSuggestion(this.getAttribute('data-symptom'));
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = this.nextElementSibling;
+                    if (next) {
+                        this.classList.remove('active');
+                        next.classList.add('active');
+                        next.focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = this.previousElementSibling;
+                    if (prev) {
+                        this.classList.remove('active');
+                        prev.classList.add('active');
+                        prev.focus();
+                    }
+                }
+            });
+        });
+    }
+    
+    function hideSuggestions() {
+        dropdown.style.display = 'none';
+    }
+    
+    function selectSuggestion(symptom) {
+        const text = symptomsTextarea.value;
+        const beforeWord = text.substring(0, wordStart);
+        const afterCursor = text.substring(symptomsTextarea.selectionStart);
+        
+        // Check if symptom already exists
+        const existingSymptoms = text.split(/[,\n]/).map(s => s.trim());
+        if (!existingSymptoms.includes(symptom)) {
+            symptomsTextarea.value = beforeWord + symptom + ', ' + afterCursor;
+            symptomsTextarea.focus();
+        }
+        
+        hideSuggestions();
+    }
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!symptomsTextarea.contains(e.target) && !dropdown.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+});
+</script>
 {% endblock %}
 
