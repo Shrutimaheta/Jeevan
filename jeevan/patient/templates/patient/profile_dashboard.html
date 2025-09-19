@@ -1,0 +1,291 @@
+{% extends 'patient/base.html' %}
+{% load static %}
+{% block title %}Welcome - {{ patient.full_name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+<style>
+	:root{--brand:#2C7BE5;--accent:#20C997;--bg:#F7FAFC;--text:#1f2937;--muted:#6B7280}
+	.hero-banner{background:linear-gradient(135deg, rgba(44,123,229,0.1), rgba(32,201,151,0.1)), url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;border-radius:20px;position:relative;overflow:hidden}
+	.hero-content{position:relative;z-index:2;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
+	.cardx{border:1px solid #eef2f7;border-radius:16px;transition:all .3s ease;background:white;position:relative;overflow:hidden}
+	.cardx:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.1)}
+	.cardx::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--brand), var(--accent))}
+	.badgex{border-radius:999px;border:1px solid #e5e7eb;padding:.25rem .5rem;font-size:12px;font-weight:500}
+	.slider{display:flex;gap:16px;overflow:auto;padding-bottom:8px;scroll-behavior:smooth}
+	.slider::-webkit-scrollbar{height:8px}
+	.slider::-webkit-scrollbar-thumb{background:linear-gradient(90deg, var(--brand), var(--accent));border-radius:999px}
+	.quick-card{background:linear-gradient(135deg, #ffffff, #f8fafc);border:1px solid #e2e8f0;border-radius:16px;padding:24px;text-align:center;transition:all .3s ease;position:relative;overflow:hidden}
+	.quick-card:hover{transform:translateY(-6px);box-shadow:0 25px 50px rgba(0,0,0,.15)}
+	.quick-card::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:linear-gradient(135deg, rgba(44,123,229,0.05), rgba(32,201,151,0.05));opacity:0;transition:opacity .3s ease}
+	.quick-card:hover::before{opacity:1}
+	.health-tip{background:linear-gradient(135deg, rgba(32,201,151,0.1), rgba(44,123,229,0.1));border:1px solid rgba(32,201,151,0.2);border-radius:16px;padding:20px;position:relative;overflow:hidden}
+	.health-tip::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle, rgba(32,201,151,0.1), transparent);border-radius:50%}
+	.inspiration-card{background:linear-gradient(135deg, rgba(44,123,229,0.8), rgba(32,201,151,0.8)), url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;border-radius:20px;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+	.doctor-card{background:white;border-radius:16px;padding:20px;box-shadow:0 8px 25px rgba(0,0,0,.08);transition:all .3s ease;border:1px solid #f1f5f9}
+	.doctor-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
+	.icon-large{font-size:48px;margin-bottom:16px;display:block}
+	.stats-card{background:linear-gradient(135deg, #ffffff, #f8fafc);border:1px solid #e2e8f0;border-radius:16px;padding:20px;text-align:center;position:relative;overflow:hidden}
+	.stats-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--brand), var(--accent))}
+</style>
+
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+	<div class="d-flex align-items-center gap-3">
+		<div style="width:40px;height:40px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px">J</div>
+		<strong style="font-size:24px;color:var(--text)">JeevanCare</strong>
+	</div>
+	<div class="text-center d-none d-md-block">
+		<h4 class="mb-0" style="color:var(--text)">Welcome Back, {{ patient.full_name }} 👋</h4>
+	</div>
+	<div class="d-flex align-items-center gap-3">
+		<a class="text-decoration-none position-relative" href="#" title="Notifications" style="font-size:20px;color:var(--muted)">
+			🔔
+			<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--accent);font-size:10px">3</span>
+		</a>
+		<a class="text-decoration-none" href="#" title="Messages" style="font-size:20px;color:var(--muted)">💬</a>
+		<div class="dropdown">
+			<a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown" style="color:var(--text)">
+				<div style="width:36px;height:36px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold">U</div>
+			</a>
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li><a class="dropdown-item" href="/patient/profile/">Profile</a></li>
+				<li><a class="dropdown-item" href="/patient/profile/">Settings</a></li>
+				<li><hr class="dropdown-divider"></li>
+				<li><a class="dropdown-item text-danger" href="/patient/logout/">Logout</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<!-- Hero Banner -->
+<div class="hero-banner p-5 mb-5">
+	<div class="hero-content">
+		<h2 class="mb-3" style="font-weight:700;font-size:2.5rem">Good Morning, {{ patient.full_name }} 🌿</h2>
+		<p class="mb-4" style="font-size:1.2rem;opacity:0.9">Your health journey continues today. Every step forward is a step toward wellness.</p>
+		<a href="/appointments/create/" class="btn btn-light btn-lg px-4 py-3" style="border-radius:12px;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.2)">Book Appointment Now</a>
+	</div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+	<div class="col-12"><h4 class="fw-bold mb-0" style="color:var(--text)">Quick Actions</h4></div>
+	<div class="col-12 col-md-6 col-xl-3">
+		<a href="/appointments/create/" class="text-reset text-decoration-none">
+			<div class="quick-card h-100">
+				<span class="icon-large">🗓️</span>
+				<h5 class="fw-bold mb-2">Book Appointment</h5>
+				<p class="text-muted mb-3">Schedule your next visit with our expert doctors</p>
+				<span class="badgex" style="background:var(--brand);color:white;border-color:var(--brand)">Start</span>
+			</div>
+		</a>
+	</div>
+	<div class="col-12 col-md-6 col-xl-3">
+		<a href="/patient/profile/" class="text-reset text-decoration-none">
+			<div class="quick-card h-100">
+				<span class="icon-large">💊</span>
+				<h5 class="fw-bold mb-2">View Prescriptions</h5>
+				<p class="text-muted mb-3">Access your medication history and current prescriptions</p>
+				<span class="badgex" style="background:var(--accent);color:white;border-color:var(--accent)">View</span>
+			</div>
+		</a>
+	</div>
+	<div class="col-12 col-md-6 col-xl-3">
+		<a href="/patient/documents/" class="text-reset text-decoration-none">
+			<div class="quick-card h-100">
+				<span class="icon-large">📄</span>
+				<h5 class="fw-bold mb-2">My Reports</h5>
+				<p class="text-muted mb-3">Upload and review your lab results and medical reports</p>
+				<span class="badgex" style="background:#FF9F43;color:white;border-color:#FF9F43">Open</span>
+			</div>
+		</a>
+	</div>
+	<div class="col-12 col-md-6 col-xl-3">
+		<a href="/teleconsultation/" class="text-reset text-decoration-none">
+			<div class="quick-card h-100">
+				<span class="icon-large">🎥</span>
+				<h5 class="fw-bold mb-2">Teleconsultation</h5>
+				<p class="text-muted mb-3">Join your virtual appointment from anywhere</p>
+				<span class="badgex" style="background:#E55353;color:white;border-color:#E55353">Join</span>
+			</div>
+		</a>
+	</div>
+</div>
+
+<div class="row g-4 mb-5">
+	<!-- Upcoming Appointments -->
+	<div class="col-12 col-lg-8">
+		<div class="cardx p-4 h-100">
+			<div class="d-flex align-items-center justify-content-between mb-4">
+				<h4 class="fw-bold mb-0" style="color:var(--text)">Upcoming Appointments</h4>
+				<a class="btn btn-outline-primary btn-sm" href="/appointments/">View All</a>
+			</div>
+			{% if upcoming_appointments %}
+				<div class="slider">
+					{% for app in upcoming_appointments %}
+						<div class="doctor-card" style="min-width:280px;">
+							<div class="d-flex align-items-center gap-3 mb-3">
+								<img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded-circle" width="50" height="50" alt="doctor"/>
+								<div>
+									<h6 class="fw-bold mb-1">Dr. Smith</h6>
+									<small class="text-muted">Cardiologist</small>
+								</div>
+							</div>
+							<div class="mb-3">
+								<div class="fw-semibold">Appointment #{{ app.id }}</div>
+								<div class="text-muted small">{{ app.appointment_date|date:'M d, Y' }} • {{ app.appointment_time|time:'H:i' }}</div>
+							</div>
+							<div class="d-flex align-items-center justify-content-between">
+								<span class="badgex" style="background:var(--accent);color:white;border-color:var(--accent)">{{ app.status|title }}</span>
+								<div class="d-flex gap-2">
+									<a href="/appointments/{{ app.id }}/" class="btn btn-sm btn-outline-primary">Join</a>
+									<a href="/appointments/{{ app.id }}/" class="btn btn-sm btn-outline-secondary">Reschedule</a>
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			{% else %}
+				<div class="text-center py-5">
+					<div style="font-size:48px;margin-bottom:16px">📅</div>
+					<h5 class="text-muted">No upcoming appointments</h5>
+					<p class="text-muted">Book your next visit to stay on top of your health</p>
+					<a href="/appointments/create/" class="btn btn-primary">Book Appointment</a>
+				</div>
+			{% endif %}
+		</div>
+	</div>
+
+	<!-- Health Snapshot -->
+	<div class="col-12 col-lg-4">
+		<div class="cardx p-4 h-100">
+			<h5 class="fw-bold mb-4" style="color:var(--text)">Health Snapshot</h5>
+			
+			<!-- Mini Stats -->
+			<div class="row g-3 mb-4">
+				<div class="col-6">
+					<div class="stats-card">
+						<div class="fw-bold fs-4" style="color:var(--accent)">{{ stats.total }}</div>
+						<div class="text-muted small">Total Visits</div>
+					</div>
+				</div>
+				<div class="col-6">
+					<div class="stats-card">
+						<div class="fw-bold fs-4" style="color:var(--brand)">{{ stats.completed }}</div>
+						<div class="text-muted small">Completed</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Health Tip -->
+			<div class="health-tip mb-4">
+				<div class="d-flex align-items-center gap-3">
+					<div style="font-size:32px">💧</div>
+					<div>
+						<h6 class="fw-bold mb-1">Daily Health Tip</h6>
+						<p class="small mb-0">Stay hydrated – 8 glasses of water a day for optimal health</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Recent Report -->
+			<div class="p-3" style="background:linear-gradient(135deg, #f8fafc, #e2e8f0);border-radius:12px;border:1px solid #e2e8f0">
+				<div class="d-flex align-items-center gap-2 mb-2">
+					<span style="font-size:20px">📊</span>
+					<h6 class="fw-bold mb-0">Recent Report</h6>
+				</div>
+				<p class="small text-muted mb-0">Your last health checkup shows excellent results. Keep it up!</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Inspiration Section -->
+<div class="inspiration-card p-5 mb-5">
+	<div class="row align-items-center">
+		<div class="col-md-8">
+			<h3 class="fw-bold mb-3">Your Health, Our Priority</h3>
+			<p class="mb-4" style="font-size:1.1rem;opacity:0.9">Take the next step in your wellness journey. Our team of expert healthcare professionals is here to support you every step of the way.</p>
+			<a href="/appointments/create/" class="btn btn-light btn-lg px-4 py-3" style="border-radius:12px;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.2)">Explore Services</a>
+		</div>
+		<div class="col-md-4 text-center d-none d-md-block">
+			<div style="font-size:120px;opacity:0.8">🏥</div>
+		</div>
+	</div>
+</div>
+
+<!-- Notifications -->
+<div class="row g-4 mb-5">
+	<div class="col-12 col-lg-6">
+		<div class="cardx p-4 h-100">
+			<div class="d-flex align-items-center gap-2 mb-4">
+				<span style="font-size:24px">🔔</span>
+				<h5 class="fw-bold mb-0" style="color:var(--text)">Notifications & Reminders</h5>
+			</div>
+			{% if recent_status_changes %}
+				<div class="vstack gap-3">
+					{% for it in recent_status_changes %}
+						<div class="p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background:linear-gradient(135deg, #f8fafc, #ffffff);border-color:#e2e8f0">
+							<div class="me-3">
+								<div class="fw-semibold">Appointment #{{ it.id }} Update</div>
+								<div class="text-muted small">Status changed to {{ it.status|title }}</div>
+							</div>
+							<a href="/appointments/{{ it.id }}/" class="btn btn-sm btn-outline-primary">View</a>
+						</div>
+					{% endfor %}
+				</div>
+			{% else %}
+				<div class="text-center py-4">
+					<div style="font-size:48px;margin-bottom:16px;opacity:0.5">🔔</div>
+					<h6 class="text-muted">No new notifications</h6>
+					<p class="text-muted small">We'll notify you about important updates</p>
+				</div>
+			{% endif %}
+		</div>
+	</div>
+	<div class="col-12 col-lg-6">
+		<div class="cardx p-4 h-100" style="background:linear-gradient(135deg, rgba(44,123,229,0.05), rgba(32,201,151,0.05));border:1px solid rgba(44,123,229,0.1)">
+			<div class="d-flex align-items-center gap-2 mb-4">
+				<span style="font-size:24px">💡</span>
+				<h5 class="fw-bold mb-0" style="color:var(--text)">Health Insights</h5>
+			</div>
+			<div class="mb-4">
+				<div class="fw-semibold mb-2">Your Health Score</div>
+				<div class="progress mb-2" style="height:8px;border-radius:4px">
+					<div class="progress-bar" style="width:85%;background:linear-gradient(90deg, var(--accent), var(--brand));border-radius:4px"></div>
+				</div>
+				<small class="text-muted">85% - Excellent! Keep up the great work</small>
+			</div>
+			<div class="p-3 rounded-3" style="background:rgba(32,201,151,0.1);border:1px solid rgba(32,201,151,0.2)">
+				<div class="fw-semibold small mb-1">Next Checkup Due</div>
+				<div class="text-muted small">Schedule your routine health check in 2 weeks</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Footer -->
+<footer class="py-4" style="background:linear-gradient(135deg, #f8fafc, #e2e8f0);border-radius:16px;border:1px solid #e2e8f0">
+	<div class="row align-items-center">
+		<div class="col-md-6">
+			<div class="d-flex align-items-center gap-3 mb-3">
+				<div style="width:32px;height:32px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold">J</div>
+				<strong>JeevanCare</strong>
+			</div>
+			<p class="text-muted small mb-0">Your trusted healthcare partner for a healthier tomorrow</p>
+		</div>
+		<div class="col-md-6 text-md-end">
+			<div class="d-flex flex-wrap gap-3 justify-content-md-end">
+				<a href="#" class="text-decoration-none small text-muted">Support</a>
+				<a href="#" class="text-decoration-none small text-muted">Privacy Policy</a>
+				<a href="#" class="text-decoration-none small text-muted">About Us</a>
+				<span class="small text-muted">Emergency: <strong>108</strong></span>
+			</div>
+			<div class="mt-2">
+				<span class="small text-muted">© 2024 JeevanCare. All rights reserved.</span>
+			</div>
+		</div>
+	</div>
+</footer>
+
+</div>
+{% endblock %}

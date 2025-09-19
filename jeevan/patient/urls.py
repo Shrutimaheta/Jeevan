@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', views.patient_login, name='patient_login'),
     path('logout/', views.patient_logout, name='patient_logout'),
     path('dashboard/', views.patient_dashboard, name='patient_dashboard'),
+    path('myprofile/', views.profile_dashboard, name='profile_dashboard'),
     path('profile/', views.patient_profile, name='patient_profile'),
     path('change-password/', views.change_password, name='change_password'),
     
@@ -21,6 +22,7 @@ urlpatterns = [
     path('api/profile/', views.api_profile, name='api_profile'),
     path('api/profile/update/', views.api_update_profile, name='api_update_profile'),
     path('api/patients/', views.api_patients, name='api_patients'),
+    path('api/dashboard-data/', views.dashboard_data, name='dashboard_data'),
     
     # Document Management
     path('documents/', views.document_list, name='document_list'),

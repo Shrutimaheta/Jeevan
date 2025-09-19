@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VaidyaMitra - Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/vaidya_login.css">
+</head>
+<body>
+  <div class="vm-container">
+    <div class="vm-auth-panel">
+      <div class="brand-block compact">
+        <div class="logo-row">
+          <div class="vm-media-logo-wrap">
+            <img src="/media/patient_photos/logo.jpg" alt="VaidyaMitra Logo" class="vm-media-logo" loading="lazy">
+          </div>
+          <div>
+            <h1 class="brand-name">VaidyaMitra</h1>
+            <p class="tagline">HMS by Mayuri K.</p>
+          </div>
+        </div>
+        <div class="welcome-text">
+          <h2>Welcome to <span>VaidyaMitra</span></h2>
+          <p class="subtitle">Sign in by entering information below</p>
+        </div>
+      </div>
+
+      <form class="login-form" action="#" method="post" novalidate autocomplete="off">
+        {# Replace action with {% url 'your_login_url_name' %} when wiring #}
+        {% csrf_token %}
+        {% if messages %}
+          <div class="vm-messages">
+            {% for message in messages %}
+              <div class="vm-msg vm-msg-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" placeholder="Email Address" class="form-control" required />
+        </div>
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password" class="form-control" required />
+        </div>
+        <div class="form-row between">
+          <label class="remember">
+            <input type="checkbox" name="remember" />
+            <span>Remember my preference</span>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+        <p class="signup-text">Don't have an account? <a href="#">Sign Up</a></p>
+      </form>
+    </div>
+
+    <div class="vm-illustration">
+      <div class="art-wrapper">
+        <!-- Replace src with actual illustration path when available -->
+        <img src="/static/img/doctor_patient_placeholder.svg" alt="Doctor examining patient illustration" class="hero-illustration" />
+        <div class="art-caption">Compassionate Digital Healthcare</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

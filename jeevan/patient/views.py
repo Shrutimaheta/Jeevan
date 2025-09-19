@@ -19,6 +19,9 @@ from .forms import PatientRegistrationForm, PatientLoginForm, PatientProfileForm
 from .serializers import PatientSerializer, PatientRegistrationSerializer, PatientLoginSerializer
 from .help_views import *
 from .forgot_password_views import *
+from datetime import date, timedelta
+
+from django.views.decorators.http import require_GET
 
 
 def patient_list(request):
@@ -434,3 +437,90 @@ def document_download(request, document_id):
     except PatientDocument.DoesNotExist:
         messages.error(request, 'Document not found.')
         return redirect('patient:document_list')
+
+
+@login_required
+def profile_dashboard(request):
+    """Patient welcome dashboard page (server-rendered)."""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+
+    # Dashboard context
+    from datetime import date, timedelta
+    from appointments.models import Appointment
+
+    today = date.today()
+    upcoming_appointments = Appointment.objects.filter(
+        patient=patient,
+        appointment_date__gte=today
+    ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:10]
+
+    all_appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
+    stats = {
+        'total': all_appointments.count(),
+        'accepted': all_appointments.filter(status='accepted').count(),
+        'pending': all_appointments.filter(status='pending').count(),
+        'completed': all_appointments.filter(status='completed').count(),
+    }
+
+    yesterday = today - timedelta(days=1)
+    recent_status_changes = all_appointments.filter(
+        updated_at__gte=yesterday
+    ).exclude(status='pending').order_by('-updated_at')[:5]
+
+    return render(request, 'patient/profile_dashboard.html', {
+        'patient': patient,
+        'upcoming_appointments': upcoming_appointments,
+        'stats': stats,
+        'recent_status_changes': recent_status_changes,
+        'today': today,
+    })
+
+
+@login_required
+@require_GET
+def dashboard_data(request):
+    """Lightweight JSON endpoint for patient dashboard widgets."""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        return JsonResponse({'error': 'Patient not found'}, status=404)
+
+    from appointments.models import Appointment
+    today = date.today()
+    upcoming = list(Appointment.objects.filter(patient=patient, appointment_date__gte=today)
+                    .exclude(status='cancelled')
+                    .order_by('appointment_date', 'appointment_time')
+                    .values('id', 'appointment_date', 'appointment_time', 'status')[:5])
+
+    all_apps = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
+    stats = {
+        'total': all_apps.count(),
+        'accepted': all_apps.filter(status='accepted').count(),
+        'pending': all_apps.filter(status='pending').count(),
+        'rejected': all_apps.filter(status='rejected').count(),
+        'completed': all_apps.filter(status='completed').count(),
+    }
+
+    recent_prescriptions = []
+    # Optional: attempt to pull related prescriptions if model present
+    try:
+        from doctor.models import AppointmentPrescription
+        recent_prescriptions = list(AppointmentPrescription.objects.filter(appointment__patient=patient)
+                                    .order_by('-created_at')
+                                    .values('id', 'appointment_id', 'diagnosis', 'created_at')[:5])
+    except Exception:
+        pass
+
+    return JsonResponse({
+        'patient': {
+            'id': patient.id,
+            'name': patient.full_name,
+        },
+        'upcomingAppointments': upcoming,
+        'stats': stats,
+        'recentPrescriptions': recent_prescriptions,
+    })

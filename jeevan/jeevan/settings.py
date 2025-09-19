@@ -152,3 +152,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'care.CustomUser'
+
+# Redirect patients after successful login to their mixed dashboard
+LOGIN_REDIRECT_URL = '/patient/myprofile/'

@@ -10,7 +10,8 @@
 #         serializer = DoctorSerializer(doctors, many=True)
 #         return Response(serializer.data)
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -24,6 +25,21 @@ from .models import Doctor
 from .serializers import DoctorSerializer
 from .forms import DoctorProfileForm
 from appointments.models import Appointment
+from .models import AppointmentPrescription
+from .forms import AppointmentPrescriptionForm
+
+def doctor_login(request):
+    """Doctor login (simple username/password using auth system)."""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user and getattr(user, 'role', '') == 'doctor':
+            login(request, user)
+            return redirect('doctor:dashboard')
+        else:
+            messages.error(request, 'Invalid credentials or not authorized.')
+    return render(request, 'doctor/login.html')
 
 def doctor_dashboard(request):
     """Doctor dashboard view - shows only accepted appointments"""
@@ -233,3 +249,34 @@ class DoctorListView(APIView):
         doctors = Doctor.objects.all()
         serializer = DoctorSerializer(doctors, many=True)
         return Response(serializer.data)
+
+def appointment_prescription(request, appointment_id):
+    """Create or edit prescription for an accepted appointment; on save mark completed."""
+    doctor = Doctor.objects.first()
+    appointment = get_object_or_404(Appointment, id=appointment_id, doctor=doctor)
+
+    prescription = getattr(appointment, 'prescription', None)
+
+    if request.method == 'POST':
+        form = AppointmentPrescriptionForm(request.POST, instance=prescription)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.appointment = appointment
+            obj.doctor = doctor
+            obj.patient_name = appointment.patient.full_name
+            obj.save()
+            # Mark appointment completed if not already
+            if appointment.status != 'completed':
+                appointment.status = 'completed'
+                appointment.save()
+            messages.success(request, 'Prescription saved and appointment marked completed.')
+            return redirect('doctor:appointments')
+    else:
+        form = AppointmentPrescriptionForm(instance=prescription)
+
+    return render(request, 'doctor/prescription_form.html', {
+        'doctor': doctor,
+        'appointment': appointment,
+        'form': form,
+        'is_edit': prescription is not None,
+    })

@@ -49,3 +49,23 @@ class Doctor(models.Model):
         return f"{self.full_name} ({self.hospital.name})"
 
 # Model is correct, no changes needed.
+
+from appointments.models import Appointment
+
+class AppointmentPrescription(models.Model):
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='prescription')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescriptions')
+    patient_name = models.CharField(max_length=255)
+    diagnosis = models.TextField(blank=True)
+    medications = models.TextField(blank=True, help_text='List medications with dosage and frequency')
+    tests_recommended = models.TextField(blank=True)
+    advice = models.TextField(blank=True)
+    follow_up_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Prescription for Appointment {self.appointment_id}"

@@ -1,0 +1,5 @@
+- [ ] Activate virtual environment and install backend dependencies
+- [x] Apply Django migrations
+- [ ] Start Django server
+- [ ] Install frontend dependencies
+- [ ] Start frontend dev server

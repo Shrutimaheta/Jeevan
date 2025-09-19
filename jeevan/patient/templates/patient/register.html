@@ -1,69 +1,92 @@
-{% extends 'patient/simple_base.html' %}
-
-{% block title %}Patient Registration - Jeevan{% endblock %}
-
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card">
-            <div class="card-header text-center bg-primary text-white">
-                <h3><i class="fas fa-user-plus me-2"></i>Patient Registration</h3>
-                <p class="mb-0">Create your account to access our healthcare services</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Registration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-4oVh..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+  :root { --accent:#3da9ff; --accent-hover:#1d8fe9; --focus:0 0 0 3px rgba(61,169,255,.28); --card-w:400px; --fs-title:clamp(24px,2.7vw,30px); --fs-label:12px; --fs-btn:13.5px; }
+        * { box-sizing:border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:linear-gradient(115deg,#e6f3ff,#b6e2ff); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:34px 18px; }
+  .card-shell { width:100%; max-width:var(--card-w); background:#fff; border-radius:26px; padding:28px 26px 34px; box-shadow:0 14px 40px -14px rgba(40,125,170,.30),0 4px 16px -8px rgba(40,125,170,.20); position:relative; overflow:hidden; }
+        .card-shell:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 88% 16%,rgba(61,169,255,.18),transparent 60%); pointer-events:none; }
+        .header { display:flex; gap:16px; align-items:center; margin:0 0 20px; }
+  .logo-wrap { width:54px; height:54px; border-radius:20px; background:#f1f9ff; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 16px -6px rgba(61,169,255,.30),0 2px 6px rgba(61,169,255,.16); }
+        .logo-wrap img { width:70%; height:70%; object-fit:contain; }
+        h1 { font-size:var(--fs-title); font-weight:700; letter-spacing:-.5px; margin:0; color:#0d4c72; }
+  .subtitle { margin:2px 0 0; font-size:12px; color:#2d6c90; font-weight:500; }
+  form { display:flex; flex-direction:column; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  label { font-size:var(--fs-label); font-weight:600; letter-spacing:.4px; color:#0d3f60; }
+  .form-control { width:100%; border:1px solid #b6d7ea; border-radius:12px; padding:10px 13px; font-size:13px; background:#fff; transition:border-color .18s, box-shadow .18s; }
+        .form-control:focus { outline:none; border-color:var(--accent); box-shadow:var(--focus); }
+  .btn-primary { background:linear-gradient(135deg,#3da9ff,#62b9ff 60%,#8acaff); border:none; color:#fff; font-weight:600; letter-spacing:.45px; padding:11px 16px; border-radius:14px; cursor:pointer; font-size:var(--fs-btn); box-shadow:0 7px 20px -10px rgba(61,169,255,.50),0 3px 9px -4px rgba(61,169,255,.38); transition:transform .18s, box-shadow .18s; }
+        .btn-primary:hover { background:linear-gradient(135deg,#2d95ec,#4babff 60%,#76c2ff); transform:translateY(-2px); box-shadow:0 12px 30px -14px rgba(61,169,255,.60),0 4px 14px -6px rgba(61,169,255,.45); }
+        .btn-primary:active { transform:translateY(0); box-shadow:0 6px 18px -8px rgba(61,169,255,.5); }
+  .messages { display:flex; flex-direction:column; gap:6px; margin-bottom:2px; }
+  .msg { font-size:12px; font-weight:500; padding:8px 12px; border-radius:10px; border:1px solid #c9e9fa; background:#eef9ff; color:#0b4f7e; }
+        .error-msg { border-color:#ffb5c1; background:#ffeef1; color:#7d1024; }
+  .alt-link { text-align:center; margin-top:4px; font-size:12.5px; }
+  .alt-link a { color:var(--accent); font-weight:600; text-decoration:none; }
+        .alt-link a:hover { text-decoration:underline; }
+  @media (max-width:520px){ :root { --card-w:100%; --fs-title:28px; --fs-btn:13.5px; } body { padding:28px 16px; } .card-shell { padding:26px 22px 32px; border-radius:22px; } }
+        @media (max-height:760px){ body { padding:32px 16px; } }
+    </style>
+</head>
+<body>
+    <div class="card-shell">
+        <div class="header">
+            <div class="logo-wrap">
+                <img src="/media/patient_photos/logo.jpg" alt="Logo" loading="lazy">
             </div>
-            <div class="card-body p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <!-- Essential Information Only -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Essential Information</h5>
-                            <p class="text-muted small">Complete your profile after registration to add more details.</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name *</label>
-                            {{ form.full_name }}
-                            {% if form.full_name.errors %}
-                                <div class="text-danger small">{{ form.full_name.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small">{{ form.email.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">Password *</label>
-                            {{ form.password }}
-                            {% if form.password.errors %}
-                                <div class="text-danger small">{{ form.password.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label">Confirm Password *</label>
-                            {{ form.confirm_password }}
-                            {% if form.confirm_password.errors %}
-                                <div class="text-danger small">{{ form.confirm_password.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-user-plus me-2"></i>Create Account
-                        </button>
-                    </div>
-
-                    <!-- Login Link -->
-                    <div class="text-center mt-3">
-                        <p>Already have an account? <a href="{% url 'patient:patient_login' %}" class="text-primary">Login here</a></p>
-                    </div>
-                </form>
+            <div>
+                <h1>Register</h1>
+                <p class="subtitle">Create your patient account</p>
             </div>
         </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if messages %}
+              <div class="messages">
+                {% for message in messages %}
+                  <div class="msg msg-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if form.non_field_errors %}
+              <div class="messages">
+                {% for error in form.non_field_errors %}
+                  <div class="msg error-msg">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="form-group">
+                <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}<div class="messages"><div class="msg error-msg">{{ form.full_name.errors.0 }}</div></div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="messages"><div class="msg error-msg">{{ form.email.errors.0 }}</div></div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}<div class="messages"><div class="msg error-msg">{{ form.password.errors.0 }}</div></div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}<div class="messages"><div class="msg error-msg">{{ form.confirm_password.errors.0 }}</div></div>{% endif %}
+            </div>
+            <button type="submit" class="btn-primary">Create Account</button>
+            <p class="alt-link">Already have an account? <a href="{% url 'patient:patient_login' %}">Login</a></p>
+        </form>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>

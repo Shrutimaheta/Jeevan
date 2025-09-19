@@ -1,75 +1,195 @@
-{% extends 'patient/simple_base.html' %}
-
-{% block title %}Patient Login - Jeevan{% endblock %}
-
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-header text-center bg-primary text-white">
-                <h3><i class="fas fa-sign-in-alt me-2"></i>Patient Login</h3>
-                <p class="mb-0">Welcome back! Please sign in to your account</p>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Portal Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'css/vaidya_login.css' %}">
+                <style>
+            :root {
+                --vm-primary: #3da9ff; /* light blue */
+                --vm-primary-hover: #1d8fe9;
+                --vm-focus: 0 0 0 3px rgba(61,169,255,0.28);
+                        --panel-width: 460px;
+                        --panel-height: 520px;
+                        /* Font scale tokens */
+                        --fs-brand: clamp(24px, 2.6vw, 32px);
+                        --fs-heading: clamp(17px, 2.1vw, 21px);
+                        --fs-tagline: clamp(11px, 1.3vw, 13px);
+                        --fs-label: 12.5px;
+                        --fs-body: 14px;
+                        --fs-button: 14.5px;
+            }
+            .vm-auth-panel::before {
+                background:linear-gradient(120deg, rgba(61,169,255,0.10), rgba(61,169,255,0) 60%),
+                                    linear-gradient(200deg, rgba(29,143,233,0.14), rgba(29,143,233,0) 70%);
+            }
+            body { font-size: var(--fs-body); -webkit-font-smoothing: antialiased; }
+            .btn-primary {
+                background:linear-gradient(135deg,#3da9ff,#62b9ff 60%,#8acaff);
+                color:#fff;
+                box-shadow:0 4px 14px -4px rgba(61,169,255,0.45);
+            }
+            .btn-primary:hover { background:linear-gradient(135deg,#2d95ec,#4babff 60%,#76c2ff); }
+            .tagline { color: var(--vm-primary); }
+            .welcome-text h2 span { color: var(--vm-primary); }
+            .vm-media-logo-wrap { box-shadow:0 4px 10px -2px rgba(61,169,255,0.28), 0 1px 3px rgba(61,169,255,0.18); }
+            .vm-msg-success { border-color:#b6def9; background:#e6f6ff; color:#0b4f7e; }
+            .remember input { accent-color: var(--vm-primary); }
+        </style>
+</head>
+<body>
+    <div class="vm-container two-col equal-panels">
+        <div class="vm-auth-panel login-only">
+            <div class="brand-block compact">
+                <div class="logo-row">
+                    <div class="vm-media-logo-wrap">
+                        <img src="/media/patient_photos/logo.jpg" alt="Portal Logo" class="vm-media-logo" loading="lazy">
+                    </div>
+                    <div>
+                        <h1 class="brand-name">Jeevancare</h1>
+                        <p class="tagline">Secure Access</p>
+                    </div>
+                </div>
+                <div class="welcome-text">
+                    <h2 class="compact-heading">Welcome <span>Back</span></h2>
+                    <p class="subtitle">Sign in with your registered email</p>
+                </div>
             </div>
-            <div class="card-body p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <!-- Display form-level errors -->
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger" role="alert">
-                            {% for error in form.non_field_errors %}
-                                <div class="text-danger fw-bold">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Display Django messages -->
-                    {% if messages %}
+            <form class="login-form" action="" method="post" novalidate autocomplete="off" id="loginForm">
+                {% csrf_token %}
+                {% if messages %}
+                    <div class="vm-messages">
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                <div class="text-danger fw-bold">{{ message }}</div>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
+                            <div class="vm-msg vm-msg-{{ message.tags }}">{{ message }}</div>
                         {% endfor %}
+                    </div>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    <div class="vm-messages">
+                        {% for error in form.non_field_errors %}
+                            <div class="vm-msg vm-msg-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="vm-messages"><div class="vm-msg vm-msg-error">{{ form.email.errors.0 }}</div></div>
                     {% endif %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <div class="text-danger small fw-bold mt-1">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.email.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                        {{ form.password }}
-                        {% if form.password.errors %}
-                            <div class="text-danger small fw-bold mt-1">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.password.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                        </button>
-                    </div>
-
-                    <div class="text-center mt-3">
-                        <p class="mb-2">
-                            <a href="{% url 'patient:forgot_password' %}" class="text-decoration-none">
-                                <i class="fas fa-key me-1"></i>Forgot Password?
-                            </a>
-                        </p>
-                        <p class="mb-0">Don't have an account? <a href="{% url 'patient:patient_register' %}" class="text-primary">Register here</a></p>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="vm-messages"><div class="vm-msg vm-msg-error">{{ form.password.errors.0 }}</div></div>
+                    {% endif %}
+                </div>
+                <div class="form-row between">
+                    <label class="remember">
+                        <input type="checkbox" name="remember" />
+                        <span>Remember my preference</span>
+                    </label>
+                    <a href="{% url 'patient:forgot_password' %}" class="forgot-link">Forgot?</a>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                    <span class="btn-text">Login</span>
+                    <span class="btn-spinner" style="display:none;margin-left:8px;width:16px;height:16px;border:2px solid rgba(255,255,255,0.6);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span>
+                </button>
+                <p class="signup-text">Don't have an account? <a href="{% url 'patient:patient_register' %}">Sign Up</a></p>
+            </form>
+        </div>
+        <div class="side-image-panel">
+            <img src="/media/patient_photos/b2.jpg" alt="Portal visual" class="side-img" loading="lazy" decoding="async">
         </div>
     </div>
-</div>
-{% endblock %}
+<script>
+    (function(){
+        const form = document.getElementById('loginForm');
+        const btn = document.getElementById('loginButton');
+        if(form && btn){
+            form.addEventListener('submit', function(){
+                if(btn.dataset.loading === '1') return; // prevent double
+                btn.dataset.loading = '1';
+                btn.classList.add('loading');
+                btn.querySelector('.btn-text').textContent = 'Logging in...';
+                btn.querySelector('.btn-spinner').style.display = 'inline-block';
+                btn.setAttribute('disabled','disabled');
+            });
+        }
+        // After render (e.g., server-side validation failure) ensure button visible
+        window.addEventListener('DOMContentLoaded', function(){
+            const errorMsgs = document.querySelectorAll('.vm-msg-error');
+            if(errorMsgs.length){
+                // Restore button state if page re-rendered with errors
+                const b = document.getElementById('loginButton');
+                if(b){
+                    b.removeAttribute('disabled');
+                    b.classList.remove('loading');
+                    const spinner = b.querySelector('.btn-spinner');
+                    if(spinner) spinner.style.display='none';
+                    const textSpan = b.querySelector('.btn-text');
+                    if(textSpan) textSpan.textContent='Login';
+                }
+                const panel = document.querySelector('.login-only');
+                if(panel){
+                    // Scroll card into center so button & errors both visible
+                    panel.scrollIntoView({behavior:'smooth', block:'center'});
+                }
+            }
+        });
+    })();
+</script>
+</body>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+#loginButton.loading { opacity:0.85; }
+                    .two-col { display:flex; justify-content:center; gap:40px; padding: clamp(20px,2.5vw,44px); min-height:100vh; align-items:center; }
+                    .equal-panels .side-image-panel { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); height:var(--panel-height); }
+                    .equal-panels .login-only { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); min-height:var(--panel-height); height:auto; }
+                    .login-only { overflow-y:visible; }
+                    .login-only { padding:26px 28px 36px !important; display:flex; flex-direction:column; }
+                    .login-only .brand-block { margin-bottom:22px; }
+                    .login-only .login-form { gap:16px; }
+                    .side-image-panel { position:relative; border-radius:26px; overflow:hidden; background:#e8f4fd; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px -6px rgba(20,53,73,0.12), 0 2px 6px rgba(20,53,73,0.09); }
+                    .side-image-panel::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(255,255,255,0.0), rgba(255,255,255,0.32) 72%); }
+                    .side-img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
+                    /* Typography scaling for tighter card */
+                    .brand-name { font-size: var(--fs-brand); line-height:1.05; letter-spacing:-0.5px; }
+                    .tagline { font-size: var(--fs-tagline); margin-top:2px; letter-spacing:0.5px; }
+                    .compact-heading, .welcome-text h2 { font-size: var(--fs-heading); font-weight:600; letter-spacing:-0.3px; margin:14px 0 4px; }
+                    .welcome-text .subtitle { font-size: 12.5px; line-height:1.35; }
+                    .form-label { font-size: var(--fs-label); font-weight:600; letter-spacing:0.4px; }
+                    .login-form .btn-primary { padding:12px 16px; font-size: var(--fs-button); font-weight:600; letter-spacing:0.6px; }
+                    .vm-msg { font-size:12.5px; }
+                    .signup-text { font-size:12.8px; }
+                .side-caption { position:absolute; bottom:22px; right:22px; left:22px; background:rgba(255,255,255,0.80); padding:12px 20px; border-radius:18px; font-size:14px; text-align:center; font-weight:500; backdrop-filter:blur(6px); box-shadow:0 4px 14px -4px rgba(0,0,0,0.15); }
+            .forgot-link { font-size:13px; font-weight:600; color:var(--vm-primary); text-decoration:none; }
+            .forgot-link:hover { text-decoration:underline; }
+                        @media (max-width:1220px){ .two-col { gap:34px; } }
+                        @media (max-width:1040px){
+                            :root { --panel-width: 420px; --panel-height: 500px; }
+                            .two-col { gap:30px; }
+                        }
+                        @media (max-width:900px){
+                            .two-col { flex-direction:column; }
+                            :root { --panel-width: 420px; --panel-height: auto; }
+                            .equal-panels .login-only, .equal-panels .side-image-panel { width:100%; max-width:520px; height:auto; }
+                            .side-image-panel { height:340px; order:2; }
+                        }
+                        @media (max-width:520px){
+                            :root { --fs-brand:28px; --fs-heading:18px; --fs-button:14px; }
+                            .login-only { padding:24px 22px 32px !important; }
+                        }
+                        @media (max-height:760px){ .login-only { padding-top:22px !important; } }
+                        @media (max-width:620px){ .side-image-panel { display:none; } .two-col { padding:28px 18px 40px; } .login-only { width:100%; max-width:480px; } }
+                        @media (max-height:760px){ :root { --panel-height: 480px; } }
+                        @media (max-height:680px){ :root { --panel-height: 440px; } }
+                        @media (max-height:620px){ .two-col { align-items:flex-start; padding-top:26px; } }
+</style>
+</html>
