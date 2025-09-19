@@ -27,6 +27,8 @@ urlpatterns = [
     path('test/', views.test, name='test'),  # test page
     path('debug/', views.debug, name='debug'),  # debug page
     path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
+    path('patient-home/', views.patient_home, name='patient_home'),
+    path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
     # Catch-all route for React app - must be last
     re_path(r'^.*$', views.index, name='index'),
 ]
@@ -45,8 +47,10 @@ if settings.DEBUG:
 
         path('test/', views.test, name='test'),  # test page
         path('debug/', views.debug, name='debug'),  # debug page
-        path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
+    path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
         path('react-debug/', views.react_debug, name='react_debug'),  # react debug page
+    path('patient-home/', views.patient_home, name='patient_home'),
+    path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
     ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
     static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
         # Catch-all route for React app - must be last

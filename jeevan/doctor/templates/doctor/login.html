@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Portal Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/vaidya_login.css' %}">
+  <style>
+    :root {
+      --vm-primary: #2563eb; /* deeper professional blue for doctor */
+      --vm-primary-hover: #1d4ed8;
+      --vm-focus: 0 0 0 3px rgba(37,99,235,0.28);
+      --panel-width: 460px;
+      --panel-height: 520px;
+      --fs-brand: clamp(24px, 2.6vw, 32px);
+      --fs-heading: clamp(17px, 2.1vw, 21px);
+      --fs-tagline: clamp(11px, 1.3vw, 13px);
+      --fs-label: 12.5px;
+      --fs-body: 14px;
+      --fs-button: 14.5px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; font-size: var(--fs-body); background: linear-gradient(140deg,#f0f6ff,#f8fbff); }
+    .vm-auth-panel::before { background:linear-gradient(120deg, rgba(37,99,235,0.12), rgba(37,99,235,0) 60%),linear-gradient(200deg, rgba(29,78,216,0.14), rgba(29,78,216,0) 70%); }
+    .btn-primary { background:linear-gradient(135deg,#2563eb,#3b82f6 58%,#60a5fa);color:#fff;box-shadow:0 4px 14px -4px rgba(37,99,235,0.45); }
+    .btn-primary:hover { background:linear-gradient(135deg,#1d56d6,#336fdd 58%,#4e94f5); }
+    .tagline { color: var(--vm-primary); }
+    .welcome-text h2 span { color: var(--vm-primary); }
+    .vm-media-logo-wrap { box-shadow:0 4px 10px -2px rgba(37,99,235,0.25), 0 1px 3px rgba(37,99,235,0.15); }
+    .vm-msg-success { border-color:#bfd4fb; background:#e6efff; color:#103879; }
+    .remember input { accent-color: var(--vm-primary); }
+    .role-badge { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; letter-spacing:0.5px; padding:4px 10px; background:#eff6ff; color:#1e3a8a; border-radius:22px; box-shadow:inset 0 0 0 1px #cfe2ff; }
+  </style>
+</head>
+<body>
+  <div class="vm-container two-col equal-panels">
+    <div class="vm-auth-panel login-only">
+      <div class="brand-block compact">
+        <div class="logo-row">
+          <div class="vm-media-logo-wrap">
+            <img src="/media/patient_photos/logo.jpg" alt="Portal Logo" class="vm-media-logo" loading="lazy">
+          </div>
+          <div>
+            <h1 class="brand-name">Jeevancare</h1>
+            <p class="tagline">Clinical Access</p>
+          </div>
+        </div>
+        <div class="welcome-text">
+          <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <h2 class="compact-heading">Doctor <span>Login</span></h2>
+            <span class="role-badge"><i class="ti ti-stethoscope"></i> DOCTOR</span>
+          </div>
+          <p class="subtitle">Secure sign-in for authorized medical staff</p>
+        </div>
+      </div>
+      <form class="login-form" action="" method="post" novalidate autocomplete="off" id="doctorLoginForm">
+        {% csrf_token %}
+        {% if messages %}
+          <div class="vm-messages">
+            {% for message in messages %}
+              <div class="vm-msg vm-msg-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if form and form.non_field_errors %}
+          <div class="vm-messages">
+            {% for error in form.non_field_errors %}
+              <div class="vm-msg vm-msg-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="form-group">
+          <label class="form-label" for="id_username">Email / Username</label>
+          <input type="text" name="username" autofocus required class="form-control" id="id_username" placeholder="doctor@hospital.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="id_password">Password</label>
+          <input type="password" name="password" required class="form-control" id="id_password" placeholder="••••••••" />
+        </div>
+        <div class="form-row between">
+          <label class="remember">
+            <input type="checkbox" name="remember" />
+            <span>Remember this device</span>
+          </label>
+          <a href="#" class="forgot-link">Need help?</a>
+        </div>
+        <button type="submit" class="btn btn-primary w-100" id="doctorLoginButton">
+          <span class="btn-text">Login</span>
+          <span class="btn-spinner" style="display:none;margin-left:8px;width:16px;height:16px;border:2px solid rgba(255,255,255,0.55);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span>
+        </button>
+        <p class="signup-text" style="margin-top:14px;font-size:12.3px;color:#5e6b7a">Patient? <a href="/patient/login/">Go to Patient Login</a></p>
+      </form>
+    </div>
+    <div class="side-image-panel">
+      <img src="/media/patient_photos/b2.jpg" alt="Clinical visual" class="side-img" loading="lazy" decoding="async">
+      <div class="side-caption">Empowering physicians with timely patient data.</div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const form = document.getElementById('doctorLoginForm');
+      const btn = document.getElementById('doctorLoginButton');
+      if(form && btn){
+        form.addEventListener('submit', function(){
+          if(btn.dataset.loading==='1') return;
+          btn.dataset.loading='1';
+          btn.classList.add('loading');
+          btn.querySelector('.btn-text').textContent='Signing in...';
+          btn.querySelector('.btn-spinner').style.display='inline-block';
+          btn.setAttribute('disabled','disabled');
+        });
+      }
+      window.addEventListener('DOMContentLoaded', function(){
+        const errorMsgs = document.querySelectorAll('.vm-msg-error');
+        if(errorMsgs.length){
+          const b = document.getElementById('doctorLoginButton');
+          if(b){
+            b.removeAttribute('disabled');
+            b.classList.remove('loading');
+            const spinner = b.querySelector('.btn-spinner');
+            if(spinner) spinner.style.display='none';
+            const textSpan = b.querySelector('.btn-text');
+            if(textSpan) textSpan.textContent='Login';
+          }
+          const panel = document.querySelector('.login-only');
+          if(panel){ panel.scrollIntoView({behavior:'smooth', block:'center'}); }
+        }
+      });
+    })();
+  </script>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #doctorLoginButton.loading { opacity:0.85; }
+    .two-col { display:flex; justify-content:center; gap:40px; padding: clamp(20px,2.5vw,44px); min-height:100vh; align-items:center; }
+    .equal-panels .side-image-panel { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); height:var(--panel-height); }
+    .equal-panels .login-only { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); min-height:var(--panel-height); height:auto; }
+    .login-only { overflow-y:visible; padding:26px 28px 36px !important; display:flex; flex-direction:column; }
+    .login-only .brand-block { margin-bottom:22px; }
+    .login-only .login-form { gap:16px; }
+    .side-image-panel { position:relative; border-radius:26px; overflow:hidden; background:#eff4ff; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px -6px rgba(16,42,82,0.15), 0 2px 6px rgba(16,42,82,0.09); }
+    .side-image-panel::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(255,255,255,0.1), rgba(255,255,255,0.34) 72%); }
+    .side-img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
+    .brand-name { font-size: var(--fs-brand); line-height:1.05; letter-spacing:-0.5px; }
+    .tagline { font-size: var(--fs-tagline); margin-top:2px; letter-spacing:0.5px; }
+    .compact-heading, .welcome-text h2 { font-size: var(--fs-heading); font-weight:600; letter-spacing:-0.3px; margin:14px 0 4px; }
+    .welcome-text .subtitle { font-size: 12.5px; line-height:1.35; }
+    .form-label { font-size: var(--fs-label); font-weight:600; letter-spacing:0.4px; }
+    .login-form .btn-primary { padding:12px 16px; font-size: var(--fs-button); font-weight:600; letter-spacing:0.6px; }
+    .vm-msg { font-size:12.5px; }
+    .signup-text { font-size:12.8px; }
+    .side-caption { position:absolute; bottom:18px; left:18px; right:18px; background:rgba(255,255,255,0.80); padding:11px 18px; border-radius:16px; font-size:13px; text-align:center; font-weight:500; backdrop-filter:blur(6px); box-shadow:0 4px 14px -4px rgba(0,0,0,0.18); }
+    .forgot-link { font-size:13px; font-weight:600; color:var(--vm-primary); text-decoration:none; }
+    .forgot-link:hover { text-decoration:underline; }
+    @media (max-width:1220px){ .two-col { gap:34px; } }
+    @media (max-width:1040px){ :root { --panel-width: 420px; --panel-height: 500px; } .two-col { gap:30px; } }
+    @media (max-width:900px){ .two-col { flex-direction:column; } :root { --panel-width: 420px; --panel-height: auto; } .equal-panels .login-only, .equal-panels .side-image-panel { width:100%; max-width:520px; height:auto; } .side-image-panel { height:340px; order:2; } }
+    @media (max-width:520px){ :root { --fs-brand:28px; --fs-heading:18px; --fs-button:14px; } .login-only { padding:24px 22px 32px !important; } }
+    @media (max-width:620px){ .side-image-panel { display:none; } .two-col { padding:28px 18px 40px; } .login-only { width:100%; max-width:480px; } }
+  </style>
+</body>
+</html>
