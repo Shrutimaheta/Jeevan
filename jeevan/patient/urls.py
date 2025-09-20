@@ -11,7 +11,7 @@ urlpatterns = [
     path('login/', views.patient_login, name='patient_login'),
     path('logout/', views.patient_logout, name='patient_logout'),
     path('dashboard/', views.patient_dashboard, name='patient_dashboard'),
-    path('myprofile/', views.profile_dashboard, name='profile_dashboard'),
+    path('welcomePatient/', views.profile_dashboard, name='profile_dashboard'),
     path('profile/', views.patient_profile, name='patient_profile'),
     path('change-password/', views.change_password, name='change_password'),
     

@@ -2,9 +2,16 @@
 {% load static %}
 {% block title %}Welcome - {{ patient.full_name }}{% endblock %}
 {% block content %}
-<div class="container-fluid">
+<div style="background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%);min-height:100vh;width:100%;position:absolute;top:0;left:0;z-index:-1"></div>
+<div class="container-fluid" style="position:relative;z-index:1">
 <style>
-	:root{--brand:#2C7BE5;--accent:#20C997;--bg:#F7FAFC;--text:#1f2937;--muted:#6B7280}
+	:root{--brand:#2C7BE5;--accent:#20C997;--bg:#e6f3ff;--text:#1f2937;--muted:#6B7280}
+	html{background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%) !important;min-height:100vh}
+	body{background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%) !important;min-height:100vh;margin:0;padding:0}
+	.container-fluid{background:transparent !important}
+	.main-content{background:transparent !important}
+	.modern-header{background:linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important}
+	*{box-sizing:border-box}
 	.hero-banner{background:linear-gradient(135deg, rgba(44,123,229,0.1), rgba(32,201,151,0.1)), url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;border-radius:20px;position:relative;overflow:hidden}
 	.hero-content{position:relative;z-index:2;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
 	.cardx{border:1px solid #eef2f7;border-radius:16px;transition:all .3s ease;background:white;position:relative;overflow:hidden}
@@ -60,54 +67,82 @@
 <!-- Hero Banner -->
 <div class="hero-banner p-5 mb-5">
 	<div class="hero-content">
-		<h2 class="mb-3" style="font-weight:700;font-size:2.5rem">Good Morning, {{ patient.full_name }} 🌿</h2>
+		<h2 class="mb-3" style="font-weight:700;font-size:2.5rem">Welcome, {{ patient.full_name }} 🌿</h2>
 		<p class="mb-4" style="font-size:1.2rem;opacity:0.9">Your health journey continues today. Every step forward is a step toward wellness.</p>
 		<a href="/appointments/create/" class="btn btn-light btn-lg px-4 py-3" style="border-radius:12px;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.2)">Book Appointment Now</a>
 	</div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Stats Section -->
 <div class="row g-4 mb-5">
-	<div class="col-12"><h4 class="fw-bold mb-0" style="color:var(--text)">Quick Actions</h4></div>
-	<div class="col-12 col-md-6 col-xl-3">
-		<a href="/appointments/create/" class="text-reset text-decoration-none">
-			<div class="quick-card h-100">
-				<span class="icon-large">🗓️</span>
-				<h5 class="fw-bold mb-2">Book Appointment</h5>
-				<p class="text-muted mb-3">Schedule your next visit with our expert doctors</p>
-				<span class="badgex" style="background:var(--brand);color:white;border-color:var(--brand)">Start</span>
+	<div class="col-12">
+		<h4 class="fw-bold mb-4" style="color:var(--text)">📊 Quick Stats</h4>
+		<div class="row g-3">
+			<div class="col-md-3">
+				<div class="cardx p-4 text-center">
+					<div class="fw-bold fs-2 mb-2" style="color:var(--brand)">{{ upcoming_appointments|length }}</div>
+					<div class="text-muted">Upcoming Appointments</div>
+				</div>
 			</div>
-		</a>
+			<div class="col-md-3">
+				<div class="cardx p-4 text-center">
+					<div class="fw-bold fs-2 mb-2" style="color:var(--accent)">{{ stats.completed|default:0 }}</div>
+					<div class="text-muted">Completed Visits</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="cardx p-4 text-center">
+					<div class="fw-bold fs-2 mb-2" style="color:#FF9F43">{{ hospitals|length }}</div>
+					<div class="text-muted">Available Hospitals</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="cardx p-4 text-center">
+					<div class="fw-bold fs-2 mb-2" style="color:#E55353">{{ recent_status_changes|length|default:0 }}</div>
+					<div class="text-muted">Recent Updates</div>
+				</div>
+			</div>
+		</div>
 	</div>
-	<div class="col-12 col-md-6 col-xl-3">
-		<a href="/patient/profile/" class="text-reset text-decoration-none">
-			<div class="quick-card h-100">
-				<span class="icon-large">💊</span>
-				<h5 class="fw-bold mb-2">View Prescriptions</h5>
-				<p class="text-muted mb-3">Access your medication history and current prescriptions</p>
-				<span class="badgex" style="background:var(--accent);color:white;border-color:var(--accent)">View</span>
+</div>
+
+<!-- Hospital Information Section -->
+<div class="row g-4 mb-5">
+	<div class="col-12">
+		<h4 class="fw-bold mb-4" style="color:var(--text)">🏥 Available Hospitals</h4>
+		<div class="row g-4">
+			{% for hospital in hospitals %}
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="cardx p-4 h-100 text-center">
+					<!-- Hospital Image - Centered and Larger -->
+					<div class="mb-4">
+						{% if hospital.logo %}
+							<img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" class="rounded mx-auto d-block" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px !important; border: 3px solid var(--accent);">
+						{% else %}
+							<div class="bg-primary rounded d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px; border-radius: 12px; border: 3px solid var(--accent);">
+								<span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
+							</div>
+						{% endif %}
+					</div>
+					
+					<!-- Hospital Name -->
+					<h5 class="fw-bold mb-2" style="color:var(--text)">{{ hospital.name }}</h5>
+					
+					<!-- Hospital Location -->
+					<p class="text-muted mb-3">
+						<span style="font-size: 16px;">📍</span> {{ hospital.location }}
+					</p>
+
+					<!-- Action Buttons -->
+					<div class="d-flex gap-2">
+						<button class="btn btn-primary btn-sm flex-fill" onclick="showHospitalDetails({{ hospital.id }})" style="font-weight: bold; color: white; background-color: #007bff;">
+							<span style="font-size: 14px;">👁️</span> View Details
+						</button>
+					</div>
+				</div>
 			</div>
-		</a>
-	</div>
-	<div class="col-12 col-md-6 col-xl-3">
-		<a href="/patient/documents/" class="text-reset text-decoration-none">
-			<div class="quick-card h-100">
-				<span class="icon-large">📄</span>
-				<h5 class="fw-bold mb-2">My Reports</h5>
-				<p class="text-muted mb-3">Upload and review your lab results and medical reports</p>
-				<span class="badgex" style="background:#FF9F43;color:white;border-color:#FF9F43">Open</span>
-			</div>
-		</a>
-	</div>
-	<div class="col-12 col-md-6 col-xl-3">
-		<a href="/teleconsultation/" class="text-reset text-decoration-none">
-			<div class="quick-card h-100">
-				<span class="icon-large">🎥</span>
-				<h5 class="fw-bold mb-2">Teleconsultation</h5>
-				<p class="text-muted mb-3">Join your virtual appointment from anywhere</p>
-				<span class="badgex" style="background:#E55353;color:white;border-color:#E55353">Join</span>
-			</div>
-		</a>
+			{% endfor %}
+		</div>
 	</div>
 </div>
 
@@ -199,19 +234,6 @@
 	</div>
 </div>
 
-<!-- Inspiration Section -->
-<div class="inspiration-card p-5 mb-5">
-	<div class="row align-items-center">
-		<div class="col-md-8">
-			<h3 class="fw-bold mb-3">Your Health, Our Priority</h3>
-			<p class="mb-4" style="font-size:1.1rem;opacity:0.9">Take the next step in your wellness journey. Our team of expert healthcare professionals is here to support you every step of the way.</p>
-			<a href="/appointments/create/" class="btn btn-light btn-lg px-4 py-3" style="border-radius:12px;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.2)">Explore Services</a>
-		</div>
-		<div class="col-md-4 text-center d-none d-md-block">
-			<div style="font-size:120px;opacity:0.8">🏥</div>
-		</div>
-	</div>
-</div>
 
 <!-- Notifications -->
 <div class="row g-4 mb-5">
@@ -288,4 +310,198 @@
 </footer>
 
 </div>
+</div>
+
+<!-- Hospital Details Modal -->
+<div class="modal fade" id="hospitalDetailsModal" tabindex="-1" aria-labelledby="hospitalDetailsModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="hospitalDetailsModalLabel">Hospital Details</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body" id="hospitalDetailsContent">
+				<!-- Hospital details will be loaded here -->
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="bookAppointmentBtn">Book Appointment</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+// Hospital data from Django template
+const hospitals = [
+	{% for hospital in hospitals %}
+	{
+		id: {{ hospital.id }},
+		name: "{{ hospital.name }}",
+		location: "{{ hospital.location }}",
+		email: "{{ hospital.email }}",
+		contact_no: "{{ hospital.contact_no }}",
+		registration_number: "{{ hospital.registration_number }}",
+		logo: "{% if hospital.logo %}{{ hospital.logo.url }}{% else %}{% endif %}",
+		specializations: [
+			{% for spec in hospital.specialization.all %}
+			"{{ spec.Sname }}"{% if not forloop.last %},{% endif %}
+			{% endfor %}
+		],
+		doctors: [
+			{% for doctor in hospital.doctor_set.all %}
+			{
+				id: {{ doctor.id }},
+				name: "{{ doctor.full_name }}",
+				contact: "{{ doctor.contact_number }}",
+				gender: "{{ doctor.gender }}",
+				specializations: [
+					{% for spec in doctor.specialization.all %}
+					"{{ spec.Sname }}"{% if not forloop.last %},{% endif %}
+					{% endfor %}
+				]
+			}{% if not forloop.last %},{% endif %}
+			{% endfor %}
+		]
+	}{% if not forloop.last %},{% endif %}
+	{% endfor %}
+];
+
+function showHospitalDetails(hospitalId) {
+	const hospital = hospitals.find(h => h.id === hospitalId);
+	if (!hospital) return;
+
+	const modal = new bootstrap.Modal(document.getElementById('hospitalDetailsModal'));
+	const content = document.getElementById('hospitalDetailsContent');
+	const bookBtn = document.getElementById('bookAppointmentBtn');
+
+	// Build hospital details HTML
+	let specializationsHtml = '';
+	if (hospital.specializations.length > 0) {
+		specializationsHtml = `
+			<div class="mb-3">
+				<h6 class="fw-bold">Hospital Specializations:</h6>
+				<div class="d-flex flex-wrap gap-1">
+					${hospital.specializations.map(spec => 
+						`<span class="badge bg-primary">${spec}</span>`
+					).join('')}
+				</div>
+			</div>
+		`;
+	}
+
+	// Build doctors HTML
+	let doctorsHtml = '';
+	if (hospital.doctors.length > 0) {
+		doctorsHtml = `
+			<div class="mt-4">
+				<h5 class="fw-bold mb-3">👨‍⚕️ Available Doctors</h5>
+				<div class="row g-3">
+					${hospital.doctors.map(doctor => `
+						<div class="col-md-6">
+							<div class="card border-0 shadow-sm">
+								<div class="card-body p-3">
+									<div class="d-flex align-items-center gap-3 mb-2">
+										<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+											<span style="color: white; font-weight: bold; font-size: 18px;">👨‍⚕️</span>
+										</div>
+										<div>
+											<h6 class="fw-bold mb-1">Dr. ${doctor.name}</h6>
+											<small class="text-muted">${doctor.gender}</small>
+										</div>
+									</div>
+									${doctor.specializations.length > 0 ? `
+										<div class="mb-2">
+											<small class="fw-bold">Specializations:</small>
+											<div class="d-flex flex-wrap gap-1 mt-1">
+												${doctor.specializations.map(spec => 
+													`<span class="badge bg-secondary" style="font-size: 10px;">${spec}</span>`
+												).join('')}
+											</div>
+										</div>
+									` : ''}
+									<div class="d-flex gap-2">
+										<button class="btn btn-primary btn-sm flex-fill" onclick="bookDoctorAppointment(${hospital.id}, ${doctor.id}, '${doctor.name}')">
+											<span style="font-size: 12px;">📅</span> Book with Dr. ${doctor.name}
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					`).join('')}
+				</div>
+			</div>
+		`;
+	} else {
+		doctorsHtml = `
+			<div class="mt-4">
+				<h5 class="fw-bold mb-3">👨‍⚕️ Available Doctors</h5>
+				<div class="text-center py-4">
+					<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👨‍⚕️</div>
+					<h6 class="text-muted">No doctors available at this hospital</h6>
+					<p class="text-muted small">Please contact the hospital directly for more information</p>
+				</div>
+			</div>
+		`;
+	}
+
+	content.innerHTML = `
+		<div class="row">
+			<div class="col-md-4 text-center">
+				${hospital.logo ? 
+					`<img src="${hospital.logo}" alt="${hospital.name}" class="img-fluid rounded mb-3" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px !important; border: 3px solid var(--accent);">` :
+					`<div class="bg-primary rounded d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 12px; border: 3px solid var(--accent);">
+						<span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
+					</div>`
+				}
+			</div>
+			<div class="col-md-8">
+				<h4 class="fw-bold mb-3">${hospital.name}</h4>
+				<div class="mb-3">
+					<div class="d-flex align-items-center gap-2 mb-2">
+						<span style="font-size: 18px;">📍</span>
+						<strong>Location:</strong> ${hospital.location}
+					</div>
+					<div class="d-flex align-items-center gap-2 mb-2">
+						<span style="font-size: 18px;">📞</span>
+						<strong>Contact:</strong> ${hospital.contact_no}
+					</div>
+					<div class="d-flex align-items-center gap-2 mb-2">
+						<span style="font-size: 18px;">✉️</span>
+						<strong>Email:</strong> ${hospital.email}
+					</div>
+					<div class="d-flex align-items-center gap-2 mb-2">
+						<span style="font-size: 18px;">🏷️</span>
+						<strong>Registration:</strong> ${hospital.registration_number}
+					</div>
+				</div>
+				${specializationsHtml}
+			</div>
+		</div>
+		${doctorsHtml}
+	`;
+
+	// Set up general book appointment button (hidden if doctors are available)
+	if (hospital.doctors.length > 0) {
+		bookBtn.style.display = 'none';
+	} else {
+		bookBtn.style.display = 'inline-block';
+		bookBtn.onclick = function() {
+			window.location.href = `/appointments/create/?hospital=${hospital.id}`;
+		};
+	}
+
+	modal.show();
+}
+
+function bookDoctorAppointment(hospitalId, doctorId, doctorName) {
+	// Close the modal first
+	const modal = bootstrap.Modal.getInstance(document.getElementById('hospitalDetailsModal'));
+	modal.hide();
+	
+	// Redirect to appointment booking with hospital and doctor pre-selected
+	window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
+}
+</script>
+
 {% endblock %}

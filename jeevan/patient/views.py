@@ -101,7 +101,7 @@ def patient_login(request):
             patient = form.cleaned_data['patient']
             login(request, patient.user)
             messages.success(request, f'Welcome back, {patient.full_name}!')
-            return redirect('patient:patient_dashboard')
+            return redirect('patient:profile_dashboard')
     else:
         form = PatientLoginForm()
     
@@ -194,9 +194,43 @@ def patient_profile(request):
     # Refresh patient data from database to ensure we have the latest data
     patient.refresh_from_db()
     
+    # Get dashboard statistics
+    from appointments.models import Appointment
+    from teleconsultation.models import Teleconsultation
+    from patient.models import PatientDocument
+    from care.models import Hospital
+    
+    # Count upcoming appointments
+    upcoming_appointments = Appointment.objects.filter(
+        patient=patient, 
+        appointment_date__gte=timezone.now().date()
+    ).exclude(status='cancelled').count()
+    
+    # Count completed teleconsultations
+    completed_consultations = Teleconsultation.objects.filter(
+        patient=patient, 
+        status='completed'
+    ).count()
+    
+    # Count medical documents
+    medical_documents = PatientDocument.objects.filter(patient=patient).count()
+    
+    # Get hospitals
+    hospitals = Hospital.objects.all().prefetch_related('doctor_set')
+    
+    # Get recent appointments
+    recent_appointments = Appointment.objects.filter(
+        patient=patient
+    ).order_by('-appointment_date')[:6]
+    
     context = {
         'patient': patient,
         'form': form,
+        'upcoming_appointments': upcoming_appointments,
+        'completed_consultations': completed_consultations,
+        'medical_documents': medical_documents,
+        'hospitals': hospitals,
+        'recent_appointments': recent_appointments,
     }
     return render(request, 'patient/profile.html', context)
 
@@ -441,42 +475,22 @@ def document_download(request, document_id):
 
 @login_required
 def profile_dashboard(request):
-    """Patient welcome dashboard page (server-rendered)."""
+    """React-enhanced patient profile dashboard mount page."""
     try:
         patient = Patient.objects.get(user=request.user)
     except Patient.DoesNotExist:
         messages.error(request, 'Patient profile not found.')
         return redirect('patient:patient_login')
 
-    # Dashboard context
-    from datetime import date, timedelta
-    from appointments.models import Appointment
+    # Get all hospitals with their information and doctors
+    from care.models import Hospital
+    from doctor.models import Doctor
+    hospitals = Hospital.objects.all().prefetch_related('specialization', 'doctor_set__specialization')
 
-    today = date.today()
-    upcoming_appointments = Appointment.objects.filter(
-        patient=patient,
-        appointment_date__gte=today
-    ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:10]
-
-    all_appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
-    stats = {
-        'total': all_appointments.count(),
-        'accepted': all_appointments.filter(status='accepted').count(),
-        'pending': all_appointments.filter(status='pending').count(),
-        'completed': all_appointments.filter(status='completed').count(),
-    }
-
-    yesterday = today - timedelta(days=1)
-    recent_status_changes = all_appointments.filter(
-        updated_at__gte=yesterday
-    ).exclude(status='pending').order_by('-updated_at')[:5]
-
+    # Minimal context; React will fetch / display richer data client-side.
     return render(request, 'patient/profile_dashboard.html', {
         'patient': patient,
-        'upcoming_appointments': upcoming_appointments,
-        'stats': stats,
-        'recent_status_changes': recent_status_changes,
-        'today': today,
+        'hospitals': hospitals,
     })
 
 

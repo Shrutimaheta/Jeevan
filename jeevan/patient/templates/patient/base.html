@@ -12,7 +12,7 @@
     <style>
         /* Modern Header Styles */
         .modern-header {
-            background: linear-gradient(135deg, #2C7BE5 0%, #20C997 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             padding: 1rem 0;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -464,21 +464,7 @@
                 </div>
                 <div class="col-md-6">
                     <nav class="main-nav d-none d-md-flex justify-content-center">
-                        <a href="{% url 'patient:patient_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt"></i>Dashboard
-                        </a>
-                        <a href="{% url 'appointments:appointment_create' %}" class="nav-link {% if request.resolver_match.url_name == 'appointment_create' %}active{% endif %}">
-                            <i class="fas fa-calendar-plus"></i>Book Appointment
-                        </a>
-                        <a href="{% url 'patient:patient_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_profile' %}active{% endif %}">
-                            <i class="fas fa-user"></i>Profile
-                        </a>
-                        <a href="{% url 'patient:document_list' %}" class="nav-link {% if request.resolver_match.url_name == 'document_list' %}active{% endif %}">
-                            <i class="fas fa-folder-open"></i>Documents
-                        </a>
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-pills"></i>Prescriptions
-                        </a>
+                        <!-- Navigation menu items removed -->
                     </nav>
                 </div>
                 <div class="col-md-3">
