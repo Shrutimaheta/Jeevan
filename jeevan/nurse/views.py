@@ -1,16 +1,26 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
-from rest_framework import viewsets
 from .models import Nurse
-from .serializers import NurseSerializer
 
 def some_view(request):
-    return HttpResponse("Doctor app working.")
+    return HttpResponse("Nurse app working.")
 
 def NURSESIGNUP(request):
     # Ensure you have: templates/nurse/nurse_login.html
     return render(request, 'nurse/nurse_login.html')
 
-class NurseViewSet(viewsets.ModelViewSet):
-    queryset = Nurse.objects.all()
-    serializer_class = NurseSerializer
+def nurse_list_api(request):
+    """API to get list of nurses"""
+    nurses = Nurse.objects.all()
+    nurses_data = []
+    for nurse in nurses:
+        nurses_data.append({
+            'id': nurse.id,
+            'full_name': nurse.full_name,
+            'email': nurse.email,
+            'contact_number': nurse.contact_number,
+            'qualification': nurse.qualification,
+            'experience': nurse.experience,
+        })
+    
+    return JsonResponse(nurses_data, safe=False)

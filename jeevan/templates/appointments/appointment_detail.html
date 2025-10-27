@@ -200,7 +200,7 @@
                                             </h4>
                                             <p class="mb-0" style="font-size: var(--font-size-base); color: var(--text-muted); font-weight: var(--font-weight-medium);">
                                                 {% for spec in appointment.doctor.specialization.all %}
-                                                    {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                    {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                                                 {% empty %}
                                                     General Practitioner
                                                 {% endfor %}

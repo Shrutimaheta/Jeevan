@@ -2,7 +2,8 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
-from .models import Patient, PatientDocument
+from django.db import transaction
+from .models import Patient, PatientDocument, VitalSign, WellnessLog, Medication, MedicationLog, LabResult, HealthGoal
 from care.models import CustomUser
 import random
 import string
@@ -14,9 +15,14 @@ class PatientRegistrationForm(forms.ModelForm):
         'placeholder': 'Confirm Password'
     }))
     
+    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Username'
+    }))
+
     class Meta:
         model = Patient
-        fields = ['full_name', 'email']
+        fields = ['full_name', 'email', 'contact_number']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -25,6 +31,10 @@ class PatientRegistrationForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Email Address'
+            }),
+            'contact_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Phone Number'
             }),
         }
     
@@ -41,9 +51,23 @@ class PatientRegistrationForm(forms.ModelForm):
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if Patient.objects.filter(email=email).exists():
-            raise ValidationError("A patient with this email already exists.")
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("A user with this email already exists.")
         return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if CustomUser.objects.filter(username=username).exists():
+            raise ValidationError("Username already exists.")
+        return username
+    
+    def clean_contact_number(self):
+        contact_number = self.cleaned_data.get('contact_number')
+        if contact_number:
+            # Check if any user exists with this contact number
+            if CustomUser.objects.filter(contact_number=contact_number).exists():
+                raise ValidationError("A user with this phone number already exists.")
+        return contact_number
     
     
     def clean(self):
@@ -60,27 +84,38 @@ class PatientRegistrationForm(forms.ModelForm):
     def save(self, commit=True):
         patient = super().save(commit=False)
         password = self.cleaned_data.get('password')
-        
-        # Create or get user
-        username = self.cleaned_data.get('email')
-        user, created = CustomUser.objects.get_or_create(
-            username=username,
-            defaults={
-                'email': username,
-                'full_name': self.cleaned_data.get('full_name'),
-                'role': 'patient'
-            }
-        )
-        if created:
-            user.set_password(password)
+        username = self.cleaned_data.get('username') or self.cleaned_data.get('email')
+        email = self.cleaned_data.get('email')
+        full_name = self.cleaned_data.get('full_name')
+        contact_number = self.cleaned_data.get('contact_number')
+
+        with transaction.atomic():
+            user, created = CustomUser.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': email,
+                    'full_name': full_name,
+                    'contact_number': contact_number,
+                    'role': 'patient'
+                }
+            )
+
+            # Ensure fields are synced in case of any mismatch
+            user.email = email
+            user.full_name = full_name
+            user.contact_number = contact_number
+            user.role = 'patient'
+            if created:
+                user.set_password(password)
             user.save()
-        
-        patient.user = user
-        patient.password = make_password(password)
-        
-        if commit:
-            patient.save()
-        
+
+            patient.user = user
+            # Store hashed copy if model requires it
+            patient.password = make_password(password)
+
+            if commit:
+                patient.save()
+
         return patient
 
 
@@ -432,5 +467,320 @@ class ResetPasswordForm(forms.Form):
         if new_password and confirm_password:
             if new_password != confirm_password:
                 raise ValidationError("Passwords don't match.")
+        
+        return cleaned_data
+
+
+# Health Tracking Forms
+
+class VitalSignForm(forms.ModelForm):
+    class Meta:
+        model = VitalSign
+        fields = ['blood_pressure_systolic', 'blood_pressure_diastolic', 'heart_rate', 'temperature', 'oxygen_saturation', 'weight', 'notes']
+        labels = {
+            'blood_pressure_systolic': 'Systolic Blood Pressure (mmHg)',
+            'blood_pressure_diastolic': 'Diastolic Blood Pressure (mmHg)',
+            'heart_rate': 'Heart Rate (BPM)',
+            'temperature': 'Temperature (°F)',
+            'oxygen_saturation': 'Oxygen Saturation (%)',
+            'weight': 'Weight (lbs)',
+            'notes': 'Notes'
+        }
+        widgets = {
+            'blood_pressure_systolic': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '50',
+                'max': '300',
+                'placeholder': 'e.g., 120'
+            }),
+            'blood_pressure_diastolic': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '30',
+                'max': '200',
+                'placeholder': 'e.g., 80'
+            }),
+            'heart_rate': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '30',
+                'max': '220',
+                'placeholder': 'e.g., 72'
+            }),
+            'temperature': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '90',
+                'max': '110',
+                'step': '0.1',
+                'placeholder': 'e.g., 98.6'
+            }),
+            'oxygen_saturation': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '70',
+                'max': '100',
+                'placeholder': 'e.g., 98'
+            }),
+            'weight': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '50',
+                'max': '500',
+                'step': '0.1',
+                'placeholder': 'e.g., 150.5'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Any additional notes about your vital signs'
+            })
+        }
+    
+    def clean_blood_pressure_systolic(self):
+        value = self.cleaned_data.get('blood_pressure_systolic')
+        if value and (value < 50 or value > 300):
+            raise ValidationError("Systolic blood pressure must be between 50 and 300 mmHg.")
+        return value
+    
+    def clean_blood_pressure_diastolic(self):
+        value = self.cleaned_data.get('blood_pressure_diastolic')
+        if value and (value < 30 or value > 200):
+            raise ValidationError("Diastolic blood pressure must be between 30 and 200 mmHg.")
+        return value
+    
+    def clean_heart_rate(self):
+        value = self.cleaned_data.get('heart_rate')
+        if value and (value < 30 or value > 220):
+            raise ValidationError("Heart rate must be between 30 and 220 BPM.")
+        return value
+    
+    def clean_temperature(self):
+        value = self.cleaned_data.get('temperature')
+        if value and (value < 90 or value > 110):
+            raise ValidationError("Temperature must be between 90 and 110°F.")
+        return value
+    
+    def clean_oxygen_saturation(self):
+        value = self.cleaned_data.get('oxygen_saturation')
+        if value and (value < 70 or value > 100):
+            raise ValidationError("Oxygen saturation must be between 70 and 100%.")
+        return value
+
+
+class WellnessLogForm(forms.ModelForm):
+    class Meta:
+        model = WellnessLog
+        fields = ['water_intake_glasses', 'sleep_hours', 'steps_count', 'mood_score', 'exercise_minutes', 'stress_level', 'notes']
+        labels = {
+            'water_intake_glasses': 'Water Intake (glasses)',
+            'sleep_hours': 'Sleep Hours',
+            'steps_count': 'Steps Count',
+            'mood_score': 'Mood (1-5)',
+            'exercise_minutes': 'Exercise Minutes',
+            'stress_level': 'Stress Level (1-5)',
+            'notes': 'Notes'
+        }
+        widgets = {
+            'water_intake_glasses': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '20',
+                'placeholder': 'e.g., 8'
+            }),
+            'sleep_hours': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '24',
+                'step': '0.1',
+                'placeholder': 'e.g., 7.5'
+            }),
+            'steps_count': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '100000',
+                'placeholder': 'e.g., 10000'
+            }),
+            'mood_score': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'exercise_minutes': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '1440',
+                'placeholder': 'e.g., 30'
+            }),
+            'stress_level': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'max': '5',
+                'placeholder': '1-5'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'How are you feeling today?'
+            })
+        }
+
+
+class MedicationForm(forms.ModelForm):
+    class Meta:
+        model = Medication
+        fields = ['name', 'dosage', 'frequency', 'prescribed_date', 'prescribed_by', 'instructions', 'side_effects']
+        labels = {
+            'name': 'Medication Name',
+            'dosage': 'Dosage',
+            'frequency': 'Frequency',
+            'prescribed_date': 'Prescribed Date',
+            'prescribed_by': 'Prescribed By',
+            'instructions': 'Instructions',
+            'side_effects': 'Side Effects'
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Metformin'
+            }),
+            'dosage': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 500mg'
+            }),
+            'frequency': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'prescribed_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'prescribed_by': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Doctor name'
+            }),
+            'instructions': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Special instructions for taking this medication'
+            }),
+            'side_effects': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Any side effects you have experienced'
+            })
+        }
+
+
+class MedicationLogForm(forms.ModelForm):
+    class Meta:
+        model = MedicationLog
+        fields = ['notes']
+        labels = {
+            'notes': 'Notes'
+        }
+        widgets = {
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Any notes about taking this medication'
+            })
+        }
+
+
+class LabResultForm(forms.ModelForm):
+    class Meta:
+        model = LabResult
+        fields = ['test_name', 'test_date', 'result_value', 'normal_range', 'status', 'doctor_notes', 'lab_name', 'file_attachment']
+        labels = {
+            'test_name': 'Test Name',
+            'test_date': 'Test Date',
+            'result_value': 'Result Value',
+            'normal_range': 'Normal Range',
+            'status': 'Status',
+            'doctor_notes': 'Doctor Notes',
+            'lab_name': 'Laboratory Name',
+            'file_attachment': 'File Attachment'
+        }
+        widgets = {
+            'test_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Blood Glucose'
+            }),
+            'test_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'result_value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 95 mg/dL'
+            }),
+            'normal_range': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 70-100 mg/dL'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'doctor_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Doctor interpretation of results'
+            }),
+            'lab_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Laboratory name'
+            }),
+            'file_attachment': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.jpg,.jpeg,.png'
+            })
+        }
+
+
+class HealthGoalForm(forms.ModelForm):
+    class Meta:
+        model = HealthGoal
+        fields = ['goal_type', 'title', 'description', 'target_value', 'current_value', 'start_date', 'target_date']
+        labels = {
+            'goal_type': 'Goal Type',
+            'title': 'Goal Title',
+            'description': 'Description',
+            'target_value': 'Target Value',
+            'current_value': 'Current Value',
+            'start_date': 'Start Date',
+            'target_date': 'Target Date'
+        }
+        widgets = {
+            'goal_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Lose 10 pounds'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Detailed description of your goal'
+            }),
+            'target_value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 10 pounds'
+            }),
+            'current_value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 5 pounds'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'target_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            })
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        target_date = cleaned_data.get('target_date')
+        
+        if start_date and target_date and start_date >= target_date:
+            raise ValidationError("Target date must be after start date.")
         
         return cleaned_data

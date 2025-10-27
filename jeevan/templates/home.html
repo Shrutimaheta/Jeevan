@@ -1,0 +1,3026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management System - Multi-Specialist Hospital Network</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #dbeafe 100%);
+            color: var(--text-dark);
+            padding: 20px 0 40px;
+            position: relative;
+            overflow: hidden;
+            min-height: 70vh;
+            display: flex;
+            align-items: flex-start;
+            padding-top: 60px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            margin-top: -20px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(30, 58, 138, 0.1);
+            border: 1px solid rgba(30, 58, 138, 0.2);
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.1);
+        }
+
+        .badge-icon {
+            font-size: 1.1rem;
+        }
+
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.8rem;
+            color: var(--text-dark);
+            max-width: 600px;
+        }
+
+        .text-highlight {
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        .text-highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            line-height: 1.7;
+            max-width: 550px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-search-section {
+            margin-top: 2rem;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 2rem;
+        }
+
+        .search-input-group {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 6px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input-group:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+        }
+
+
+        .search-icon {
+            color: var(--text-light);
+            margin: 0 15px;
+            font-size: 1.1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 18px 0;
+            font-size: 1.1rem;
+            outline: none;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .search-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+        }
+
+        .search-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .quick-options {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .option-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+        }
+
+        .option-item:active {
+            transform: translateY(-1px) scale(0.98);
+            transition: all 0.1s ease;
+        }
+
+        .option-item i {
+            font-size: 1.1rem;
+        }
+
+        /* Hero Illustration */
+        .hero-illustration {
+            position: relative;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -2rem;
+        }
+
+
+        .hero-image-background {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
+            background-image: url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        .hero-image-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(44, 90, 160, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% {
+                transform: scaleY(1);
+            }
+            95% {
+                transform: scaleY(0.1);
+            }
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(20deg);
+            }
+            75% {
+                transform: rotate(-10deg);
+            }
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -50px;
+            position: relative;
+            z-index: 3;
+        }
+
+        /* Enhanced Search Interface Styles */
+        .search-hero-section {
+            background: white;
+            padding: 40px 0 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .search-hero-content {
+            position: relative;
+            z-index: 2;
+            margin-top: -20px;
+        }
+
+        .search-hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            position: relative;
+        }
+
+        .search-hero-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .search-hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+
+        .search-form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+            margin-top: 2rem;
+        }
+
+        /* Sticky Filter Bar */
+        .sticky-filter-bar {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sticky-filter-bar.visible {
+            transform: translateY(0);
+        }
+
+        .filter-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-count-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-count {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+        }
+
+        .filter-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .btn-clear-filters {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
+        }
+
+        .btn-clear-filters:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+        }
+
+        /* Search Layout */
+        .search-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Filter Sidebar - Horizontal Layout */
+        .filter-sidebar {
+            position: static;
+            width: 100%;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+        }
+
+        /* Horizontal Filter Layout */
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-group {
+            margin-bottom: 0;
+        }
+
+        .filter-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .filter-group.half-width {
+            grid-column: span 1;
+        }
+
+        /* Results Section - Horizontal Layout */
+        .results-section {
+            min-height: 400px;
+        }
+
+        .results-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Ensure hospital cards work properly in grid */
+        .results-list .hospital-card {
+            margin-bottom: 0;
+        }
+
+        /* Tablet and Desktop Responsive */
+        @media (min-width: 768px) {
+            .filter-form {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .filter-group.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .filter-group.half-width {
+                grid-column: span 1;
+            }
+
+            .results-list {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 24px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .filter-form {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .results-list {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+        }
+
+        .filter-group {
+            margin-bottom: 28px;
+        }
+
+        .filter-label {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .filter-label i {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-right: 8px;
+        }
+
+        /* Search Input */
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(44, 90, 160, 0.1);
+            background: white;
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* Location Input */
+        .location-input-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        .location-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .location-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(44, 90, 160, 0.1);
+            background: white;
+            outline: none;
+        }
+
+        .btn-location {
+            padding: 16px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-location:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+        }
+
+        /* Filter Select */
+        .filter-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            font-size: 1rem;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(44, 90, 160, 0.1);
+            background: white;
+            outline: none;
+        }
+
+        /* Rating Filter */
+        .rating-filter {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .rating-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rating-option {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            border: 2px solid transparent;
+        }
+
+        .rating-option:hover {
+            background: #f0f9ff;
+            border-color: rgba(44, 90, 160, 0.2);
+            transform: translateX(4px);
+        }
+
+        .rating-option input[type="radio"] {
+            display: none;
+        }
+
+        .rating-option input[type="radio"]:checked + label,
+        .rating-option:has(input:checked) {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .rating-stars {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            color: #fbbf24;
+        }
+
+        .rating-text {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Checkbox Styles */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-checkbox {
+            display: none;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-dark);
+            padding: 12px 0;
+        }
+
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            margin-right: 16px;
+            position: relative;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .filter-checkbox:checked + .checkbox-label .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkbox-text {
+            font-size: 1rem;
+        }
+
+        /* Filter Actions */
+        .filter-actions {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #f8fafc;
+        }
+
+        .btn-search {
+            width: 100%;
+            padding: 18px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-search:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(44, 90, 160, 0.3);
+        }
+
+        /* Results Section */
+        .results-section {
+            min-height: 400px;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .results-count {
+            display: flex;
+            align-items: center;
+        }
+
+        .results-count .badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+        }
+
+        .results-count small {
+            font-size: 0.85rem;
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 5rem;
+            color: #d1d5db;
+            margin-bottom: 32px;
+        }
+
+        .empty-state-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+
+        .empty-state-suggestions {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
+            max-width: 400px;
+        }
+
+        .empty-state-suggestions h5 {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .empty-state-suggestions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .empty-state-suggestions li {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .hospital-card {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.2);
+            transition: all 0.6s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 100%;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .hospital-card.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hospital-card .btn {
+            white-space: normal;
+            word-wrap: break-word;
+            font-size: 0.8rem;
+            padding: 10px 8px;
+            line-height: 1.2;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hospital-card .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+
+        .hospital-card h5,
+        .hospital-card h6,
+        .hospital-card p {
+            color: white;
+        }
+
+        .hospital-card .text-muted {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .hospital-card .specialization-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hospital-card .badge {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hospital-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hospital-card:hover::before {
+            opacity: 1;
+        }
+
+        .hospital-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .hospital-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+        }
+
+        .specialization-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .doctor-card {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(44, 90, 160, 0.2);
+            transition: all 0.6s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .doctor-card.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+        }
+
+        .doctor-card h5,
+        .doctor-card h6,
+        .doctor-card p {
+            color: white;
+        }
+
+        .doctor-card .text-muted {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .doctor-card .specialization-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .doctor-card .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .doctor-card .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+
+        .doctor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+            border: 3px solid white;
+        }
+
+        /* Hide 0-star ratings */
+        .rating-0 {
+            display: none !important;
+        }
+
+        /* Professional doctor avatar fallback */
+        .doctor-avatar::before {
+            content: "👨‍⚕️";
+            font-size: 1.2rem;
+        }
+
+        .doctor-avatar[data-initial]::before {
+            content: attr(data-initial);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            text-align: center;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .small-stats-card {
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 8px;
+            padding: 15px 10px;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .small-stats-card:hover {
+            background: rgba(37, 99, 235, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        .small-stats-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .small-stats-text {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto 20px;
+        }
+
+        .navbar-custom {
+            background: var(--primary-color);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 72px;
+            padding: 12px 0;
+        }
+
+        .navbar-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .navbar-custom:hover::before {
+            left: 100%;
+        }
+
+        .navbar-custom.scrolled {
+            background: var(--primary-color);
+            box-shadow: 0 12px 48px rgba(30, 58, 138, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+            line-height: 1.3;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .navbar-brand i {
+            color: #ffffff;
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+            font-size: 1.3rem;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Emergency Care Button & Modal Styles */
+        .emergency-trigger-btn {
+            /* Remove special styling to match other buttons */
+        }
+
+        @keyframes emergencyPulse {
+            0%, 100% { 
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            }
+            50% { 
+                box-shadow: 0 4px 25px rgba(239, 68, 68, 0.5), 0 0 0 4px rgba(239, 68, 68, 0.1);
+            }
+        }
+
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Emergency Modal Styles */
+        .emergency-modal .modal-dialog {
+            max-width: 500px;
+            margin: 1rem auto;
+        }
+
+        .emergency-modal .modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .emergency-modal .modal-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 25px 30px;
+            position: relative;
+        }
+
+        .emergency-modal .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="emergency-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23emergency-pattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .emergency-modal .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .emergency-modal .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+            position: relative;
+            z-index: 2;
+        }
+
+        .emergency-modal .modal-body {
+            padding: 30px;
+            background: #f8fafc;
+        }
+
+        .emergency-options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .emergency-option {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .emergency-option:hover {
+            border-color: #ef4444;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .emergency-option-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .emergency-option-content {
+            flex: 1;
+        }
+
+        .emergency-option-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: var(--text-dark);
+        }
+
+        .emergency-option-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .emergency-option-arrow {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .emergency-option:hover .emergency-option-arrow {
+            color: #ef4444;
+            transform: translateX(3px);
+        }
+
+        /* Emergency option specific colors */
+        .emergency-option:nth-child(1) .emergency-option-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .emergency-option:nth-child(2) .emergency-option-icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .emergency-option:nth-child(3) .emergency-option-icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .emergency-option:nth-child(4) .emergency-option-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .emergency-option:nth-child(5) .emergency-option-icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+
+            .emergency-modal .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+
+            .emergency-modal .modal-body {
+                padding: 20px;
+            }
+
+            .emergency-option {
+                padding: 15px;
+            }
+
+            .emergency-option-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+                margin-right: 12px;
+            }
+
+            .emergency-option-title {
+                font-size: 1rem;
+            }
+
+            .emergency-option-desc {
+                font-size: 0.85rem;
+            }
+        }
+
+        .nav-link {
+            font-weight: 500 !important;
+            color: white !important;
+            padding: 10px 20px !important;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            margin: 2px 4px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .nav-link:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            border-radius: 25px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before {
+            opacity: 0.1;
+        }
+
+        .btn-login-custom:hover {
+            transform: translateY(-2px);
+            background: var(--secondary-color) !important;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.4) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-3px); }
+            60% { transform: translateY(-2px); }
+        }
+
+        .footer {
+            background: var(--primary-color);
+            color: #ffffff;
+            padding: 60px 0 30px;
+        }
+
+        .footer a {
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-custom {
+                min-height: 65px;
+                padding: 8px 0;
+            }
+            
+            .navbar-brand {
+                font-size: 1.3rem !important;
+                padding: 6px 0;
+            }
+            
+            .navbar-brand i {
+                font-size: 1.1rem;
+                margin-right: 8px;
+            }
+            
+            .nav-link {
+                padding: 8px 16px !important;
+                font-size: 0.9rem;
+                margin: 2px 0;
+                border-radius: 18px;
+            }
+            
+            .btn-login-custom {
+                padding: 8px 20px !important;
+                font-size: 0.9rem;
+                border-radius: 20px;
+            }
+            
+            .hero-section {
+                padding: 20px 0 30px;
+                min-height: auto;
+                padding-top: 40px;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+                line-height: 1.3;
+            }
+            
+            .hero-description {
+                font-size: 1.1rem;
+                margin-bottom: 2rem;
+            }
+            
+            .hero-illustration {
+                height: 400px;
+                margin-top: 0rem;
+            }
+            
+            .hero-image-background {
+                height: 350px;
+            }
+            
+            .search-container {
+                padding: 20px;
+                margin-bottom: 1.5rem;
+            }
+            
+            .search-input-group {
+                margin-bottom: 1rem;
+            }
+            
+            .search-btn {
+                padding: 14px 24px;
+                font-size: 0.95rem;
+            }
+            
+            .quick-options {
+                gap: 12px;
+                margin-top: 0.8rem;
+            }
+            
+            .option-item {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .search-section {
+                margin-top: -20px;
+                padding: 20px;
+            }
+
+            /* Mobile Responsive for Enhanced Search */
+            .search-hero-title {
+                font-size: 2.2rem;
+            }
+
+            .search-hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .search-layout {
+                gap: 1.5rem;
+            }
+
+            .filter-sidebar {
+                position: static;
+            }
+
+            .filter-card {
+                padding: 20px;
+            }
+
+            .filter-form {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .filter-group {
+                margin-bottom: 0;
+            }
+
+            .filter-group.full-width,
+            .filter-group.half-width {
+                grid-column: 1;
+            }
+
+            .location-input-wrapper {
+                flex-direction: column;
+            }
+
+            .btn-location {
+                width: 100%;
+                justify-content: center;
+                margin-top: 8px;
+            }
+
+            .results-list {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .results-list .hospital-card {
+                margin-bottom: 0;
+            }
+
+            .sticky-filter-bar {
+                padding: 16px 0;
+            }
+
+            .filter-summary {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+                padding: 16px 20px;
+            }
+
+            .btn-clear-filters {
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 1rem;
+            }
+
+            .empty-state {
+                padding: 60px 20px;
+            }
+
+            .empty-state-icon {
+                font-size: 4rem;
+            }
+
+            .empty-state-title {
+                font-size: 1.5rem;
+            }
+
+            .empty-state-text {
+                font-size: 1.1rem;
+            }
+
+            .empty-state-suggestions {
+                padding: 20px;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="#" style="color: var(--primary-color);">
+                    <i class="fas fa-hospital me-2"></i>Patient Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#hospitals">Hospitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#doctors">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#contact">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-login-custom" href="/patient/login/" style="padding: 10px 24px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; background: var(--primary-color); color: white; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 3px 10px rgba(44, 90, 160, 0.3); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); font-size: 0.95rem;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-start" style="min-height: 60vh; padding-top: 20px;">
+                <div class="col-lg-6 hero-content">
+                    <div class="hero-badge mb-2">
+                        <span class="badge-icon">🏥</span>
+                        <span class="badge-text">Trusted Healthcare Network</span>
+                    </div>
+                    <h1 class="display-3 fw-bold mb-4 hero-title">
+                        We take care of your <span class="text-highlight">health</span>
+                    </h1>
+                    <p class="lead mb-5 hero-description">
+                        Connect with the best healthcare professionals across our network of multi-specialist hospitals. Book appointments, access quality care, and manage your health journey with confidence.
+                    </p>
+                    <div class="hero-search-section">
+                        <div class="quick-options">
+                            <a href="#doctors" class="option-item">
+                                <i class="fas fa-user-md"></i>
+                                <span>Find Doctor</span>
+                            </a>
+                            <a href="/appointments/create/" class="option-item">
+                                <i class="fas fa-hospital"></i>
+                                <span>Book Appointment</span>
+                            </a>
+                            <button class="option-item emergency-trigger-btn" data-bs-toggle="modal" data-bs-target="#emergencyModal">
+                                <i class="fas fa-ambulance"></i>
+                                <span>Emergency Care</span>
+                            </button>
+                            <a href="#" class="option-item" onclick="showCallNowNumber()">
+                                <i class="fas fa-phone"></i>
+                                <span>Call Now</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 hero-illustration">
+                    <div class="hero-image-background">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="about" class="py-5">
+        <div class="container">
+            <h2 class="section-title text-center">Why Choose Patient Management System?</h2>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                </div>
+                        <h5 class="fw-bold">Trusted Healthcare</h5>
+                        <p class="text-muted">Verified hospitals and certified doctors ensure quality care for you and your family.</p>
+                </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                </div>
+                        <h5 class="fw-bold">24/7 Availability</h5>
+                        <p class="text-muted">Book appointments anytime, anywhere with our round-the-clock booking system.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                </div>
+                        <h5 class="fw-bold">Easy Booking</h5>
+                        <p class="text-muted">Simple and intuitive interface makes booking appointments effortless.</p>
+        </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h5 class="fw-bold">Patient-Centric</h5>
+                        <p class="text-muted">Your health and comfort are our top priorities in everything we do.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Small Stats Section -->
+            <div class="row text-center mt-4">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="small-stats-card">
+                        <div class="small-stats-number">{{ hospitals.count }}</div>
+                        <p class="small-stats-text">Partner Hospitals</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="small-stats-card">
+                        <div class="small-stats-number">{{ featured_doctors.count }}</div>
+                        <p class="small-stats-text">Expert Doctors</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="small-stats-card">
+                        <div class="small-stats-number">{{ specializations.count }}</div>
+                        <p class="small-stats-text">Specializations</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="small-stats-card">
+                        <div class="small-stats-number">24/7</div>
+                        <p class="small-stats-text">Emergency Care</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Our Partner Hospitals Section -->
+    <section id="hospitals" style="background: white; padding: 0; margin-top: -10px;">
+        <div class="container">
+            <div class="text-center mb-3">
+            <h2 class="section-title">Our Partner Hospitals</h2>
+                <p class="lead text-muted" style="margin-top: -10px;">Trusted healthcare partners across the region</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <p class="text-muted">We've partnered with leading hospitals and healthcare providers to bring you the best medical care. Each partner is carefully selected for their commitment to quality, patient safety, and medical excellence.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="results-list" id="hospital-list">
+                {% include 'partials/hospital_list.html' with hospitals=hospitals %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Hospital Search Section -->
+    <section class="container-fluid px-0" style="padding-bottom: 0;">
+        <!-- Hero Section -->
+        <div class="search-hero-section">
+        <div class="container">
+                <div class="search-hero-content">
+                    <h2 class="search-hero-title">Find your perfect healthcare match</h2>
+                    <p class="search-hero-subtitle">Hospitals that care, near you</p>
+                    
+                    <!-- Search Form -->
+                    <div class="search-form-container">
+                        <form method="GET" id="hospital-search-form" class="filter-form" hx-get="/htmx/hospitals/" hx-target="#hospital-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+                            <!-- Search Input -->
+                            <div class="filter-group full-width">
+                                <label class="filter-label">
+                                    <i class="fas fa-search me-2"></i>Search Hospitals
+                                </label>
+                                <div class="search-input-wrapper">
+                                    <input type="text" class="form-control search-input" name="search" 
+                                           placeholder="Hospital name or location..." 
+                                           value="{{ search_query }}" id="hospital-search">
+                                    <i class="fas fa-search search-icon"></i>
+                </div>
+                            </div>
+
+                            <!-- Specialization Filter -->
+                            <div class="filter-group half-width">
+                                <label class="filter-label">
+                                    <i class="fas fa-stethoscope me-2"></i>Specialization
+                                </label>
+                                <select class="form-select filter-select" name="specialization">
+                        <option value="">All Specializations</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.id }}" {% if specialization_filter == spec.id|stringformat:"s" %}selected{% endif %}>
+                            {{ spec.sname }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                            <!-- Location Filter -->
+                            <div class="filter-group half-width">
+                                <label class="filter-label">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Location
+                                </label>
+                                <div class="location-input-wrapper">
+                                    <input type="text" class="form-control location-input" name="location" 
+                                           placeholder="City or area..." value="{{ location_filter }}">
+                                    <button type="button" class="btn btn-location" id="use-location-btn" title="Use my current location">
+                                        <i class="fas fa-crosshairs"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Rating Filter -->
+                            <div class="filter-group half-width">
+                                <label class="filter-label">
+                                    <i class="fas fa-star me-2"></i>Minimum Rating
+                                </label>
+                                <select class="form-select filter-select" name="min_rating">
+                                    <option value="">Any Rating</option>
+                                    <option value="4" {% if min_rating == '4' %}selected{% endif %}>4+ Stars</option>
+                                    <option value="3" {% if min_rating == '3' %}selected{% endif %}>3+ Stars</option>
+                                    <option value="2" {% if min_rating == '2' %}selected{% endif %}>2+ Stars</option>
+                    </select>
+                </div>
+
+                            <!-- Insurance Filter -->
+                            <div class="filter-group half-width">
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" class="filter-checkbox" id="insurance-filter" name="insurance" value="1" {% if insurance == '1' %}checked{% endif %}>
+                                    <label for="insurance-filter" class="checkbox-label">
+                                        <span class="checkbox-custom"></span>
+                                        <span class="checkbox-text">Accepts Insurance</span>
+                                    </label>
+                </div>
+                    </div>
+
+                            <!-- Availability Filter -->
+                            <div class="filter-group half-width">
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" class="filter-checkbox" id="availability-filter" name="available_today" value="1" {% if available_today == '1' %}checked{% endif %}>
+                                    <label for="availability-filter" class="checkbox-label">
+                                        <span class="checkbox-custom"></span>
+                                        <span class="checkbox-text">Available Today</span>
+                                    </label>
+                </div>
+                            </div>
+
+                            <!-- Search Button -->
+                            <div class="filter-group full-width">
+                                <button type="submit" class="btn btn-search w-100">
+                                    <i class="fas fa-search me-2"></i>Find Hospitals
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Results Summary -->
+            <div class="results-summary mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="results-count">
+                        <span class="badge bg-primary me-2" id="result-count">Loading...</span>
+                        <small class="text-muted">hospitals found for you</small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="clear-filters">
+                        <i class="fas fa-times me-1"></i>Clear All
+                    </button>
+                </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+                    </div>
+        
+
+    </section>
+
+    <!-- Featured Doctors Section -->
+    <section id="doctors" style="background: white; padding: 0; margin: 0; margin-top: -20px;">
+        <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+            <div class="text-center mb-5">
+            <h2 class="section-title">Featured Doctors</h2>
+                <p class="lead text-muted" style="margin-top: -8px;">Meet our expert medical professionals</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <p class="text-muted">Our network includes highly qualified doctors across various specialties. Each doctor is carefully vetted for their expertise, experience, and commitment to patient care.</p>
+                    </div>
+                </div>
+            </div>
+            <form class="row g-3 mb-3" hx-get="/htmx/doctors/" hx-target="#doctor-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Search Doctors</label>
+                    <input type="text" class="form-control" name="search" placeholder="Doctor or hospital...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Specialization</label>
+                    <select class="form-select" name="specialization">
+                        <option value="">All</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.id }}">{{ spec.sname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Min Rating</label>
+                    <select class="form-select" name="min_rating">
+                        <option value="">Any</option>
+                        <option value="4">4+</option>
+                        <option value="3">3+</option>
+                        <option value="2">2+</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="available_today" name="available_today">
+                        <label class="form-check-label" for="available_today">Available Today</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="insurance_doc" name="insurance">
+                        <label class="form-check-label" for="insurance_doc">Accepts Insurance</label>
+                    </div>
+                </div>
+            </form>
+            <div class="row" id="doctor-list">
+                {% include 'partials/doctor_list.html' with doctors=featured_doctors %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-hospital me-2"></i>Patient Management System
+                    </h5>
+                    <p class="text-muted">Connecting patients with quality healthcare across our network of multi-specialist hospitals.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#hospitals">Hospitals</a></li>
+                        <li><a href="#doctors">Doctors</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Services</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Book Appointment</a></li>
+                        <li><a href="#">Emergency Care</a></li>
+                        <li><a href="#">Teleconsultation</a></li>
+                        <li><a href="#">Health Records</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold mb-3">Contact Info</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-phone me-2"></i>+91 98765 43210
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-envelope me-2"></i>info@jeevan.com
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-map-marker-alt me-2"></i>123 Healthcare Street, Medical City
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: #374151;">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">&copy; 2024 Patient Management System. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-muted me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Emergency Modal -->
+    <div class="modal fade emergency-modal" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
+                    <h5 class="modal-title" id="emergencyModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
+                        <i class="fas fa-ambulance me-2"></i>Emergency Care
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="emergency-options">
+                        <a href="#" class="emergency-option" onclick="showEmergencyNumber()">
+                            <div class="emergency-option-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="emergency-option-content">
+                                <h6 class="emergency-option-title">Call Ambulance</h6>
+                                <p class="emergency-option-desc">Immediate emergency response</p>
+                            </div>
+                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
+                        </a>
+
+                        <a href="#" class="emergency-option" onclick="showAmbulanceBooking()">
+                            <div class="emergency-option-icon">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <div class="emergency-option-content">
+                                <h6 class="emergency-option-title">Book Ambulance</h6>
+                                <p class="emergency-option-desc">Schedule emergency transport</p>
+                            </div>
+                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
+                        </a>
+
+                        <a href="#" class="emergency-option" onclick="showEmergencyAppointment()">
+                            <div class="emergency-option-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="emergency-option-content">
+                                <h6 class="emergency-option-title">Emergency Appointment</h6>
+                                <p class="emergency-option-desc">Book urgent doctor consultation</p>
+                            </div>
+                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
+                        </a>
+
+                        <a href="/emergency/nearest-hospitals/" class="emergency-option">
+                            <div class="emergency-option-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="emergency-option-content">
+                                <h6 class="emergency-option-title">Nearest Emergency Hospital</h6>
+                                <p class="emergency-option-desc">Find closest emergency facility</p>
+                            </div>
+                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
+                        </a>
+
+                        <a href="/emergency/guide/" class="emergency-option">
+                            <div class="emergency-option-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="emergency-option-content">
+                                <h6 class="emergency-option-title">Emergency Guide</h6>
+                                <p class="emergency-option-desc">Quick checklist for emergencies</p>
+                            </div>
+                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Ambulance Booking Modal -->
+    <div class="modal fade" id="ambulanceBookingModal" tabindex="-1" aria-labelledby="ambulanceBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
+                    <h5 class="modal-title" id="ambulanceBookingModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
+                        <i class="fas fa-ambulance me-2"></i>Book Emergency Ambulance
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
+                                <div style="text-align: center; margin-bottom: 25px;">
+                                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: white; font-size: 1.8rem;">
+                                        <i class="fas fa-ambulance"></i>
+                                    </div>
+                                    <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 10px;">Emergency Ambulance Service</h4>
+                                    <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Fast, reliable emergency transport</p>
+                                </div>
+                                
+                                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
+                                    <h6 style="color: var(--text-dark); font-weight: 600; margin-bottom: 15px;">
+                                        <i class="fas fa-info-circle me-2" style="color: #f59e0b;"></i>Service Information
+                                    </h6>
+                                    <ul style="margin: 0; padding-left: 20px; color: var(--text-dark); font-size: 0.9rem; line-height: 1.6;">
+                                        <li>24/7 Emergency Response</li>
+                                        <li>Advanced Life Support (ALS)</li>
+                                        <li>GPS Tracking & ETA Updates</li>
+                                        <li>Medical Equipment Onboard</li>
+                                        <li>Direct Hospital Coordination</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                        <i class="fas fa-clock" style="color: #f59e0b; margin-right: 8px;"></i>
+                                        <strong style="color: var(--text-dark);">Average Response Time: 8-12 minutes</strong>
+                                    </div>
+                                    <p style="color: var(--text-dark); font-size: 0.85rem; margin: 0; line-height: 1.4;">
+                                        Our emergency ambulances are strategically positioned for rapid response across the city.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
+                                <h5 style="color: var(--text-dark); font-weight: 700; margin-bottom: 20px; text-align: center;">
+                                    <i class="fas fa-calendar-plus me-2" style="color: #f59e0b;"></i>Quick Booking
+                                </h5>
+                                
+                                <form id="ambulanceBookingForm">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Patient Name *</label>
+                                        <input type="text" class="form-control" id="patientName" placeholder="Enter patient name" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Contact Number *</label>
+                                        <input type="tel" class="form-control" id="contactNumber" placeholder="Enter contact number" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Pickup Location *</label>
+                                        <textarea class="form-control" id="pickupLocation" rows="2" placeholder="Enter detailed pickup address" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Emergency Type *</label>
+                                        <select class="form-select" id="emergencyType" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                            <option value="">Select emergency type</option>
+                                            <option value="cardiac">Cardiac Emergency</option>
+                                            <option value="trauma">Trauma/Accident</option>
+                                            <option value="stroke">Stroke</option>
+                                            <option value="respiratory">Respiratory Emergency</option>
+                                            <option value="other">Other Medical Emergency</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Additional Notes</label>
+                                        <textarea class="form-control" id="additionalNotes" rows="2" placeholder="Any additional information (optional)" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 15px; margin-top: 25px;">
+                                        <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                                            <i class="fas fa-ambulance me-2"></i>Book Ambulance
+                                        </button>
+                                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Appointment Modal -->
+    <div class="modal fade" id="emergencyAppointmentModal" tabindex="-1" aria-labelledby="emergencyAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
+                    <h5 class="modal-title" id="emergencyAppointmentModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
+                        <i class="fas fa-user-md me-2"></i>Emergency Doctor Appointment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
+                                <div style="text-align: center; margin-bottom: 25px;">
+                                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: white; font-size: 1.8rem;">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 10px;">Emergency Medical Consultation</h4>
+                                    <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Immediate medical attention</p>
+                                </div>
+                                
+                                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
+                                    <h6 style="color: var(--text-dark); font-weight: 600; margin-bottom: 15px;">
+                                        <i class="fas fa-info-circle me-2" style="color: #3b82f6;"></i>Emergency Services
+                                    </h6>
+                                    <ul style="margin: 0; padding-left: 20px; color: var(--text-dark); font-size: 0.9rem; line-height: 1.6;">
+                                        <li>Immediate Doctor Consultation</li>
+                                        <li>Emergency Room Access</li>
+                                        <li>Specialist Referral</li>
+                                        <li>Priority Scheduling</li>
+                                        <li>24/7 Medical Support</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                        <i class="fas fa-clock" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <strong style="color: var(--text-dark);">Priority Response: 15-30 minutes</strong>
+                                    </div>
+                                    <p style="color: var(--text-dark); font-size: 0.85rem; margin: 0; line-height: 1.4;">
+                                        Emergency appointments are prioritized and will be scheduled immediately based on medical urgency.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
+                                <h5 style="color: var(--text-dark); font-weight: 700; margin-bottom: 20px; text-align: center;">
+                                    <i class="fas fa-calendar-plus me-2" style="color: #3b82f6;"></i>Emergency Booking
+                                </h5>
+                                
+                                <form id="emergencyAppointmentForm">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Patient Name *</label>
+                                        <input type="text" class="form-control" id="emergencyPatientName" placeholder="Enter patient name" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Contact Number *</label>
+                                        <input type="tel" class="form-control" id="emergencyContactNumber" placeholder="Enter contact number" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Emergency Type *</label>
+                                        <select class="form-select" id="emergencyMedicalType" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                            <option value="">Select emergency type</option>
+                                            <option value="cardiac">Cardiac Emergency</option>
+                                            <option value="stroke">Stroke Symptoms</option>
+                                            <option value="trauma">Trauma/Injury</option>
+                                            <option value="respiratory">Breathing Difficulty</option>
+                                            <option value="severe_pain">Severe Pain</option>
+                                            <option value="fever">High Fever</option>
+                                            <option value="allergic">Allergic Reaction</option>
+                                            <option value="other">Other Medical Emergency</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Symptoms Description *</label>
+                                        <textarea class="form-control" id="emergencySymptoms" rows="3" placeholder="Describe the symptoms and current condition" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Preferred Hospital</label>
+                                        <select class="form-select" id="preferredHospital" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
+                                            <option value="">Any Available Hospital</option>
+                                            <option value="hospital1">City General Hospital</option>
+                                            <option value="hospital2">Metro Medical Center</option>
+                                            <option value="hospital3">Emergency Care Hospital</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Additional Information</label>
+                                        <textarea class="form-control" id="emergencyAdditionalInfo" rows="2" placeholder="Any additional medical information (optional)" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 15px; margin-top: 25px;">
+                                        <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                                            <i class="fas fa-user-md me-2"></i>Book Emergency Appointment
+                                        </button>
+                                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Now Number Modal -->
+    <div class="modal fade" id="callNowModal" tabindex="-1" aria-labelledby="callNowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
+                    <h5 class="modal-title" id="callNowModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
+                        <i class="fas fa-phone me-2"></i>Emergency Contact Center
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
+                    <div class="text-center">
+                        <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem;">
+                                <i class="fas fa-headset"></i>
+                            </div>
+                            <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 15px;">24/7 Emergency Hotline</h4>
+                            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
+                                <h2 style="color: #3b82f6; font-weight: 800; margin: 0; font-size: 2.5rem;">+91-1800-123-4567</h2>
+                                <p style="color: var(--text-light); margin: 5px 0 0 0; font-size: 1.1rem;">Toll-Free Emergency Number</p>
+                            </div>
+                            <p style="color: var(--text-dark); font-size: 1rem; line-height: 1.6; margin-bottom: 25px;">
+                                Call our 24/7 emergency hotline for immediate assistance with medical emergencies, ambulance dispatch, hospital information, and emergency guidance. Our trained operators are available round-the-clock to help you.
+                            </p>
+                            <div style="display: flex; gap: 15px; justify-content: center;">
+                                <a href="tel:+91-1800-123-4567" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                                    <i class="fas fa-phone me-2"></i>Call Now
+                                </a>
+                                <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
+                                    <i class="fas fa-times me-2"></i>Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Number Message Box -->
+    <div class="modal fade" id="emergencyNumberModal" tabindex="-1" aria-labelledby="emergencyNumberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
+                    <h5 class="modal-title" id="emergencyNumberModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
+                        <i class="fas fa-ambulance me-2"></i>Emergency Ambulance Service
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
+                    <div class="text-center">
+                        <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem;">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 15px;">Emergency Ambulance</h4>
+                            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
+                                <h2 style="color: #3b82f6; font-weight: 800; margin: 0; font-size: 2.5rem;">108</h2>
+                                <p style="color: var(--text-light); margin: 5px 0 0 0; font-size: 1.1rem;">National Emergency Number</p>
+                            </div>
+                            <p style="color: var(--text-dark); font-size: 1rem; line-height: 1.6; margin-bottom: 25px;">
+                                Call this number for immediate medical emergency response. Our emergency services are available 24/7 to provide rapid ambulance dispatch to your location.
+                            </p>
+                            <div style="display: flex; gap: 15px; justify-content: center;">
+                                <a href="tel:108" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                                    <i class="fas fa-phone me-2"></i>Call Now
+                                </a>
+                                <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
+                                    <i class="fas fa-times me-2"></i>Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar-custom');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Enhanced scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards for animation with staggered effect
+        document.querySelectorAll('.hospital-card, .doctor-card, .stats-card').forEach((card, index) => {
+            // Add delay for staggered animation
+            card.style.transitionDelay = `${index * 0.1}s`;
+            observer.observe(card);
+        });
+
+        // Additional animation for sections
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        // Animate sections
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            sectionObserver.observe(section);
+        });
+
+        // Smooth scrolling for anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Add click feedback for hero buttons
+            document.querySelectorAll('.option-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Add a brief visual feedback
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+
+        // Emergency Number Display Function
+        function showEmergencyNumber() {
+            // Close the main emergency modal first
+            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
+            if (emergencyModal) {
+                emergencyModal.hide();
+            }
+            
+            // Show the emergency number modal after a short delay
+            setTimeout(() => {
+                const emergencyNumberModal = new bootstrap.Modal(document.getElementById('emergencyNumberModal'));
+                emergencyNumberModal.show();
+            }, 300);
+        }
+
+        // Ambulance Booking Display Function
+        function showAmbulanceBooking() {
+            // Close the main emergency modal first
+            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
+            if (emergencyModal) {
+                emergencyModal.hide();
+            }
+            
+            // Show the ambulance booking modal after a short delay
+            setTimeout(() => {
+                const ambulanceBookingModal = new bootstrap.Modal(document.getElementById('ambulanceBookingModal'));
+                ambulanceBookingModal.show();
+            }, 300);
+        }
+
+        // Call Now Number Display Function
+        function showCallNowNumber() {
+            // Show the call now modal directly
+            const callNowModal = new bootstrap.Modal(document.getElementById('callNowModal'));
+            callNowModal.show();
+        }
+
+        // Emergency Appointment Display Function
+        function showEmergencyAppointment() {
+            // Close the main emergency modal first
+            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
+            if (emergencyModal) {
+                emergencyModal.hide();
+            }
+            
+            // Show the emergency appointment modal after a short delay
+            setTimeout(() => {
+                const emergencyAppointmentModal = new bootstrap.Modal(document.getElementById('emergencyAppointmentModal'));
+                emergencyAppointmentModal.show();
+            }, 300);
+        }
+
+        // Ambulance Booking Form Handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const ambulanceBookingForm = document.getElementById('ambulanceBookingForm');
+            if (ambulanceBookingForm) {
+                ambulanceBookingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data
+                    const formData = {
+                        patientName: document.getElementById('patientName').value,
+                        contactNumber: document.getElementById('contactNumber').value,
+                        pickupLocation: document.getElementById('pickupLocation').value,
+                        emergencyType: document.getElementById('emergencyType').value,
+                        additionalNotes: document.getElementById('additionalNotes').value
+                    };
+                    
+                    // Validate required fields
+                    if (!formData.patientName || !formData.contactNumber || !formData.pickupLocation || !formData.emergencyType) {
+                        alert('Please fill in all required fields.');
+                        return;
+                    }
+                    
+                    // Show booking confirmation
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Booking...';
+                    submitBtn.disabled = true;
+                    
+                    // Simulate booking process
+                    setTimeout(() => {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('ambulanceBookingModal'));
+                        modal.hide();
+                        
+                        // Show success message
+                        alert(`Ambulance booking confirmed!\n\nPatient: ${formData.patientName}\nContact: ${formData.contactNumber}\nLocation: ${formData.pickupLocation}\nEmergency Type: ${formData.emergencyType}\n\nOur team will contact you shortly with ETA updates.`);
+                        
+                        // Reset form
+                        this.reset();
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 2000);
+                });
+            }
+
+            // Emergency Appointment Form Handler
+            const emergencyAppointmentForm = document.getElementById('emergencyAppointmentForm');
+            if (emergencyAppointmentForm) {
+                emergencyAppointmentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form data
+                    const formData = {
+                        patientName: document.getElementById('emergencyPatientName').value,
+                        contactNumber: document.getElementById('emergencyContactNumber').value,
+                        emergencyType: document.getElementById('emergencyMedicalType').value,
+                        symptoms: document.getElementById('emergencySymptoms').value,
+                        preferredHospital: document.getElementById('preferredHospital').value,
+                        additionalInfo: document.getElementById('emergencyAdditionalInfo').value
+                    };
+                    
+                    // Validate required fields
+                    if (!formData.patientName || !formData.contactNumber || !formData.emergencyType || !formData.symptoms) {
+                        alert('Please fill in all required fields.');
+                        return;
+                    }
+                    
+                    // Show booking confirmation
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Booking...';
+                    submitBtn.disabled = true;
+                    
+                    // Simulate booking process
+                    setTimeout(() => {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('emergencyAppointmentModal'));
+                        modal.hide();
+                        
+                        // Show success message
+                        alert(`Emergency appointment confirmed!\n\nPatient: ${formData.patientName}\nContact: ${formData.contactNumber}\nEmergency Type: ${formData.emergencyType}\nSymptoms: ${formData.symptoms}\n\nA doctor will contact you within 15-30 minutes. Please stay accessible.`);
+                        
+                        // Reset form
+                        this.reset();
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 2000);
+                });
+            }
+        });
+
+        // Emergency Modal Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const emergencyModal = document.getElementById('emergencyModal');
+            const emergencyOptions = document.querySelectorAll('.emergency-option');
+            const floatingEmergencyBtn = document.querySelector('.floating-emergency-btn');
+            
+            // Add visual feedback for emergency options
+            emergencyOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Add emergency-specific styling
+                    this.style.background = 'var(--danger-color)';
+                    this.style.color = 'white';
+                    
+                    // Show emergency alert for critical options
+                    if (this.href.includes('tel:')) {
+                        // Add emergency alert styling
+                        this.style.animation = 'pulse 0.5s ease-in-out';
+                        setTimeout(() => {
+                            this.style.animation = '';
+                        }, 500);
+                    }
+                });
+            });
+
+            // Floating button pulse animation
+            if (floatingEmergencyBtn) {
+                floatingEmergencyBtn.addEventListener('mouseenter', function() {
+                    this.style.animation = 'none';
+                    setTimeout(() => {
+                        this.style.animation = 'emergencyPulse 2s infinite';
+                    }, 100);
+                });
+            }
+
+            // Emergency modal accessibility
+            if (emergencyModal) {
+                emergencyModal.addEventListener('shown.bs.modal', function() {
+                    // Focus on first emergency option for keyboard navigation
+                    const firstOption = this.querySelector('.emergency-option');
+                    if (firstOption) {
+                        firstOption.focus();
+                    }
+                });
+
+                // Add keyboard navigation
+                emergencyModal.addEventListener('keydown', function(e) {
+                    const options = Array.from(this.querySelectorAll('.emergency-option'));
+                    const currentIndex = options.indexOf(document.activeElement);
+                    
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const nextIndex = (currentIndex + 1) % options.length;
+                        options[nextIndex].focus();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const prevIndex = currentIndex === 0 ? options.length - 1 : currentIndex - 1;
+                        options[prevIndex].focus();
+                    }
+                });
+            }
+        });
+
+        // Enhanced Search Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sticky Filter Bar
+            const stickyFilterBar = document.getElementById('sticky-filter-bar');
+            const resultCount = document.getElementById('result-count');
+            const clearFiltersBtn = document.getElementById('clear-filters');
+            const searchForm = document.getElementById('hospital-search-form');
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const hospitalList = document.getElementById('hospital-list');
+
+            // Show/hide sticky filter bar on scroll
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 200) {
+                    stickyFilterBar.classList.add('visible');
+                } else {
+                    stickyFilterBar.classList.remove('visible');
+                }
+            });
+
+            // Clear all filters
+            clearFiltersBtn.addEventListener('click', function() {
+                const form = document.getElementById('hospital-search-form');
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+                form.dispatchEvent(new Event('change'));
+            });
+
+            // Location services
+            const useLocationBtn = document.getElementById('use-location-btn');
+            if (useLocationBtn) {
+                useLocationBtn.addEventListener('click', function() {
+                    if (navigator.geolocation) {
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                const lat = position.coords.latitude;
+                                const lng = position.coords.longitude;
+                                
+                                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        const locationInput = document.querySelector('input[name="location"]');
+                                        if (locationInput) {
+                                            locationInput.value = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
+                                        }
+                                        useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                                    })
+                                    .catch(error => {
+                                        console.error('Error getting location:', error);
+                                        useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                                        alert('Unable to get your location. Please enter manually.');
+                                    });
+                            },
+                            function(error) {
+                                console.error('Geolocation error:', error);
+                                useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                                alert('Location access denied. Please enter your location manually.');
+                            }
+                        );
+                    } else {
+                        alert('Geolocation is not supported by this browser.');
+                    }
+                });
+            }
+
+            // Form submission with loading states
+            searchForm.addEventListener('htmx:beforeRequest', function() {
+                loadingState.style.display = 'flex';
+                emptyState.style.display = 'none';
+                hospitalList.style.display = 'none';
+            });
+
+            searchForm.addEventListener('htmx:afterRequest', function(event) {
+                loadingState.style.display = 'none';
+                
+                // Check if results are empty
+                const hasResults = hospitalList.querySelector('.hospital-card, .row > div');
+                if (!hasResults) {
+                    emptyState.style.display = 'flex';
+                    hospitalList.style.display = 'none';
+                } else {
+                    emptyState.style.display = 'none';
+                    hospitalList.style.display = 'block';
+                }
+            });
+
+            // Update result count
+            function updateResultCount() {
+                const hospitalCards = document.querySelectorAll('.hospital-card');
+                const count = hospitalCards.length;
+                
+                if (count === 0) {
+                    resultCount.textContent = 'No hospitals found';
+                } else if (count === 1) {
+                    resultCount.textContent = '1 hospital found';
+                } else {
+                    resultCount.textContent = `${count} hospitals found`;
+                }
+            }
+
+            // Update count when results change
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        updateResultCount();
+                    }
+                });
+            });
+
+            observer.observe(hospitalList, {
+                childList: true,
+                subtree: true
+            });
+
+            // Initial count update
+            updateResultCount();
+
+            // Enhanced form validation
+            const searchInput = document.getElementById('hospital-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    if (this.value.length > 0) {
+                        this.style.borderColor = 'var(--primary-color)';
+                    } else {
+                        this.style.borderColor = '';
+                    }
+                });
+            }
+
+            // Smooth animations for filter interactions
+            const filterGroups = document.querySelectorAll('.filter-group');
+            filterGroups.forEach(group => {
+                const inputs = group.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.addEventListener('focus', function() {
+                        group.style.transform = 'translateX(4px)';
+                        group.style.transition = 'transform 0.2s ease';
+                    });
+                    
+                    input.addEventListener('blur', function() {
+                        group.style.transform = 'translateX(0)';
+                    });
+                });
+            });
+
+            // Rating filter visual feedback
+            const ratingOptions = document.querySelectorAll('.rating-option');
+            ratingOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    ratingOptions.forEach(opt => opt.classList.remove('active'));
+                    // Add active class to clicked option
+                    this.classList.add('active');
+                });
+            });
+
+            // Checkbox animations
+            const checkboxes = document.querySelectorAll('.filter-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const label = this.nextElementSibling;
+                    if (this.checked) {
+                        label.style.color = 'var(--primary-color)';
+                        label.style.transform = 'scale(1.02)';
+                    } else {
+                        label.style.color = 'var(--text-dark)';
+                        label.style.transform = 'scale(1)';
+                    }
+                });
+            });
+
+            // Enhanced micro-interactions
+            const filterCard = document.querySelector('.filter-card');
+            if (filterCard) {
+                filterCard.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.12)';
+                });
+                
+                filterCard.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.08)';
+                });
+            }
+
+            // Search input enhancements
+            const searchInputs = document.querySelectorAll('.search-input, .location-input');
+            searchInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        });
+
+    </script>
+    <!-- Live Chat Widget -->
+    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <div id="chat-button" style="width: 60px; height: 60px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;">
+            <i class="fas fa-comments" style="color: white; font-size: 24px;"></i>
+        </div>
+        <div id="chat-box" style="position: absolute; bottom: 70px; right: 0; width: 350px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: none; border: 1px solid #e5e7eb;">
+            <div style="background: #007bff; color: white; padding: 16px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h6 style="margin: 0; font-weight: 600;">Live Chat Support</h6>
+                <button id="close-chat" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 16px; height: 280px; overflow-y: auto;">
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <strong>Welcome to Patient Management System!</strong><br>
+                    <small>How can we help you today?</small>
+                </div>
+                <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px;">
+                    <strong>Quick Options:</strong><br>
+                    • Book an appointment<br>
+                    • Find a doctor<br>
+                    • Hospital information<br>
+                    • Emergency contact
+                </div>
+            </div>
+            <div style="padding: 16px; border-top: 1px solid #e5e7eb;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                    <button id="send-message" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Send</button>
+                </div>
+                <div style="margin-top: 8px; text-align: center;">
+                    <small style="color: #6b7280;">Or call us: <strong>+91 98765 43210</strong></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatButton = document.getElementById('chat-button');
+            const chatBox = document.getElementById('chat-box');
+            const closeChat = document.getElementById('close-chat');
+            const sendButton = document.getElementById('send-message');
+            const chatInput = document.getElementById('chat-input');
+
+            chatButton.addEventListener('click', function() {
+                chatBox.style.display = chatBox.style.display === 'none' ? 'block' : 'none';
+            });
+
+            closeChat.addEventListener('click', function() {
+                chatBox.style.display = 'none';
+            });
+
+            sendButton.addEventListener('click', function() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    // Add user message to chat
+                    const chatArea = chatBox.querySelector('div[style*="height: 280px"]');
+                    const userMessage = document.createElement('div');
+                    userMessage.style.cssText = 'background: #007bff; color: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px; text-align: right;';
+                    userMessage.innerHTML = '<strong>You:</strong> ' + message;
+                    chatArea.appendChild(userMessage);
+                    
+                    // Auto response
+                    setTimeout(() => {
+                        const botMessage = document.createElement('div');
+                        botMessage.style.cssText = 'background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;';
+                        botMessage.innerHTML = '<strong>Support:</strong> Thank you for your message! Our team will get back to you shortly. For immediate assistance, please call +91 98765 43210';
+                        chatArea.appendChild(botMessage);
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }, 1000);
+                    
+                    chatInput.value = '';
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }
+            });
+
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

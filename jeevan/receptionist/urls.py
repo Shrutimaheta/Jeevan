@@ -1,7 +1,5 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
 from .views import (
-    ReceptionistViewSet, 
     receptionist_login, 
     receptionist_logout,
     receptionist_dashboard,
@@ -11,9 +9,6 @@ from .views import (
     doctor_schedule_manage,
     receptionist_change_password
 )
-
-router = DefaultRouter()
-router.register(r'receptionists', ReceptionistViewSet, basename='receptionist')
 
 app_name = 'receptionist'
 
@@ -27,4 +22,4 @@ urlpatterns = [
     path('appointments/', appointment_list, name='appointments'),
     path('appointments/<int:appointment_id>/<str:action>/', appointment_action, name='appointment_action'),
     path('doctor-schedule/', doctor_schedule_manage, name='doctor_schedule'),
-] + router.urls
+]

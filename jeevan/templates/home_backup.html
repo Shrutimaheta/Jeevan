@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeevan - Multi-Specialist Hospital Network</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -50px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .hospital-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+            height: 100%;
+        }
+
+        .hospital-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .hospital-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+        }
+
+        .specialization-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .doctor-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .doctor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .section-title {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto 20px;
+        }
+
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 60px 0;
+            }
+            
+            .search-section {
+                margin-top: -30px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="#" style="color: var(--primary-color);">
+                <i class="fas fa-hospital me-2"></i>Jeevan
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#hospitals">Hospitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#doctors">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="#contact">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-outline-primary btn-sm" href="/patient/login/">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1 class="display-4 fw-bold mb-4">Your Health, Our Priority</h1>
+                    <p class="lead mb-4">Connect with the best healthcare professionals across our network of multi-specialist hospitals. Book appointments, access quality care, and manage your health journey with confidence.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#hospitals" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-search me-2"></i>Find Hospitals
+                        </a>
+                        <a href="#doctors" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-user-md me-2"></i>Browse Doctors
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="fas fa-hospital-symbol" style="font-size: 15rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="container">
+        <div class="search-section">
+            <h3 class="text-center mb-4">Find Your Perfect Healthcare Match</h3>
+            <form method="GET" class="row g-3" hx-get="/htmx/hospitals/" hx-target="#hospital-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Search Hospitals</label>
+                    <input type="text" class="form-control" name="search" placeholder="Hospital name or location..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Specialization</label>
+                    <select class="form-select" name="specialization">
+                        <option value="">All Specializations</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.id }}" {% if specialization_filter == spec.id|stringformat:"s" %}selected{% endif %}>
+                            {{ spec.sname }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Min Rating</label>
+                    <select class="form-select" name="min_rating">
+                        <option value="">Any</option>
+                        <option value="4" {% if min_rating == '4' %}selected{% endif %}>4+</option>
+                        <option value="3" {% if min_rating == '3' %}selected{% endif %}>3+</option>
+                        <option value="2" {% if min_rating == '2' %}selected{% endif %}>2+</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Location</label>
+                    <input type="text" class="form-control" name="location" placeholder="City or area..." value="{{ location_filter }}">
+                </div>
+                <div class="col-md-12 d-flex gap-3 align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="insurance" name="insurance" {% if insurance == '1' %}checked{% endif %}>
+                        <label class="form-check-label" for="insurance">Accepts Insurance</label>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5" style="background: var(--light-bg);">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-number">{{ hospitals.count }}</div>
+                        <p class="text-muted mb-0">Partner Hospitals</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-number">{{ featured_doctors.count }}</div>
+                        <p class="text-muted mb-0">Expert Doctors</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-number">{{ specializations.count }}</div>
+                        <p class="text-muted mb-0">Specializations</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-number">24/7</div>
+                        <p class="text-muted mb-0">Emergency Care</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hospitals Section -->
+    <section id="hospitals" class="py-5">
+        <div class="container">
+            <h2 class="section-title">Our Partner Hospitals</h2>
+            <div class="row" id="hospital-list">
+                {% include 'partials/hospital_list.html' with hospitals=hospitals %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Doctors Section -->
+    <section id="doctors" class="py-5" style="background: var(--light-bg);">
+        <div class="container">
+            <h2 class="section-title">Featured Doctors</h2>
+            <form class="row g-3 mb-3" hx-get="/htmx/doctors/" hx-target="#doctor-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Search Doctors</label>
+                    <input type="text" class="form-control" name="search" placeholder="Doctor or hospital...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Specialization</label>
+                    <select class="form-select" name="specialization">
+                        <option value="">All</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.id }}">{{ spec.sname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Min Rating</label>
+                    <select class="form-select" name="min_rating">
+                        <option value="">Any</option>
+                        <option value="4">4+</option>
+                        <option value="3">3+</option>
+                        <option value="2">2+</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="available_today" name="available_today">
+                        <label class="form-check-label" for="available_today">Available Today</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="insurance_doc" name="insurance">
+                        <label class="form-check-label" for="insurance_doc">Accepts Insurance</label>
+                    </div>
+                </div>
+            </form>
+            <div class="row" id="doctor-list">
+                {% include 'partials/doctor_list.html' with doctors=featured_doctors %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="about" class="py-5">
+        <div class="container">
+            <h2 class="section-title text-center">Why Choose Jeevan?</h2>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">Trusted Healthcare</h5>
+                        <p class="text-muted">Verified hospitals and certified doctors ensure quality care for you and your family.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h5 class="fw-bold">24/7 Availability</h5>
+                        <p class="text-muted">Book appointments anytime, anywhere with our round-the-clock booking system.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">Easy Booking</h5>
+                        <p class="text-muted">Simple and intuitive interface makes booking appointments effortless.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h5 class="fw-bold">Patient-Centric</h5>
+                        <p class="text-muted">Your health and comfort are our top priorities in everything we do.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-hospital me-2"></i>Jeevan
+                    </h5>
+                    <p class="text-muted">Connecting patients with quality healthcare across our network of multi-specialist hospitals.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#hospitals">Hospitals</a></li>
+                        <li><a href="#doctors">Doctors</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Services</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Book Appointment</a></li>
+                        <li><a href="#">Emergency Care</a></li>
+                        <li><a href="#">Teleconsultation</a></li>
+                        <li><a href="#">Health Records</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold mb-3">Contact Info</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-phone me-2"></i>+91 98765 43210
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-envelope me-2"></i>info@jeevan.com
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-map-marker-alt me-2"></i>123 Healthcare Street, Medical City
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: #374151;">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">&copy; 2024 Jeevan. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-muted me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards for animation
+        document.querySelectorAll('.hospital-card, .doctor-card, .stats-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+    <!-- Live Chat Widget -->
+    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <div id="chat-button" style="width: 60px; height: 60px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;">
+            <i class="fas fa-comments" style="color: white; font-size: 24px;"></i>
+        </div>
+        <div id="chat-box" style="position: absolute; bottom: 70px; right: 0; width: 350px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: none; border: 1px solid #e5e7eb;">
+            <div style="background: #007bff; color: white; padding: 16px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h6 style="margin: 0; font-weight: 600;">Live Chat Support</h6>
+                <button id="close-chat" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 16px; height: 280px; overflow-y: auto;">
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <strong>Welcome to Jeevan Healthcare!</strong><br>
+                    <small>How can we help you today?</small>
+                </div>
+                <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px;">
+                    <strong>Quick Options:</strong><br>
+                    • Book an appointment<br>
+                    • Find a doctor<br>
+                    • Hospital information<br>
+                    • Emergency contact
+                </div>
+            </div>
+            <div style="padding: 16px; border-top: 1px solid #e5e7eb;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
+                    <button id="send-message" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Send</button>
+                </div>
+                <div style="margin-top: 8px; text-align: center;">
+                    <small style="color: #6b7280;">Or call us: <strong>+91 98765 43210</strong></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatButton = document.getElementById('chat-button');
+            const chatBox = document.getElementById('chat-box');
+            const closeChat = document.getElementById('close-chat');
+            const sendButton = document.getElementById('send-message');
+            const chatInput = document.getElementById('chat-input');
+
+            chatButton.addEventListener('click', function() {
+                chatBox.style.display = chatBox.style.display === 'none' ? 'block' : 'none';
+            });
+
+            closeChat.addEventListener('click', function() {
+                chatBox.style.display = 'none';
+            });
+
+            sendButton.addEventListener('click', function() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    // Add user message to chat
+                    const chatArea = chatBox.querySelector('div[style*="height: 280px"]');
+                    const userMessage = document.createElement('div');
+                    userMessage.style.cssText = 'background: #007bff; color: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px; text-align: right;';
+                    userMessage.innerHTML = '<strong>You:</strong> ' + message;
+                    chatArea.appendChild(userMessage);
+                    
+                    // Auto response
+                    setTimeout(() => {
+                        const botMessage = document.createElement('div');
+                        botMessage.style.cssText = 'background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;';
+                        botMessage.innerHTML = '<strong>Support:</strong> Thank you for your message! Our team will get back to you shortly. For immediate assistance, please call +91 98765 43210';
+                        chatArea.appendChild(botMessage);
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }, 1000);
+                    
+                    chatInput.value = '';
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }
+            });
+
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
