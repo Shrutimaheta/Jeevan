@@ -61,7 +61,8 @@ class AppointmentForm(forms.ModelForm):
             }),
             'abha_id': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter your ABHA ID'
+                'placeholder': 'Enter your ABHA ID (optional)',
+                'required': False
             })
         }
         labels = {
@@ -175,6 +176,18 @@ class AppointmentForm(forms.ModelForm):
         if hospital and doctor:
             if not Doctor.objects.filter(id=doctor.id, hospital=hospital).exists():
                 raise forms.ValidationError("Selected doctor does not belong to the selected hospital.")
+        
+        # ABHA ID validation (optional)
+        abha_id = cleaned_data.get('abha_id')
+        if abha_id:
+            # Remove spaces and dashes for validation
+            clean_abha = abha_id.replace(' ', '').replace('-', '')
+            
+            # Check if it's 14 digits
+            if not (clean_abha.isdigit() and len(clean_abha) == 14):
+                # Check if it's alphanumeric (ABHA format)
+                if not (clean_abha.isalnum() and len(clean_abha) == 14):
+                    raise forms.ValidationError("ABHA ID must be 14 digits or alphanumeric characters.")
         
         return cleaned_data
 

@@ -378,7 +378,7 @@
                                 <option value="{{ doctor.id }}" {% if selected_doctor and selected_doctor.id == doctor.id %}selected{% endif %}>
                                     {{ doctor.full_name }} - 
                                     {% for spec in doctor.specialization.all %}
-                                        {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                        {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                                     {% endfor %}
                                 </option>
                             {% endfor %}
@@ -409,7 +409,7 @@
                             <h5>{{ selected_doctor.full_name }}</h5>
                             <p>
                                 {% for spec in selected_doctor.specialization.all %}
-                                    {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                    {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             </p>
                         </div>
@@ -482,7 +482,7 @@
                                         <h5>{{ doctor.full_name }}</h5>
                                         <p>
                                             {% for spec in doctor.specialization.all %}
-                                                {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                                             {% endfor %}
                                         </p>
                                     </div>

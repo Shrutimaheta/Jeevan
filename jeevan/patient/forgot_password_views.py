@@ -17,17 +17,11 @@ def forgot_password(request):
             patient = form.cleaned_data['patient']
             recovery_method = form.cleaned_data['recovery_method']
             
-            # Create or get existing token
-            token_obj, created = PasswordResetToken.objects.get_or_create(
-                patient=patient,
-                is_used=False,
-                defaults={'token': None}  # Will be set by the model's default
-            )
+            # Delete any existing unused tokens for this patient
+            PasswordResetToken.objects.filter(patient=patient, is_used=False).delete()
             
-            # If token exists but is expired, create a new one
-            if not created and token_obj.is_expired:
-                token_obj.delete()
-                token_obj = PasswordResetToken.objects.create(patient=patient)
+            # Create a new token
+            token_obj = PasswordResetToken.objects.create(patient=patient)
             
             # Generate OTP for phone verification
             if recovery_method == 'phone':
@@ -44,26 +38,26 @@ def forgot_password(request):
             
             # For email verification
             elif recovery_method == 'email':
-                # Send email with reset link
-                reset_url = request.build_absolute_uri(
-                    f'/patient/reset-password/{token_obj.token}/'
-                )
+                # Generate OTP for email verification
+                otp = ''.join(random.choices(string.digits, k=6))
+                # Store OTP in session (in production, use Redis or database)
+                request.session[f'email_otp_{patient.id}'] = otp
+                request.session[f'email_otp_time_{patient.id}'] = timezone.now().isoformat()
                 
-                subject = 'Password Reset Request - Jeevan Healthcare'
+                subject = 'Password Reset Code - Patient Management System'
                 message = f'''
                 Hello {patient.full_name},
                 
-                You have requested to reset your password for your Jeevan Healthcare account.
+                You have requested to reset your password for your Patient Management System account.
                 
-                Click the link below to reset your password:
-                {reset_url}
+                Your verification code is: {otp}
                 
-                This link will expire in 24 hours.
+                This code will expire in 5 minutes.
                 
                 If you did not request this password reset, please ignore this email.
                 
                 Best regards,
-                Jeevan Healthcare Team
+                Patient Management System Team
                 '''
                 
                 try:
@@ -74,12 +68,12 @@ def forgot_password(request):
                         [patient.email],
                         fail_silently=False,
                     )
-                    messages.success(request, f'Password reset link sent to {patient.email}')
+                    messages.success(request, f'Verification code sent to {patient.email}. Code: {otp}')
                 except Exception as e:
                     messages.error(request, 'Failed to send email. Please try again later.')
                     return render(request, 'patient/forgot_password.html', {'form': form})
                 
-                return redirect('patient:forgot_password_sent')
+                return redirect('patient:verify_email_otp', patient_id=patient.id)
     
     else:
         form = ForgotPasswordForm()
@@ -127,6 +121,46 @@ def verify_otp(request, patient_id):
     return render(request, 'patient/verify_otp.html', {'patient': patient})
 
 
+def verify_email_otp(request, patient_id):
+    """Verify OTP for email reset"""
+    try:
+        patient = Patient.objects.get(id=patient_id)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Invalid request.')
+        return redirect('patient:forgot_password')
+    
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+        stored_otp = request.session.get(f'email_otp_{patient_id}')
+        otp_time_str = request.session.get(f'email_otp_time_{patient_id}')
+        
+        if not stored_otp or not otp_time_str:
+            messages.error(request, 'Verification code has expired. Please request a new one.')
+            return redirect('patient:forgot_password')
+        
+        # Check if OTP is expired (5 minutes)
+        otp_time = timezone.datetime.fromisoformat(otp_time_str)
+        if timezone.now() > otp_time + timezone.timedelta(minutes=5):
+            messages.error(request, 'Verification code has expired. Please request a new one.')
+            del request.session[f'email_otp_{patient_id}']
+            del request.session[f'email_otp_time_{patient_id}']
+            return redirect('patient:forgot_password')
+        
+        if entered_otp == stored_otp:
+            # OTP verified, create reset token
+            token_obj = PasswordResetToken.objects.create(patient=patient)
+            # Clear OTP from session
+            del request.session[f'email_otp_{patient_id}']
+            del request.session[f'email_otp_time_{patient_id}']
+            
+            messages.success(request, 'Email verification successful!')
+            return redirect('patient:reset_password', token=token_obj.token)
+        else:
+            messages.error(request, 'Invalid verification code. Please try again.')
+    
+    return render(request, 'patient/verify_email_otp.html', {'patient': patient})
+
+
 def reset_password(request, token):
     """Reset password page - step 2: Enter new password"""
     try:
@@ -163,5 +197,5 @@ def reset_password(request, token):
 
 
 def forgot_password_sent(request):
-    """Confirmation page after sending reset email"""
+    """Confirmation page after sending reset email (legacy - not used with OTP system)"""
     return render(request, 'patient/forgot_password_sent.html')

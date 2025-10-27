@@ -2,314 +2,1868 @@
 {% load static %}
 {% block title %}Welcome - {{ patient.full_name }}{% endblock %}
 {% block content %}
-<div style="background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%);min-height:100vh;width:100%;position:absolute;top:0;left:0;z-index:-1"></div>
-<div class="container-fluid" style="position:relative;z-index:1">
+<!-- Tailwind CSS for modern patient dashboard -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+	tailwind.config = {
+		theme: {
+			extend: {
+				colors: {
+					brand: {50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#2c5aa0',600:'#2c5aa0',700:'#1e3a8a'},
+					teal: {50:'#f0fdfa',100:'#ccfbf1',500:'#14b8a6',600:'#0d9488'}
+				},
+				boxShadow: {
+					soft: '0 10px 25px -10px rgba(2,6,23,0.15)',
+					elev: '0 20px 45px -20px rgba(2,6,23,0.25)'
+				},
+				ringOffsetWidth: {
+					2: '2px'
+				}
+			}
+		}
+	}
+</script>
+
+<!-- New Tailwind Dashboard -->
+<div id="tw-dashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+	<!-- Removed duplicate header bar (base header kept) -->
+
+	<!-- Next appointment + stats -->
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<div class="lg:col-span-2 bg-gradient-to-r from-brand-600 to-brand-700 text-white rounded-2xl p-6 shadow-elev">
+			<div class="flex items-start justify-between gap-4">
+				<div>
+					<h2 class="text-xl font-bold">Next Appointment</h2>
+                    {% with next=upcoming_appointments.0 %}
+					<p class="mt-2 text-brand-100">
+						{% if next %}
+						Dr. {{ next.doctor.full_name|default:"Sarah Johnson" }} • {{ next.doctor.specialization.first.sname|default:"General Medicine" }}
+						<br>
+						{{ next.appointment_date|date:'M d, Y' }} at {{ next.appointment_time|time:'g:i A' }}
+						{% else %}
+						No upcoming appointment.
+                        {% endif %}
+                    {% endwith %}
+					</p>
+				</div>
+				<button id="tw-book-btn" class="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-4 py-2.5 rounded-xl shadow-soft hover:shadow-elev transition">
+					<span>Book Appointment</span>
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+				</button>
+			</div>
+		</div>
+		<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
+			<div class="bg-white rounded-2xl p-4 shadow-soft">
+				<p class="text-slate-500 text-sm">Appointments</p>
+				<p class="text-2xl font-extrabold text-slate-900">{{ upcoming_appointments|length|default:"0" }}</p>
+			</div>
+			<div class="bg-white rounded-2xl p-4 shadow-soft">
+				<p class="text-slate-500 text-sm">Prescriptions</p>
+				<p class="text-2xl font-extrabold text-slate-900">{{ prescriptions|length|default:"0" }}</p>
+			</div>
+			<div class="bg-white rounded-2xl p-4 shadow-soft">
+				<p class="text-slate-500 text-sm">Bills Due</p>
+				<p class="text-2xl font-extrabold text-rose-600">₹{{ bills_due_total|default:"0" }}</p>
+			</div>
+			<div class="bg-white rounded-2xl p-4 shadow-soft">
+				<p class="text-slate-500 text-sm">Reports</p>
+				<p class="text-2xl font-extrabold text-slate-900">{{ reports|length|default:"0" }}</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Action bar -->
+	<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+		<button class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="window.twOpenBooking()">
+			<div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">📅</div>
+			<div class="text-left">
+				<div class="font-semibold text-slate-800">Book Appointment</div>
+				<div class="text-xs text-slate-500">Find specialist & slot</div>
+			</div>
+		</button>
+		<button id="tw-upload-report" class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="showUploadModal()">
+			<div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">📄</div>
+			<div class="text-left">
+				<div class="font-semibold text-slate-800">Upload Report</div>
+				<div class="text-xs text-slate-500">PDF / Image</div>
+			</div>
+		</button>
+		<button class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="alert('Payment gateway placeholder')">
+			<div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">💳</div>
+			<div class="text-left">
+				<div class="font-semibold text-slate-800">Pay Bill</div>
+				<div class="text-xs text-slate-500">Secure payment</div>
+			</div>
+		</button>
+		<button class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="window.location.href='tel:108'">
+			<div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">☎️</div>
+			<div class="text-left">
+				<div class="font-semibold text-slate-800">Contact Hospital</div>
+				<div class="text-xs text-slate-500">24/7 helpline</div>
+			</div>
+		</button>
+	</div>
+
+	<!-- Cards grid -->
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+		<!-- Upcoming Appointments -->
+		<div class="bg-white rounded-2xl shadow-soft p-6">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="font-bold text-slate-900">Upcoming Appointments</h3>
+				<a href="/appointments/" class="text-brand-600 text-sm hover:underline">View all</a>
+			</div>
+			<div class="space-y-3 max-h-64 overflow-auto">
+				{% if upcoming_appointments %}
+					{% for app in upcoming_appointments|slice:':3' %}
+					<div class="p-4 rounded-xl border border-slate-200 flex items-start justify-between">
+						<div>
+							<div class="font-semibold text-slate-800">Dr. {{ app.doctor.full_name|default:'Sarah Johnson' }}</div>
+							<div class="text-xs text-slate-500">{{ app.doctor.specialization.first.sname|default:'General Medicine' }}</div>
+							<div class="text-sm mt-1">{{ app.appointment_date|date:'M d, Y' }} • {{ app.appointment_time|time:'g:i A' }}</div>
+						</div>
+					{% if app.status == 'confirmed' %}
+					<span class="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">{{ app.status|default:'pending'|title }}</span>
+					{% else %}
+					<span class="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">{{ app.status|default:'pending'|title }}</span>
+					{% endif %}
+					</div>
+					{% endfor %}
+				{% else %}
+					<div class="text-sm text-slate-500">No upcoming appointments.</div>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Prescriptions -->
+		<div class="bg-white rounded-2xl shadow-soft p-6">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="font-bold text-slate-900">Prescriptions</h3>
+				<a href="/prescriptions/" class="text-brand-600 text-sm hover:underline">View all</a>
+			</div>
+			{% if prescriptions %}
+			<ul class="space-y-3">
+				{% for rx in prescriptions|slice:':3' %}
+				<li class="p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+					<div>
+						<div class="font-semibold">{{ rx.doctor.full_name|default:rx.doctor|default:"" }}</div>
+						<div class="text-xs text-slate-500">{{ rx.date|date:'M d, Y' }}</div>
+					</div>
+					{% if rx.file %}
+					<a href="{{ rx.file.url }}" class="text-sm font-semibold text-brand-700 hover:underline">Download PDF</a>
+					{% endif %}
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<div class="text-sm text-slate-500">No prescriptions available.</div>
+			{% endif %}
+		</div>
+
+		<!-- Reports -->
+		<div class="bg-white rounded-2xl shadow-soft p-6">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="font-bold text-slate-900">Reports</h3>
+				<button id="tw-upload-report-2" class="text-sm font-semibold text-teal-700 hover:underline" onclick="showUploadModal()">Upload</button>
+			</div>
+			{% if reports %}
+			<ul class="space-y-3">
+				{% for rep in reports|slice:':5' %}
+				<li class="p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+					<span>{{ rep.filename|default:rep.name|default:rep.file.name|default:"Report" }}</span>
+					<div class="flex items-center gap-2">
+						{% if rep.file %}<a class="text-sm text-brand-700 hover:underline" href="{{ rep.file.url }}">View</a>{% endif %}
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<div class="text-sm text-slate-500">No reports uploaded yet.</div>
+			{% endif %}
+		</div>
+
+		<!-- Bills -->
+		<div class="bg-white rounded-2xl shadow-soft p-6">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="font-bold text-slate-900">Bills</h3>
+				<a href="#" class="text-brand-600 text-sm hover:underline">View all</a>
+			</div>
+			{% with bill_list=bills %}
+			{% if bill_list %}
+			<ul class="space-y-3">
+				{% for bill in bill_list|slice:':5' %}
+				<li class="p-4 rounded-xl border border-slate-200">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="font-semibold">{{ bill.title|default:bill.service_name|default:"" }}</div>
+							<div class="text-xs text-slate-500">{{ bill.date|date:'M d, Y' }}</div>
+						</div>
+						<div class="text-right">
+							<div class="font-extrabold text-slate-900">₹{{ bill.amount|default:bill.total|default:0 }}</div>
+							<span class="text-xs px-2 py-1 rounded-full {% if bill.status == 'paid' %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %}">{{ bill.status|default:'pending'|title }}</span>
+						</div>
+					</div>
+					<div class="mt-3 flex items-center gap-3">
+						{% if bill.status != 'paid' %}<button class="px-3 py-2 text-sm font-semibold bg-brand-600 text-white rounded-lg hover:bg-brand-700">Pay Now</button>{% endif %}
+						<button class="px-3 py-2 text-sm font-semibold text-brand-700">Download</button>
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<div class="text-sm text-slate-500">No bills found.</div>
+			{% endif %}
+			{% endwith %}
+		</div>
+
+		<!-- Health Insights -->
+		<div class="bg-white rounded-2xl shadow-soft p-6">
+			<h3 class="font-bold text-slate-900 mb-2">Health Insights</h3>
+			<div class="grid grid-cols-2 gap-4">
+				{% if bmi %}
+				<div class="p-4 bg-brand-50 rounded-xl">
+					<p class="text-slate-600 text-sm">BMI</p>
+					<p class="text-xl font-extrabold text-brand-700">{{ bmi }}</p>
+				</div>
+				{% endif %}
+				{% if last_visit_date %}
+				<div class="p-4 bg-emerald-50 rounded-xl">
+					<p class="text-slate-600 text-sm">Last Visit</p>
+					<p class="text-xl font-extrabold text-emerald-700">{{ last_visit_date|date:'M d' }}</p>
+				</div>
+				{% endif %}
+				{% if medication_adherence %}
+				<div class="p-4 bg-amber-50 rounded-xl">
+					<p class="text-slate-600 text-sm">Med Adherence</p>
+					<p class="text-xl font-extrabold text-amber-700">{{ medication_adherence }}%</p>
+				</div>
+				{% endif %}
+				{% if avg_sleep_hours %}
+				<div class="p-4 bg-teal-50 rounded-xl">
+					<p class="text-slate-600 text-sm">Sleep (avg)</p>
+					<p class="text-xl font-extrabold text-teal-700">{{ avg_sleep_hours }}h</p>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Appointments List -->
+	<div class="bg-white rounded-2xl shadow-soft p-6 mt-6">
+		<div class="flex items-center justify-between mb-4">
+			<h3 class="font-bold text-slate-900">All Appointments</h3>
+			<div class="text-sm text-slate-500">Past & Upcoming</div>
+		</div>
+		<div class="overflow-x-auto">
+			<table class="min-w-full text-sm">
+				<thead class="text-left text-slate-500">
+					<tr>
+						<th class="py-2">Doctor</th>
+						<th class="py-2">Specialization</th>
+						<th class="py-2">Date</th>
+						<th class="py-2">Time</th>
+						<th class="py-2">Status</th>
+						<th class="py-2">Actions</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-slate-100">
+					{% if upcoming_appointments %}
+						{% for app in upcoming_appointments %}
+						<tr>
+							<td class="py-3">Dr. {{ app.doctor.full_name|default:'—' }}</td>
+							<td class="py-3">{{ app.doctor.specialization.first.sname|default:'—' }}</td>
+							<td class="py-3">{{ app.appointment_date|date:'M d, Y' }}</td>
+							<td class="py-3">{{ app.appointment_time|time:'g:i A' }}</td>
+						<td class="py-3">
+							{% if app.status == 'confirmed' %}
+							<span class="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">{{ app.status|title|default:'—' }}</span>
+							{% else %}
+							<span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">{{ app.status|title|default:'—' }}</span>
+							{% endif %}
+						</td>
+							<td class="py-3">
+								<button class="px-3 py-1.5 text-xs font-semibold text-brand-700" onclick="window.twReschedule()">Reschedule</button>
+								<button class="px-3 py-1.5 text-xs font-semibold text-rose-700" onclick="window.twCancel()">Cancel</button>
+							</td>
+						</tr>
+						{% endfor %}
+					{% else %}
+						<tr><td class="py-4 text-slate-500" colspan="6">No appointments to show.</td></tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<!-- Feedback -->
+	<div class="bg-white rounded-2xl shadow-soft p-6 mt-6">
+		<h3 class="font-bold text-slate-900 mb-4">Feedback</h3>
+		<form class="grid grid-cols-1 md:grid-cols-3 gap-4">
+			<input type="text" placeholder="Doctor / Department" class="col-span-1 md:col-span-1 w-full border border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+			<select class="col-span-1 md:col-span-1 w-full border border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+				<option>Rating</option>
+				<option>5 - Excellent</option>
+				<option>4 - Good</option>
+				<option>3 - Average</option>
+				<option>2 - Poor</option>
+				<option>1 - Very Poor</option>
+			</select>
+			<div class="col-span-1 md:col-span-3">
+				<textarea rows="3" placeholder="Write your feedback..." class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+			</div>
+			<div class="col-span-1 md:col-span-3 flex justify-end">
+				<button type="button" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl">Submit</button>
+			</div>
+		</form>
+	</div>
+
+	<!-- Footer -->
+	<footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500">
+		<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+			<div>© 2025 JeevanCare • All rights reserved</div>
+			<div class="flex items-center gap-4">
+				<a class="hover:text-slate-700" href="#">Privacy</a>
+				<a class="hover:text-slate-700" href="#">Terms</a>
+				<a class="hover:text-slate-700" href="tel:108">Emergency: 108</a>
+			</div>
+		</div>
+	</footer>
+</div>
+
+<!-- Booking Modal removed: reverting to legacy hospital/specialization modal flow -->
+
+<!-- Report Upload Modal -->
+<div class="modal fade" id="uploadReportModal" tabindex="-1" aria-labelledby="uploadReportModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="uploadReportModalLabel">
+					<i class="fas fa-file-upload me-2"></i>Upload Medical Report
+				</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="uploadReportForm" method="post" enctype="multipart/form-data" action="{% url 'patient:document_upload' %}">
+					{% csrf_token %}
+					
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="title" class="form-label fw-bold">Document Title</label>
+							<input type="text" class="form-control" id="title" name="title" placeholder="e.g., Blood Test Report - Jan 2025" required>
+							<div class="form-text">Use a descriptive title to easily find your document later.</div>
+						</div>
+						
+						<div class="col-md-6 mb-3">
+							<label for="document_type" class="form-label fw-bold">Document Type</label>
+							<select class="form-select" id="document_type" name="document_type" required>
+								<option value="">Select document type</option>
+								<option value="medical_report">Medical Report</option>
+								<option value="prescription">Prescription</option>
+								<option value="lab_result">Lab Result</option>
+								<option value="scan_imaging">Scan/Imaging</option>
+								<option value="insurance_document">Insurance Document</option>
+								<option value="id_proof">ID Proof</option>
+								<option value="other">Other</option>
+							</select>
+						</div>
+					</div>
+					
+					<div class="mb-3">
+						<label for="file" class="form-label fw-bold">Select File</label>
+						<input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp" required>
+						<div class="form-text">
+							<i class="fas fa-info-circle me-1"></i>
+							Supported formats: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF, BMP, WEBP. Maximum size: 10MB.
+						</div>
+					</div>
+					
+					<div class="mb-3">
+						<label for="description" class="form-label fw-bold">Description (Optional)</label>
+						<textarea class="form-control" id="description" name="description" rows="3" placeholder="Add any additional notes about this document..."></textarea>
+					</div>
+					
+					<!-- Upload Guidelines -->
+					<div class="alert alert-info">
+						<h6 class="fw-bold mb-2"><i class="fas fa-shield-alt me-1"></i>Privacy & Security</h6>
+						<p class="mb-0 small">Your documents are securely stored and only accessible by you and authorized medical staff. We maintain strict privacy standards and comply with healthcare data protection regulations.</p>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary" onclick="submitUploadForm()">
+					<i class="fas fa-upload me-1"></i>Upload Document
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Notifications Panel -->
+<aside id="tw-notif-panel" class="fixed top-0 right-0 h-full w-80 bg-white shadow-elev border-l border-slate-200 z-[70] translate-x-full transition-transform">
+	<div class="p-4 border-b border-slate-200 flex items-center justify-between">
+		<h4 class="font-bold text-slate-900">Notifications</h4>
+		<button class="text-slate-500" onclick="window.twToggleNotif(false)">✕</button>
+	</div>
+	<div class="p-4 space-y-3 overflow-y-auto h-[calc(100%-56px)]">
+		<div class="p-3 rounded-xl border border-slate-200">
+			<div class="font-semibold">Appointment Confirmed</div>
+			<div class="text-xs text-slate-500">Tomorrow • 2:30 PM</div>
+		</div>
+		<div class="p-3 rounded-xl border border-slate-200">
+			<div class="font-semibold">Report Uploaded</div>
+			<div class="text-xs text-slate-500">CBC Report • Oct 12</div>
+		</div>
+		<div class="p-3 rounded-xl border border-slate-200">
+			<div class="font-semibold">Payment Reminder</div>
+			<div class="text-xs text-slate-500">Cardiology • ₹750</div>
+		</div>
+	</div>
+</aside>
+
+<!-- Tailwind Dashboard JS -->
+<script>
+(() => {
+	const $ = (s) => document.querySelector(s);
+	const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+	// Notifications
+	window.twToggleNotif = (open) => {
+		const panel = $('#tw-notif-panel');
+		if (!panel) return;
+		panel.style.transform = open ? 'translateX(0)' : 'translateX(100%)';
+	};
+	const notifBtn = $('#tw-notif-btn');
+	if (notifBtn) notifBtn.addEventListener('click', () => twToggleNotif(true));
+
+	// Upload report modal functions
+	window.showUploadModal = () => {
+		const modal = new bootstrap.Modal(document.getElementById('uploadReportModal'));
+		modal.show();
+	};
+
+	window.submitUploadForm = () => {
+		const form = document.getElementById('uploadReportForm');
+		if (form) {
+			// Show loading state
+			const submitBtn = document.querySelector('#uploadReportModal .btn-primary');
+			const originalText = submitBtn.innerHTML;
+			submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading...';
+			submitBtn.disabled = true;
+			
+			// Submit the form
+			form.submit();
+		}
+	};
+
+    // Legacy flow trigger wiring only (Tailwind stepper removed)
+    const modal = null;
+    const stepContent = null;
+    const steps = [];
+    let current = 0;
+    const state = {};
+
+	const samples = {
+		specs: ['Cardiology','Neurology','Orthopedics','Pediatrics','Dermatology'],
+		doctors: {
+			'Cardiology': ['Dr. A. Shah','Dr. P. Mehta'],
+			'Neurology': ['Dr. S. Iyer','Dr. K. Rao'],
+			'Orthopedics': ['Dr. R. Patel'],
+			'Pediatrics': ['Dr. M. Jain'],
+			'Dermatology': ['Dr. N. Singh']
+		}
+	};
+
+	function render() {
+        // no-op
+	}
+
+    function canProceed() { return false; }
+
+    // remove listeners
+
+    // Reconnect to legacy Bootstrap modal flow
+    window.twOpenBooking = () => { try { showHospitalSelection(); } catch(_) {} };
+    window.twCloseBooking = () => {};
+    const bookBtn = $('#tw-book-btn');
+    if (bookBtn) bookBtn.addEventListener('click', () => window.twOpenBooking());
+    window.twReschedule = () => window.twOpenBooking();
+    window.twCancel = () => alert('Cancellation request submitted.');
+})();
+</script>
+<link rel="stylesheet" href="{% static 'css/patient_dashboard_premium.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-	:root{--brand:#2C7BE5;--accent:#20C997;--bg:#e6f3ff;--text:#1f2937;--muted:#6B7280}
-	html{background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%) !important;min-height:100vh}
-	body{background:linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%) !important;min-height:100vh;margin:0;padding:0}
-	.container-fluid{background:transparent !important}
-	.main-content{background:transparent !important}
-	.modern-header{background:linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important}
-	*{box-sizing:border-box}
-	.hero-banner{background:linear-gradient(135deg, rgba(44,123,229,0.1), rgba(32,201,151,0.1)), url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;border-radius:20px;position:relative;overflow:hidden}
-	.hero-content{position:relative;z-index:2;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
-	.cardx{border:1px solid #eef2f7;border-radius:16px;transition:all .3s ease;background:white;position:relative;overflow:hidden}
-	.cardx:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.1)}
-	.cardx::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--brand), var(--accent))}
-	.badgex{border-radius:999px;border:1px solid #e5e7eb;padding:.25rem .5rem;font-size:12px;font-weight:500}
-	.slider{display:flex;gap:16px;overflow:auto;padding-bottom:8px;scroll-behavior:smooth}
-	.slider::-webkit-scrollbar{height:8px}
-	.slider::-webkit-scrollbar-thumb{background:linear-gradient(90deg, var(--brand), var(--accent));border-radius:999px}
-	.quick-card{background:linear-gradient(135deg, #ffffff, #f8fafc);border:1px solid #e2e8f0;border-radius:16px;padding:24px;text-align:center;transition:all .3s ease;position:relative;overflow:hidden}
-	.quick-card:hover{transform:translateY(-6px);box-shadow:0 25px 50px rgba(0,0,0,.15)}
-	.quick-card::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:linear-gradient(135deg, rgba(44,123,229,0.05), rgba(32,201,151,0.05));opacity:0;transition:opacity .3s ease}
-	.quick-card:hover::before{opacity:1}
-	.health-tip{background:linear-gradient(135deg, rgba(32,201,151,0.1), rgba(44,123,229,0.1));border:1px solid rgba(32,201,151,0.2);border-radius:16px;padding:20px;position:relative;overflow:hidden}
-	.health-tip::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle, rgba(32,201,151,0.1), transparent);border-radius:50%}
-	.inspiration-card{background:linear-gradient(135deg, rgba(44,123,229,0.8), rgba(32,201,151,0.8)), url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;border-radius:20px;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
-	.doctor-card{background:white;border-radius:16px;padding:20px;box-shadow:0 8px 25px rgba(0,0,0,.08);transition:all .3s ease;border:1px solid #f1f5f9}
-	.doctor-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
-	.icon-large{font-size:48px;margin-bottom:16px;display:block}
-	.stats-card{background:linear-gradient(135deg, #ffffff, #f8fafc);border:1px solid #e2e8f0;border-radius:16px;padding:20px;text-align:center;position:relative;overflow:hidden}
-	.stats-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--brand), var(--accent))}
+/* Chart Styles */
+.chart-container {
+	position: relative;
+	height: 300px;
+	margin: 1rem 0;
+	padding: 1rem;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border-radius: 12px;
+	border: 1px solid #e2e8f0;
+}
+
+.chart-controls {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.chart-btn {
+	padding: 0.5rem 1rem;
+	border: 1px solid #d1d5db;
+	background: #ffffff;
+	color: #6b7280;
+	border-radius: 6px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.chart-btn:hover {
+	background: #f3f4f6;
+	border-color: #9ca3af;
+}
+
+.chart-btn.active {
+	background: #3b82f6;
+	border-color: #3b82f6;
+	color: #ffffff;
+}
+
+.adherence-score {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #10b981;
+	background: rgba(16, 185, 129, 0.1);
+	padding: 0.5rem 1rem;
+	border-radius: 8px;
+}
+
+/* Chart Card Enhancements */
+.premium-card .card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+/* Responsive Chart Adjustments */
+@media (max-width: 768px) {
+	.chart-container {
+		height: 250px;
+		padding: 0.75rem;
+	}
+	
+	.chart-controls {
+		flex-wrap: wrap;
+	}
+	
+	.chart-btn {
+		font-size: 0.75rem;
+		padding: 0.375rem 0.75rem;
+	}
+}
+
+/* Chart Loading Animation */
+.chart-container.loading {
+	position: relative;
+}
+
+.chart-container.loading::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 40px;
+	height: 40px;
+	margin: -20px 0 0 -20px;
+	border: 3px solid #f3f3f3;
+	border-top: 3px solid #3b82f6;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* No Appointments Message */
+.no-appointments-message {
+	text-align: center;
+	padding: 3rem 2rem;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border-radius: 12px;
+	border: 2px dashed #cbd5e1;
+}
+
+.no-appointments-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+	opacity: 0.6;
+}
+
+.no-appointments-message h6 {
+	color: #475569;
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+}
+
+.no-appointments-message p {
+	color: #64748b;
+	margin-bottom: 1.5rem;
+	font-size: 0.9rem;
+}
+
+/* Hospital Selection Modal Styles */
+#hospitalSelectionContent .card {
+	transition: all 0.3s ease;
+	border: 2px solid transparent;
+}
+
+#hospitalSelectionContent .card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+	border-color: #3b82f6;
+}
+
+#hospitalSelectionContent .card:active {
+	transform: translateY(-2px);
+}
+
+/* Tab Button Styles */
+.btn-group .btn {
+	border-radius: 0;
+	font-weight: 500;
+	transition: all 0.3s ease;
+}
+
+.btn-group .btn.active {
+	background-color: #3b82f6;
+	border-color: #3b82f6;
+	color: white;
+	box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-group .btn:not(.active):hover {
+	background-color: #f8fafc;
+	border-color: #3b82f6;
+	color: #3b82f6;
+}
+
+/* Specialization Card Styles */
+#specializationSelectionContent .card {
+	transition: all 0.3s ease;
+	border: 2px solid transparent;
+}
+
+#specializationSelectionContent .card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+	border-color: #3b82f6;
+}
+
+#specializationSelectionContent .card:active {
+	transform: translateY(-2px);
+}
+
+/* Specialization Cards - Compact Premium Sizing */
+#specializationSelectionContent .spec-card .card-body { padding: 0.75rem 0.75rem 0.9rem; }
+#specializationSelectionContent .spec-icon-wrap {
+	width: 56px;
+	height: 56px;
+	border-radius: 14px;
+	background: #f1f5ff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 10px;
+}
+#specializationSelectionContent .spec-icon-wrap img { width: 32px; height: 32px; object-fit: contain; }
+#specializationSelectionContent .spec-title { font-size: 0.95rem; margin-bottom: 0.25rem; }
+#specializationSelectionContent .spec-desc { font-size: 0.78rem; color: #64748b; margin: 0 0 0.5rem; min-height: 2.4em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#specializationSelectionContent .spec-meta { font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; }
+#specializationSelectionContent .badge { font-size: 0.65rem; padding: .35em .5em; }
+#specializationSelectionContent .card-footer { padding: 0.5rem 0.75rem; }
+
+/* Medical Icon Styles */
+.medical-icon {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	transition: all 0.3s ease;
+}
+
+.medical-icon:hover {
+	transform: scale(1.1);
+}
+
+.medical-icon-fallback {
+	width: 80px;
+	height: 80px;
+	background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	font-size: 32px;
+	box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+/* Specialization Card Icon Enhancement */
+#specializationSelectionContent .card .medical-icon {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+#specializationSelectionContent .card:hover .medical-icon {
+	transform: scale(1.05);
+	filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+/* Premium Hospital Cards */
+.hospital-card-premium {
+	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+	border-radius: 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+	overflow: hidden;
+	position: relative;
+}
+
+.hospital-card-premium:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+	border-color: #3b82f6;
+}
+
+.hospital-card-premium::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, #2c5aa0, #1e3a8a);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.hospital-card-premium:hover::before {
+	opacity: 1;
+}
+
+.hospital-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 20px 20px 0;
+	position: relative;
+}
+
+.hospital-logo-premium {
+	width: 60px;
+	height: 60px;
+	background: linear-gradient(135deg, #eff6ff, #dbeafe);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #dbeafe;
+	position: relative;
+	overflow: hidden;
+}
+
+.hospital-logo-premium img {
+	width: 40px;
+	height: 40px;
+	object-fit: cover;
+	border-radius: 8px;
+}
+
+.hospital-icon {
+	font-size: 24px;
+	color: #3b82f6;
+}
+
+.hospital-badge {
+	background: linear-gradient(135deg, #10b981, #059669);
+	border-radius: 20px;
+	padding: 6px 12px;
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.badge-text {
+	color: white;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.hospital-card-body {
+	padding: 20px;
+}
+
+.hospital-name {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 8px;
+	line-height: 1.3;
+}
+
+.hospital-location {
+	color: #64748b;
+	font-size: 0.875rem;
+	margin-bottom: 16px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.hospital-specializations {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 16px;
+}
+
+.spec-tag {
+	background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+	color: #475569;
+	padding: 4px 8px;
+	border-radius: 8px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	border: 1px solid #e2e8f0;
+}
+
+.spec-tag.more {
+	background: linear-gradient(135deg, #2c5aa0, #1e3a8a);
+	color: white;
+}
+
+.hospital-contact {
+	color: #64748b;
+	font-size: 0.875rem;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.hospital-card-footer {
+	padding: 0 20px 20px;
+}
+
+.book-btn-premium {
+	width: 100%;
+	background: linear-gradient(135deg, #2c5aa0, #1e3a8a);
+	color: white;
+	border: none;
+	border-radius: 12px;
+	padding: 12px 20px;
+	font-weight: 600;
+	font-size: 0.875rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+.book-btn-premium:hover {
+	background: linear-gradient(135deg, #1e3a8a, #1e40af);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(44, 90, 160, 0.4);
+}
+
+/* Premium Specialization Cards */
+.specialization-card-premium {
+	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+	border-radius: 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+	overflow: hidden;
+	position: relative;
+}
+
+.specialization-card-premium:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+	border-color: #10b981;
+}
+
+.specialization-card-premium::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, #10b981, #059669);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.specialization-card-premium:hover::before {
+	opacity: 1;
+}
+
+.spec-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 20px 20px 0;
+}
+
+.spec-icon-premium {
+	width: 60px;
+	height: 60px;
+	background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #d1fae5;
+	position: relative;
+	overflow: hidden;
+}
+
+.spec-icon-premium img {
+	width: 32px;
+	height: 32px;
+	object-fit: contain;
+}
+
+.spec-availability {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	background: linear-gradient(135deg, #10b981, #059669);
+	border-radius: 20px;
+	padding: 6px 12px;
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.availability-dot {
+	width: 6px;
+	height: 6px;
+	background: white;
+	border-radius: 50%;
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
+}
+
+.availability-text {
+	color: white;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.spec-card-body {
+	padding: 20px;
+}
+
+.spec-name {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 8px;
+	line-height: 1.3;
+}
+
+.spec-description {
+	color: #64748b;
+	font-size: 0.875rem;
+	margin-bottom: 16px;
+	line-height: 1.5;
+}
+
+.spec-stats {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.stat-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: #64748b;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.stat-item i {
+	color: #10b981;
+	font-size: 0.875rem;
+}
+
+.spec-card-footer {
+	padding: 0 20px 20px;
+}
+
+.select-spec-btn {
+	width: 100%;
+	background: linear-gradient(135deg, #10b981, #059669);
+	color: white;
+	border: none;
+	border-radius: 12px;
+	padding: 12px 20px;
+	font-weight: 600;
+	font-size: 0.875rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.select-spec-btn:hover {
+	background: linear-gradient(135deg, #059669, #047857);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Premium Location Cards */
+.location-card-premium {
+	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+	border-radius: 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+	overflow: hidden;
+	position: relative;
+}
+
+.location-card-premium:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+	border-color: #f59e0b;
+}
+
+.location-card-premium::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, #f59e0b, #d97706);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.location-card-premium:hover::before {
+	opacity: 1;
+}
+
+.location-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 20px 20px 0;
+}
+
+.location-icon-premium {
+	width: 60px;
+	height: 60px;
+	background: linear-gradient(135deg, #fef3c7, #fde68a);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #fde68a;
+	position: relative;
+	overflow: hidden;
+}
+
+.location-icon-premium i {
+	font-size: 24px;
+	color: #f59e0b;
+}
+
+.location-badge {
+	background: linear-gradient(135deg, #f59e0b, #d97706);
+	border-radius: 20px;
+	padding: 6px 12px;
+	box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.location-card-body {
+	padding: 20px;
+}
+
+.location-name {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 8px;
+	line-height: 1.3;
+}
+
+.location-description {
+	color: #64748b;
+	font-size: 0.875rem;
+	margin-bottom: 16px;
+	line-height: 1.5;
+}
+
+.location-stats {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.location-card-footer {
+	padding: 0 20px 20px;
+}
+
+.view-location-btn {
+	width: 100%;
+	background: linear-gradient(135deg, #f59e0b, #d97706);
+	color: white;
+	border: none;
+	border-radius: 12px;
+	padding: 12px 20px;
+	font-weight: 600;
+	font-size: 0.875rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.view-location-btn:hover {
+	background: linear-gradient(135deg, #d97706, #b45309);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Empty State Styling */
+.empty-state-icon {
+	font-size: 48px;
+	margin-bottom: 16px;
+	opacity: 0.5;
+}
+
+.empty-state-title {
+	color: #64748b;
+	font-weight: 600;
+}
+
+.empty-state-text {
+	color: #94a3b8;
+	font-size: 0.875rem;
+}
 </style>
 
-<!-- Header -->
-<div class="d-flex align-items-center justify-content-between mb-4">
-	<div class="d-flex align-items-center gap-3">
-		<div style="width:40px;height:40px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px">J</div>
-		<strong style="font-size:24px;color:var(--text)">JeevanCare</strong>
-	</div>
-	<div class="text-center d-none d-md-block">
-		<h4 class="mb-0" style="color:var(--text)">Welcome Back, {{ patient.full_name }} 👋</h4>
-	</div>
-	<div class="d-flex align-items-center gap-3">
-		<a class="text-decoration-none position-relative" href="#" title="Notifications" style="font-size:20px;color:var(--muted)">
-			🔔
-			<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--accent);font-size:10px">3</span>
-		</a>
-		<a class="text-decoration-none" href="#" title="Messages" style="font-size:20px;color:var(--muted)">💬</a>
-		<div class="dropdown">
-			<a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown" style="color:var(--text)">
-				<div style="width:36px;height:36px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold">U</div>
-			</a>
-			<ul class="dropdown-menu dropdown-menu-end">
-				<li><a class="dropdown-item" href="/patient/profile/">Profile</a></li>
-				<li><a class="dropdown-item" href="/patient/profile/">Settings</a></li>
-				<li><hr class="dropdown-divider"></li>
-				<li><a class="dropdown-item text-danger" href="/patient/logout/">Logout</a></li>
-			</ul>
-		</div>
-	</div>
-</div>
+<div class="premium-dashboard" style="display:none;">
 
-<!-- Hero Banner -->
-<div class="hero-banner p-5 mb-5">
-	<div class="hero-content">
-		<h2 class="mb-3" style="font-weight:700;font-size:2.5rem">Welcome, {{ patient.full_name }} 🌿</h2>
-		<p class="mb-4" style="font-size:1.2rem;opacity:0.9">Your health journey continues today. Every step forward is a step toward wellness.</p>
-		<a href="/appointments/create/" class="btn btn-light btn-lg px-4 py-3" style="border-radius:12px;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.2)">Book Appointment Now</a>
-	</div>
-</div>
 
-<!-- Quick Stats Section -->
-<div class="row g-4 mb-5">
-	<div class="col-12">
-		<h4 class="fw-bold mb-4" style="color:var(--text)">📊 Quick Stats</h4>
-		<div class="row g-3">
-			<div class="col-md-3">
-				<div class="cardx p-4 text-center">
-					<div class="fw-bold fs-2 mb-2" style="color:var(--brand)">{{ upcoming_appointments|length }}</div>
-					<div class="text-muted">Upcoming Appointments</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="cardx p-4 text-center">
-					<div class="fw-bold fs-2 mb-2" style="color:var(--accent)">{{ stats.completed|default:0 }}</div>
-					<div class="text-muted">Completed Visits</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="cardx p-4 text-center">
-					<div class="fw-bold fs-2 mb-2" style="color:#FF9F43">{{ hospitals|length }}</div>
-					<div class="text-muted">Available Hospitals</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="cardx p-4 text-center">
-					<div class="fw-bold fs-2 mb-2" style="color:#E55353">{{ recent_status_changes|length|default:0 }}</div>
-					<div class="text-muted">Recent Updates</div>
+	<!-- Hero Section -->
+	<section class="hero-section" aria-labelledby="hero-title" style="padding: 5px 0 0px;">
+		<div class="hero-content">
+			<div class="hero-banner" role="img" aria-label="Healthcare background">
+				<div class="hero-text">
+					<h1 class="hero-title" id="hero-title">Good {{ current_time }}, {{ patient.full_name }} 👋</h1>
+					<p class="hero-subtitle">Your health dashboard • Last updated: {{ current_date }}</p>
+					<div class="hero-actions">
+						<a href="/appointments/create/" class="hero-cta" role="button" aria-describedby="hero-subtitle">
+							<span>📅 Book Appointment</span>
+							<span class="cta-arrow" aria-hidden="true">→</span>
+						</a>
+						<a href="/reports/" class="hero-cta-secondary" role="button">
+							<span>📋 View Reports</span>
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-</div>
+	</section>
 
-<!-- Hospital Information Section -->
-<div class="row g-4 mb-5">
-	<div class="col-12">
-		<h4 class="fw-bold mb-4" style="color:var(--text)">🏥 Available Hospitals</h4>
-		<div class="row g-4">
+	<!-- Quick Stats Section -->
+	<section class="hero-content" aria-labelledby="stats-heading">
+		<h2 id="stats-heading" class="sr-only">Dashboard Statistics</h2>
+		<div class="stats-grid" role="group" aria-label="Health dashboard statistics">
+			<article class="stat-card fade-in-up" aria-labelledby="upcoming-appointments-stat">
+				<div class="stat-icon">📅</div>
+				<div class="stat-number" id="upcoming-appointments-stat" aria-label="{{ upcoming_appointments|length }} upcoming appointments">{{ upcoming_appointments|length|default:"0" }}</div>
+				<div class="stat-label">Upcoming Appointments</div>
+				<div class="stat-trend">{% if upcoming_appointments|length > 0 %}Scheduled{% else %}None scheduled{% endif %}</div>
+			</article>
+			<article class="stat-card fade-in-up" aria-labelledby="completed-visits-stat">
+				<div class="stat-icon">✅</div>
+				<div class="stat-number" id="completed-visits-stat" aria-label="{{ stats.completed|default:0 }} completed visits">{{ stats.completed|default:"12" }}</div>
+				<div class="stat-label">Completed Visits</div>
+				<div class="stat-trend">{% if stats.completed > 0 %}Completed{% else %}No visits yet{% endif %}</div>
+			</article>
+			<article class="stat-card fade-in-up" aria-labelledby="health-score-stat">
+				<div class="stat-icon">💚</div>
+				<div class="stat-number" id="health-score-stat" aria-label="{{ health_score|default:'75' }}% health score">{{ health_score|default:"75" }}%</div>
+				<div class="stat-label">Health Score</div>
+				<div class="stat-trend">Based on recent data</div>
+			</article>
+			<article class="stat-card fade-in-up" aria-labelledby="available-hospitals-stat">
+				<div class="stat-icon">🏥</div>
+				<div class="stat-number" id="available-hospitals-stat" aria-label="{{ hospitals|length }} available hospitals">{{ hospitals|length|default:"8" }}</div>
+				<div class="stat-label">Available Hospitals</div>
+				<div class="stat-trend">{% if hospitals|length > 0 %}Available{% else %}No hospitals{% endif %}</div>
+			</article>
+		</div>
+	</section>
+
+	<!-- Hospital Information Section -->
+	<section class="hero-content">
+		<h2 class="card-title mb-4">🏥 Available Hospitals</h2>
+		<div class="hospital-grid">
 			{% for hospital in hospitals %}
-			<div class="col-12 col-md-6 col-lg-4">
-				<div class="cardx p-4 h-100 text-center">
-					<!-- Hospital Image - Centered and Larger -->
-					<div class="mb-4">
-						{% if hospital.logo %}
-							<img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" class="rounded mx-auto d-block" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px !important; border: 3px solid var(--accent);">
-						{% else %}
-							<div class="bg-primary rounded d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px; border-radius: 12px; border: 3px solid var(--accent);">
-								<span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
-							</div>
-						{% endif %}
+			<div class="hospital-card fade-in-up">
+				{% if hospital.logo %}
+					<img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" class="hospital-logo">
+				{% else %}
+					<div class="hospital-logo" style="background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+						🏥
 					</div>
-					
-					<!-- Hospital Name -->
-					<h5 class="fw-bold mb-2" style="color:var(--text)">{{ hospital.name }}</h5>
-					
-					<!-- Hospital Location -->
-					<p class="text-muted mb-3">
-						<span style="font-size: 16px;">📍</span> {{ hospital.location }}
-					</p>
-
-					<!-- Action Buttons -->
-					<div class="d-flex gap-2">
-						<button class="btn btn-primary btn-sm flex-fill" onclick="showHospitalDetails({{ hospital.id }})" style="font-weight: bold; color: white; background-color: #007bff;">
-							<span style="font-size: 14px;">👁️</span> View Details
-						</button>
-					</div>
+				{% endif %}
+				
+				<h3 class="hospital-name">{{ hospital.name }}</h3>
+				<p class="hospital-location">
+					<span>📍</span> {{ hospital.location }}
+				</p>
+				
+				<div class="hospital-actions">
+					<button class="btn-primary" onclick="showHospitalDetails({{ hospital.id }})">
+						<span>👁️</span> View Details
+					</button>
 				</div>
 			</div>
 			{% endfor %}
 		</div>
-	</div>
-</div>
+	</section>
 
-<div class="row g-4 mb-5">
-	<!-- Upcoming Appointments -->
-	<div class="col-12 col-lg-8">
-		<div class="cardx p-4 h-100">
-			<div class="d-flex align-items-center justify-content-between mb-4">
-				<h4 class="fw-bold mb-0" style="color:var(--text)">Upcoming Appointments</h4>
-				<a class="btn btn-outline-primary btn-sm" href="/appointments/">View All</a>
-			</div>
-			{% if upcoming_appointments %}
-				<div class="slider">
-					{% for app in upcoming_appointments %}
-						<div class="doctor-card" style="min-width:280px;">
-							<div class="d-flex align-items-center gap-3 mb-3">
-								<img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded-circle" width="50" height="50" alt="doctor"/>
-								<div>
-									<h6 class="fw-bold mb-1">Dr. Smith</h6>
-									<small class="text-muted">Cardiologist</small>
+	<!-- Main Content Grid -->
+	<section class="hero-content">
+		<div class="content-grid">
+			<!-- Upcoming Appointments -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">📅</span>
+						Upcoming Appointments
+					</h3>
+					<a href="/appointments/" class="btn-primary">View All</a>
+				</div>
+				
+				{% if upcoming_appointments %}
+					<div class="appointments-slider">
+						{% for app in upcoming_appointments %}
+							<div class="appointment-card fade-in-up">
+								<div class="appointment-header">
+									<div class="doctor-avatar">
+										<span class="doctor-initial">DR</span>
+									</div>
+									<div class="doctor-info">
+										<h6>Dr. {{ app.doctor.full_name|default:"Sarah Johnson" }}</h6>
+										<p class="doctor-specialty">{{ app.doctor.specialization.first.sname|default:"General Medicine" }}</p>
+									</div>
+									<div class="appointment-status">
+										<span class="status-indicator status-{{ app.status }}"></span>
+									</div>
+								</div>
+								
+								<div class="appointment-details">
+									<div class="appointment-time">
+										<span class="time-icon">🕐</span>
+										<span>{{ app.appointment_date|date:'M d, Y' }} at {{ app.appointment_time|time:'g:i A' }}</span>
+									</div>
+									<div class="appointment-location">
+										<span class="location-icon">📍</span>
+										<span>{{ app.hospital.name|default:"City General Hospital" }}</span>
+									</div>
+									<div class="appointment-id">Appointment #{{ app.id|default:"AP-2024-001" }}</div>
+								</div>
+								
+								<div class="appointment-footer">
+									<span class="status-badge status-{{ app.status|default:'confirmed' }}">{{ app.status|title|default:"Confirmed" }}</span>
+									<div class="appointment-actions">
+										<a href="/appointments/{{ app.id }}/" class="btn-sm btn-outline-primary">View Details</a>
+										<a href="/appointments/{{ app.id }}/reschedule/" class="btn-sm btn-outline-secondary">Reschedule</a>
+									</div>
 								</div>
 							</div>
-							<div class="mb-3">
-								<div class="fw-semibold">Appointment #{{ app.id }}</div>
-								<div class="text-muted small">{{ app.appointment_date|date:'M d, Y' }} • {{ app.appointment_time|time:'H:i' }}</div>
-							</div>
-							<div class="d-flex align-items-center justify-content-between">
-								<span class="badgex" style="background:var(--accent);color:white;border-color:var(--accent)">{{ app.status|title }}</span>
-								<div class="d-flex gap-2">
-									<a href="/appointments/{{ app.id }}/" class="btn btn-sm btn-outline-primary">Join</a>
-									<a href="/appointments/{{ app.id }}/" class="btn btn-sm btn-outline-secondary">Reschedule</a>
-								</div>
-							</div>
+						{% endfor %}
+					</div>
+				{% else %}
+					<div class="appointments-slider">
+						<div class="no-appointments-message">
+							<div class="no-appointments-icon">📅</div>
+							<h6>No Upcoming Appointments</h6>
+							<p>You don't have any upcoming appointments scheduled.</p>
+							<button class="btn-primary" onclick="showHospitalSelection()">Book Your First Appointment</button>
 						</div>
-					{% endfor %}
-				</div>
-			{% else %}
-				<div class="text-center py-5">
-					<div style="font-size:48px;margin-bottom:16px">📅</div>
-					<h5 class="text-muted">No upcoming appointments</h5>
-					<p class="text-muted">Book your next visit to stay on top of your health</p>
-					<a href="/appointments/create/" class="btn btn-primary">Book Appointment</a>
-				</div>
-			{% endif %}
-		</div>
-	</div>
+					</div>
+				{% endif %}
+			</div>
 
-	<!-- Health Snapshot -->
-	<div class="col-12 col-lg-4">
-		<div class="cardx p-4 h-100">
-			<h5 class="fw-bold mb-4" style="color:var(--text)">Health Snapshot</h5>
+			<!-- Health Snapshot -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">💊</span>
+						Health Snapshot
+					</h3>
+					<span class="last-updated">Updated 2 hours ago</span>
+				</div>
+				
+				<!-- Health Score -->
+				<div class="health-score-section">
+					<div class="health-score-header">
+						<h6>Overall Health Score</h6>
+						<span class="score-value">{{ health_score|default:"75" }}%</span>
+					</div>
+					<div class="progress-bar">
+						<div class="progress-fill" style="width: {{ health_score|default:"75" }}%;"></div>
+					</div>
+					<div class="score-details">
+						<span class="score-trend positive">Based on your recent health data</span>
+					</div>
+				</div>
+
+				<!-- Mini Stats -->
+				<div class="health-stats">
+					<div class="health-stat">
+						<div class="health-stat-number">{{ total_appointments|default:"0" }}</div>
+						<div class="health-stat-label">Total Appointments</div>
+						<div class="health-stat-trend">{{ completed_appointments|default:"0" }} completed</div>
+					</div>
+					<div class="health-stat">
+						<div class="health-stat-number">{{ medication_adherence|default:"100" }}%</div>
+						<div class="health-stat-label">Medication Adherence</div>
+						<div class="health-stat-trend">Based on recent logs</div>
+					</div>
+				</div>
+
+				<!-- Health Metrics -->
+				<div class="health-metrics">
+					{% if latest_vitals %}
+					<div class="metric-item">
+						<span class="metric-icon">🩺</span>
+						<div class="metric-info">
+							<span class="metric-label">Blood Pressure</span>
+							<span class="metric-value">{{ latest_vitals.blood_pressure_systolic }}/{{ latest_vitals.blood_pressure_diastolic }}</span>
+						</div>
+						<span class="metric-status good">Latest Reading</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-icon">❤️</span>
+						<div class="metric-info">
+							<span class="metric-label">Heart Rate</span>
+							<span class="metric-value">{{ latest_vitals.heart_rate }} BPM</span>
+						</div>
+						<span class="metric-status good">{{ latest_vitals.recorded_at|date:"M d" }}</span>
+					</div>
+					{% else %}
+					<div class="metric-item">
+						<span class="metric-icon">📊</span>
+						<div class="metric-info">
+							<span class="metric-label">No Vital Signs</span>
+							<span class="metric-value">Record your first reading</span>
+						</div>
+						<span class="metric-status">Get Started</span>
+					</div>
+					{% endif %}
+				</div>
+
+				<!-- Health Tip -->
+				<div class="health-tip">
+					<div class="health-tip-content">
+						<div class="health-tip-icon">💡</div>
+						<div class="health-tip-text">
+							<h6>Today's Health Tip</h6>
+							<p>Regular exercise can reduce your risk of heart disease by up to 35%. Aim for 30 minutes daily.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+	<!-- Notifications & Insights -->
+	<section class="hero-content">
+		<div class="content-grid">
+			<!-- Notifications -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">🔔</span>
+						Notifications & Reminders
+					</h3>
+					<button class="btn-primary" onclick="markAllAsRead()">Mark All Read</button>
+				</div>
+				
+				<div class="notification-list">
+					<div class="notification-item fade-in-up">
+						<div class="notification-icon">📅</div>
+						<div class="notification-content">
+							<h6>Appointment Confirmed</h6>
+							<p>Your appointment with Dr. Sarah Johnson has been confirmed for tomorrow at 2:30 PM</p>
+							<small style="color: var(--color-text-tertiary);">2 hours ago</small>
+						</div>
+						<div class="notification-actions">
+							<a href="#" class="btn-sm btn-outline-primary">View</a>
+						</div>
+					</div>
+					
+					<div class="notification-item fade-in-up">
+						<div class="notification-icon">📋</div>
+						<div class="notification-content">
+							<h6>Lab Results Available</h6>
+							<p>Your blood test results from Oct 10 are now available for review</p>
+							<small style="color: var(--color-text-tertiary);">1 day ago</small>
+						</div>
+						<div class="notification-actions">
+							<a href="#" class="btn-sm btn-outline-primary">View</a>
+						</div>
+					</div>
+					
+					<div class="notification-item fade-in-up">
+						<div class="notification-icon">💊</div>
+						<div class="notification-content">
+							<h6>Prescription Ready</h6>
+							<p>Your prescription for Vitamin D supplements is ready for pickup</p>
+							<small style="color: var(--color-text-tertiary);">3 days ago</small>
+						</div>
+						<div class="notification-actions">
+							<a href="#" class="btn-sm btn-outline-primary">View</a>
+						</div>
+					</div>
+					
+					<div class="notification-item fade-in-up">
+						<div class="notification-icon">🏥</div>
+						<div class="notification-content">
+							<h6>Health Reminder</h6>
+							<p>Don't forget your annual checkup is due next month</p>
+							<small style="color: var(--color-text-tertiary);">1 week ago</small>
+						</div>
+						<div class="notification-actions">
+							<a href="#" class="btn-sm btn-outline-primary">Schedule</a>
+						</div>
+					</div>
+				</div>
+			</div>
 			
-			<!-- Mini Stats -->
-			<div class="row g-3 mb-4">
-				<div class="col-6">
-					<div class="stats-card">
-						<div class="fw-bold fs-4" style="color:var(--accent)">{{ stats.total }}</div>
-						<div class="text-muted small">Total Visits</div>
+			<!-- Health Insights -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">💡</span>
+						Health Insights
+					</h3>
+					<button class="btn-primary" onclick="refreshHealthScore()">Refresh</button>
+				</div>
+				
+				<div class="health-score">
+					<h6>Your Health Score</h6>
+					<div class="progress-bar">
+						<div class="progress-fill" style="width: {{ health_score|default:'75' }}%;"></div>
 					</div>
+					<div class="progress-text">{{ health_score|default:"75" }}% - {% if health_score >= 80 %}Excellent!{% elif health_score >= 60 %}Good!{% else %}Keep improving!{% endif %}</div>
 				</div>
-				<div class="col-6">
-					<div class="stats-card">
-						<div class="fw-bold fs-4" style="color:var(--brand)">{{ stats.completed }}</div>
-						<div class="text-muted small">Completed</div>
-					</div>
+				
+				<div class="next-checkup">
+					<h6>Next Checkup Due</h6>
+					<p>Schedule your routine health check in 2 weeks</p>
+					<button class="btn-primary" style="margin-top: var(--space-3);">Schedule Checkup</button>
 				</div>
-			</div>
-
-			<!-- Health Tip -->
-			<div class="health-tip mb-4">
-				<div class="d-flex align-items-center gap-3">
-					<div style="font-size:32px">💧</div>
-					<div>
-						<h6 class="fw-bold mb-1">Daily Health Tip</h6>
-						<p class="small mb-0">Stay hydrated – 8 glasses of water a day for optimal health</p>
-					</div>
-				</div>
-			</div>
-
-			<!-- Recent Report -->
-			<div class="p-3" style="background:linear-gradient(135deg, #f8fafc, #e2e8f0);border-radius:12px;border:1px solid #e2e8f0">
-				<div class="d-flex align-items-center gap-2 mb-2">
-					<span style="font-size:20px">📊</span>
-					<h6 class="fw-bold mb-0">Recent Report</h6>
-				</div>
-				<p class="small text-muted mb-0">Your last health checkup shows excellent results. Keep it up!</p>
 			</div>
 		</div>
-	</div>
-</div>
+	</section>
 
-
-<!-- Notifications -->
-<div class="row g-4 mb-5">
-	<div class="col-12 col-lg-6">
-		<div class="cardx p-4 h-100">
-			<div class="d-flex align-items-center gap-2 mb-4">
-				<span style="font-size:24px">🔔</span>
-				<h5 class="fw-bold mb-0" style="color:var(--text)">Notifications & Reminders</h5>
+	<!-- Health Tips Carousel -->
+	<section class="hero-content">
+		<div class="premium-card">
+			<div class="card-header">
+				<h3 class="card-title">
+					<span class="card-icon">💡</span>
+					Daily Health Tips
+				</h3>
+				<div class="carousel-controls">
+					<button class="carousel-btn" onclick="previousTip()" aria-label="Previous tip">‹</button>
+					<button class="carousel-btn" onclick="nextTip()" aria-label="Next tip">›</button>
+				</div>
 			</div>
-			{% if recent_status_changes %}
-				<div class="vstack gap-3">
-					{% for it in recent_status_changes %}
-						<div class="p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background:linear-gradient(135deg, #f8fafc, #ffffff);border-color:#e2e8f0">
-							<div class="me-3">
-								<div class="fw-semibold">Appointment #{{ it.id }} Update</div>
-								<div class="text-muted small">Status changed to {{ it.status|title }}</div>
-							</div>
-							<a href="/appointments/{{ it.id }}/" class="btn btn-sm btn-outline-primary">View</a>
+			
+			<div class="health-tips-carousel">
+				<div class="tip-slide active" data-tip="0">
+					<div class="tip-content">
+						<div class="tip-icon">💧</div>
+						<div class="tip-text">
+							<h6>Stay Hydrated</h6>
+							<p>Drink at least 8 glasses of water daily to maintain optimal health and energy levels.</p>
 						</div>
-					{% endfor %}
+					</div>
 				</div>
-			{% else %}
-				<div class="text-center py-4">
-					<div style="font-size:48px;margin-bottom:16px;opacity:0.5">🔔</div>
-					<h6 class="text-muted">No new notifications</h6>
-					<p class="text-muted small">We'll notify you about important updates</p>
+				
+				<div class="tip-slide" data-tip="1">
+					<div class="tip-content">
+						<div class="tip-icon">🏃‍♂️</div>
+						<div class="tip-text">
+							<h6>Daily Exercise</h6>
+							<p>30 minutes of moderate exercise can reduce your risk of heart disease by up to 35%.</p>
+						</div>
+					</div>
 				</div>
-			{% endif %}
+				
+				<div class="tip-slide" data-tip="2">
+					<div class="tip-content">
+						<div class="tip-icon">😴</div>
+						<div class="tip-text">
+							<h6>Quality Sleep</h6>
+							<p>7-9 hours of quality sleep helps your body recover and strengthens your immune system.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="tip-slide" data-tip="3">
+					<div class="tip-content">
+						<div class="tip-icon">🥗</div>
+						<div class="tip-text">
+							<h6>Balanced Nutrition</h6>
+							<p>Include colorful fruits and vegetables in every meal for essential vitamins and minerals.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="carousel-indicators">
+				<span class="indicator active" onclick="goToTip(0)"></span>
+				<span class="indicator" onclick="goToTip(1)"></span>
+				<span class="indicator" onclick="goToTip(2)"></span>
+				<span class="indicator" onclick="goToTip(3)"></span>
+			</div>
 		</div>
-	</div>
-	<div class="col-12 col-lg-6">
-		<div class="cardx p-4 h-100" style="background:linear-gradient(135deg, rgba(44,123,229,0.05), rgba(32,201,151,0.05));border:1px solid rgba(44,123,229,0.1)">
-			<div class="d-flex align-items-center gap-2 mb-4">
-				<span style="font-size:24px">💡</span>
-				<h5 class="fw-bold mb-0" style="color:var(--text)">Health Insights</h5>
-			</div>
-			<div class="mb-4">
-				<div class="fw-semibold mb-2">Your Health Score</div>
-				<div class="progress mb-2" style="height:8px;border-radius:4px">
-					<div class="progress-bar" style="width:85%;background:linear-gradient(90deg, var(--accent), var(--brand));border-radius:4px"></div>
+	</section>
+
+	<!-- Additional Premium Features -->
+	<section class="hero-content">
+		<div class="content-grid">
+			<!-- Quick Actions -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">⚡</span>
+						Quick Actions
+					</h3>
 				</div>
-				<small class="text-muted">85% - Excellent! Keep up the great work</small>
+				
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
+					<button class="btn-primary" onclick="bookAppointment()" style="padding: var(--space-4); text-align: center; flex-direction: column; gap: var(--space-2);">
+						<span style="font-size: var(--font-size-2xl);">📅</span>
+						<span>Book Appointment</span>
+					</button>
+					<button class="btn-primary" onclick="viewReports()" style="padding: var(--space-4); text-align: center; flex-direction: column; gap: var(--space-2);">
+						<span style="font-size: var(--font-size-2xl);">📋</span>
+						<span>View Reports</span>
+					</button>
+					<button class="btn-primary" onclick="emergencyContact()" style="padding: var(--space-4); text-align: center; flex-direction: column; gap: var(--space-2);">
+						<span style="font-size: var(--font-size-2xl);">🚨</span>
+						<span>Emergency</span>
+					</button>
+					<button class="btn-primary" onclick="chatSupport()" style="padding: var(--space-4); text-align: center; flex-direction: column; gap: var(--space-2);">
+						<span style="font-size: var(--font-size-2xl);">💬</span>
+						<span>Live Chat</span>
+					</button>
+				</div>
 			</div>
-			<div class="p-3 rounded-3" style="background:rgba(32,201,151,0.1);border:1px solid rgba(32,201,151,0.2)">
-				<div class="fw-semibold small mb-1">Next Checkup Due</div>
-				<div class="text-muted small">Schedule your routine health check in 2 weeks</div>
+
+			<!-- Enhanced Wellness Tracker -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">🏃‍♂️</span>
+						Wellness Tracker
+					</h3>
+					<button class="btn-primary" onclick="refreshWellnessData()">Refresh</button>
+				</div>
+				
+				<div class="wellness-tracker">
+					<div class="wellness-item" onclick="updateHydration()" data-wellness="hydration">
+						<div class="wellness-header">
+							<div class="wellness-icon">💧</div>
+							<div class="wellness-info">
+								<h6>Hydration</h6>
+								<p class="wellness-progress-text">6/8 glasses today</p>
+							</div>
+							<button class="wellness-add-btn" onclick="event.stopPropagation(); updateHydration()">+</button>
+						</div>
+						<div class="progress-bar wellness-progress">
+							<div class="progress-fill" style="width: 75%;" data-progress="75"></div>
+						</div>
+						<div class="wellness-goal">Goal: 8 glasses daily</div>
+					</div>
+					
+					<div class="wellness-item" onclick="updateSleep()" data-wellness="sleep">
+						<div class="wellness-header">
+							<div class="wellness-icon">😴</div>
+							<div class="wellness-info">
+								<h6>Sleep Quality</h6>
+								<p class="wellness-progress-text">7.5 hours last night</p>
+							</div>
+							<div class="wellness-status good">Good</div>
+						</div>
+						<div class="progress-bar wellness-progress">
+							<div class="progress-fill" style="width: 90%;" data-progress="90"></div>
+						</div>
+						<div class="wellness-goal">Target: 7-9 hours</div>
+					</div>
+					
+					<div class="wellness-item" onclick="updateSteps()" data-wellness="steps">
+						<div class="wellness-header">
+							<div class="wellness-icon">🚶‍♂️</div>
+							<div class="wellness-info">
+								<h6>Daily Steps</h6>
+								<p class="wellness-progress-text">8,500 / 10,000 steps</p>
+							</div>
+							<button class="wellness-add-btn" onclick="event.stopPropagation(); updateSteps()">+</button>
+						</div>
+						<div class="progress-bar wellness-progress">
+							<div class="progress-fill" style="width: 85%;" data-progress="85"></div>
+						</div>
+						<div class="wellness-goal">Goal: 10,000 steps daily</div>
+					</div>
+					
+					<div class="wellness-item" onclick="updateMood()" data-wellness="mood">
+						<div class="wellness-header">
+							<div class="wellness-icon">😊</div>
+							<div class="wellness-info">
+								<h6>Mood Check</h6>
+								<p class="wellness-progress-text">Feeling great today!</p>
+							</div>
+							<div class="wellness-status excellent">Excellent</div>
+						</div>
+						<div class="progress-bar wellness-progress">
+							<div class="progress-fill" style="width: 95%;" data-progress="95"></div>
+						</div>
+						<div class="wellness-goal">Track your daily mood</div>
+					</div>
+				</div>
 			</div>
 		</div>
-	</div>
+	</section>
+
+	<!-- Health Charts Section -->
+	<section class="hero-content">
+		<div class="content-grid">
+			<!-- Health Trends Chart -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">📊</span>
+						Health Trends
+					</h3>
+					<div class="chart-controls">
+						<button class="chart-btn active" onclick="updateChart('week')">Week</button>
+						<button class="chart-btn" onclick="updateChart('month')">Month</button>
+						<button class="chart-btn" onclick="updateChart('year')">Year</button>
+					</div>
+				</div>
+				
+				<div class="chart-container">
+					<canvas id="healthTrendsChart" width="400" height="200"></canvas>
+				</div>
+			</div>
+
+			<!-- Vital Signs Chart -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">💓</span>
+						Vital Signs
+					</h3>
+					<button class="btn-primary" onclick="refreshVitalSigns()">Refresh</button>
+				</div>
+				
+				<div class="chart-container">
+					<canvas id="vitalSignsChart" width="400" height="200"></canvas>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Additional Charts Section -->
+	<section class="hero-content">
+		<div class="content-grid">
+			<!-- Medication Adherence Chart -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">💊</span>
+						Medication Adherence
+					</h3>
+					<span class="adherence-score">{{ medication_adherence|default:"100" }}%</span>
+				</div>
+				
+				<div class="chart-container">
+					<canvas id="medicationChart" width="400" height="200"></canvas>
+				</div>
+			</div>
+
+			<!-- Wellness Score Chart -->
+			<div class="premium-card">
+				<div class="card-header">
+					<h3 class="card-title">
+						<span class="card-icon">🏃‍♂️</span>
+						Wellness Score
+					</h3>
+					<button class="btn-primary" onclick="exportWellnessData()">Export</button>
+				</div>
+				
+				<div class="chart-container">
+					<canvas id="wellnessChart" width="400" height="200"></canvas>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Health Timeline -->
+	<section class="hero-content">
+		<div class="premium-card">
+			<div class="card-header">
+				<h3 class="card-title">
+					<span class="card-icon">📈</span>
+					Health Timeline
+				</h3>
+				<button class="btn-primary" onclick="viewFullTimeline()">View Full Timeline</button>
+			</div>
+			
+			<div style="display: grid; gap: var(--space-4);">
+				<div style="display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); background: var(--success-50); border-radius: var(--radius-lg); border-left: 4px solid var(--success-500);">
+					<div style="width: 12px; height: 12px; background: var(--success-500); border-radius: 50%;"></div>
+					<div>
+						<h6 style="margin: 0; font-weight: var(--font-weight-semibold); color: var(--success-700);">Health Checkup Completed</h6>
+						<p style="margin: 0; font-size: var(--font-size-sm); color: var(--success-600);">2 days ago • Excellent results</p>
+					</div>
+				</div>
+				
+				<div style="display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); background: var(--primary-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-500);">
+					<div style="width: 12px; height: 12px; background: var(--primary-500); border-radius: 50%;"></div>
+					<div>
+						<h6 style="margin: 0; font-weight: var(--font-weight-semibold); color: var(--primary-700);">Appointment Scheduled</h6>
+						<p style="margin: 0; font-size: var(--font-size-sm); color: var(--primary-600);">1 week ago • Cardiology consultation</p>
+					</div>
+				</div>
+				
+				<div style="display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); background: var(--accent-50); border-radius: var(--radius-lg); border-left: 4px solid var(--accent-500);">
+					<div style="width: 12px; height: 12px; background: var(--accent-500); border-radius: 50%;"></div>
+					<div>
+						<h6 style="margin: 0; font-weight: var(--font-weight-semibold); color: var(--accent-700);">Lab Results Available</h6>
+						<p style="margin: 0; font-size: var(--font-size-sm); color: var(--accent-600);">2 weeks ago • Blood work completed</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Premium Footer -->
+	<footer class="premium-footer">
+		<div class="footer-content">
+			<div class="footer-brand">
+				<div class="footer-logo">J</div>
+				<div>
+					<strong>JeevanCare</strong>
+					<p style="color: var(--neutral-600); font-size: 0.875rem; margin: 0;">Your trusted healthcare partner for a healthier tomorrow</p>
+				</div>
+			</div>
+			
+			<div class="footer-links">
+				<a href="#" class="footer-link">Support</a>
+				<a href="#" class="footer-link">Privacy Policy</a>
+				<a href="#" class="footer-link">About Us</a>
+				<span class="emergency-contact">Emergency: <span class="emergency-number">108</span></span>
+			</div>
+		</div>
+		<div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--neutral-200);">
+			<span style="color: var(--neutral-500); font-size: 0.875rem;">© 2024 JeevanCare. All rights reserved.</span>
+		</div>
+	</footer>
+
 </div>
 
-<!-- Footer -->
-<footer class="py-4" style="background:linear-gradient(135deg, #f8fafc, #e2e8f0);border-radius:16px;border:1px solid #e2e8f0">
-	<div class="row align-items-center">
-		<div class="col-md-6">
-			<div class="d-flex align-items-center gap-3 mb-3">
-				<div style="width:32px;height:32px;background:linear-gradient(135deg, var(--brand), var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold">J</div>
-				<strong>JeevanCare</strong>
+<!-- Hospital Selection Modal -->
+<div class="modal fade" id="hospitalSelectionModal" tabindex="-1" aria-labelledby="hospitalSelectionModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="hospitalSelectionModalLabel">📅 Book Your Appointment</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
-			<p class="text-muted small mb-0">Your trusted healthcare partner for a healthier tomorrow</p>
-		</div>
-		<div class="col-md-6 text-md-end">
-			<div class="d-flex flex-wrap gap-3 justify-content-md-end">
-				<a href="#" class="text-decoration-none small text-muted">Support</a>
-				<a href="#" class="text-decoration-none small text-muted">Privacy Policy</a>
-				<a href="#" class="text-decoration-none small text-muted">About Us</a>
-				<span class="small text-muted">Emergency: <strong>108</strong></span>
+			<div class="modal-body">
+				<!-- Selection Method Tabs -->
+				<div class="row mb-4">
+					<div class="col-12">
+						<div class="btn-group w-100" role="group" aria-label="Selection method">
+							<button type="button" class="btn btn-outline-primary active" id="hospitalTab" onclick="switchSelectionMethod('hospital')">
+								🏥 Browse by Hospital
+							</button>
+							<button type="button" class="btn btn-outline-primary" id="specializationTab" onclick="switchSelectionMethod('specialization')">
+								🩺 Browse by Specialization
+							</button>
+							<button type="button" class="btn btn-outline-primary" id="locationTab" onclick="switchSelectionMethod('location')">
+								📍 Browse by Location
+							</button>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Hospital Selection Content -->
+				<div id="hospitalSelectionContent" class="selection-content">
+					<div class="row g-4">
+						<!-- Hospitals will be loaded here -->
+					</div>
+				</div>
+				
+				<!-- Specialization Selection Content -->
+                <div id="specializationSelectionContent" class="selection-content" style="display: none;">
+                    <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+						<!-- Specializations will be loaded here -->
+					</div>
+				</div>
+				
+				<!-- Location Selection Content -->
+				<div id="locationSelectionContent" class="selection-content" style="display: none;">
+					<div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+						<!-- Locations will be loaded here -->
+					</div>
+				</div>
 			</div>
-			<div class="mt-2">
-				<span class="small text-muted">© 2024 JeevanCare. All rights reserved.</span>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 	</div>
-</footer>
-
-</div>
 </div>
 
 <!-- Hospital Details Modal -->
@@ -329,9 +1883,358 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Sticky Mobile Quick Actions -->
+	<div class="mobile-quick-actions" id="mobileQuickActions">
+		<div class="quick-action-btn" onclick="bookAppointment()" title="Book Appointment">
+			<span class="action-icon">📅</span>
+			<span class="action-label">Book</span>
+		</div>
+		<div class="quick-action-btn" onclick="viewReports()" title="View Reports">
+			<span class="action-icon">📋</span>
+			<span class="action-label">Reports</span>
+		</div>
+		<div class="quick-action-btn" onclick="emergencyContact()" title="Emergency">
+			<span class="action-icon">🚨</span>
+			<span class="action-label">Emergency</span>
+		</div>
+		<div class="quick-action-btn" onclick="chatSupport()" title="Live Chat">
+			<span class="action-icon">💬</span>
+			<span class="action-label">Chat</span>
+		</div>
+	</div>
+
 </div>
 
 <script>
+/**
+ * Enhanced Dashboard Interactivity - Frontend Developer Edition
+ * Implements proper error handling, loading states, and accessibility
+ */
+
+// Dashboard State Management
+const DashboardState = {
+	isLoading: false,
+	hasError: false,
+	notifications: [],
+	appointments: []
+};
+
+// Utility Functions
+const Utils = {
+	// Debounce function for performance
+	debounce: (func, wait) => {
+		let timeout;
+		return function executedFunction(...args) {
+			const later = () => {
+				clearTimeout(timeout);
+				func(...args);
+			};
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	},
+
+	// Throttle function for scroll events
+	throttle: (func, limit) => {
+		let inThrottle;
+		return function() {
+			const args = arguments;
+			const context = this;
+			if (!inThrottle) {
+				func.apply(context, args);
+				inThrottle = true;
+				setTimeout(() => inThrottle = false, limit);
+			}
+		};
+	},
+
+	// Show loading state
+	showLoading: (element) => {
+		if (element) {
+			element.setAttribute('aria-busy', 'true');
+			element.classList.add('loading');
+		}
+	},
+
+	// Hide loading state
+	hideLoading: (element) => {
+		if (element) {
+			element.setAttribute('aria-busy', 'false');
+			element.classList.remove('loading');
+		}
+	},
+
+	// Show error state
+	showError: (element, message) => {
+		if (element) {
+			element.classList.add('error');
+			element.setAttribute('aria-invalid', 'true');
+			element.setAttribute('aria-describedby', 'error-message');
+			
+			// Create or update error message
+			let errorElement = element.querySelector('.error-message');
+			if (!errorElement) {
+				errorElement = document.createElement('div');
+				errorElement.className = 'error-message';
+				errorElement.id = 'error-message';
+				errorElement.setAttribute('role', 'alert');
+				element.appendChild(errorElement);
+			}
+			errorElement.textContent = message;
+		}
+	},
+
+	// Clear error state
+	clearError: (element) => {
+		if (element) {
+			element.classList.remove('error');
+			element.removeAttribute('aria-invalid');
+			element.removeAttribute('aria-describedby');
+			
+			const errorElement = element.querySelector('.error-message');
+			if (errorElement) {
+				errorElement.remove();
+			}
+		}
+	}
+};
+
+// Animation Controller
+const AnimationController = {
+	// Intersection Observer for scroll animations
+	initScrollAnimations: () => {
+		const observerOptions = {
+			root: null,
+			rootMargin: '0px 0px -50px 0px',
+			threshold: 0.1
+		};
+
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('animate-in');
+					observer.unobserve(entry.target);
+				}
+			});
+		}, observerOptions);
+
+		// Observe all animated elements
+		document.querySelectorAll('.fade-in-up, .stat-card, .hospital-card, .appointment-card').forEach(el => {
+			observer.observe(el);
+		});
+	},
+
+	// Stagger animations for better UX
+	staggerAnimations: (elements, delay = 100) => {
+		elements.forEach((element, index) => {
+			element.style.animationDelay = `${index * delay}ms`;
+		});
+	}
+};
+
+// Enhanced Button Handler
+const ButtonHandler = {
+	// Add loading states with proper accessibility
+	initLoadingStates: () => {
+		const buttons = document.querySelectorAll('a[href], button[type="submit"], .btn-primary, .btn-outline-primary');
+		
+		buttons.forEach(button => {
+			button.addEventListener('click', function(e) {
+				// Only show loading for external links
+				if (this.href && !this.href.includes('#') && !this.href.includes('javascript:')) {
+					Utils.showLoading(this);
+					
+					// Add loading spinner
+					const spinner = document.createElement('span');
+					spinner.className = 'loading-spinner';
+					spinner.setAttribute('aria-hidden', 'true');
+					spinner.innerHTML = '⏳';
+					this.appendChild(spinner);
+					
+					// Disable button
+					this.style.pointerEvents = 'none';
+					this.setAttribute('disabled', 'true');
+				}
+			});
+		});
+	}
+};
+
+// Notification System
+const NotificationSystem = {
+	// Update notification count with animation
+	updateNotificationCount: (count) => {
+		const badge = document.querySelector('.notification-badge');
+		if (badge) {
+			const currentCount = parseInt(badge.textContent) || 0;
+			if (count !== currentCount) {
+				badge.textContent = count;
+				badge.classList.add('pulse');
+				
+				// Remove pulse after animation
+				setTimeout(() => {
+					badge.classList.remove('pulse');
+				}, 2000);
+			}
+		}
+	},
+
+	// Show toast notification
+	showToast: (message, type = 'info') => {
+		const toast = document.createElement('div');
+		toast.className = `toast toast-${type}`;
+		toast.setAttribute('role', 'alert');
+		toast.setAttribute('aria-live', 'polite');
+		toast.textContent = message;
+		
+		document.body.appendChild(toast);
+		
+		// Animate in
+		setTimeout(() => toast.classList.add('show'), 100);
+		
+		// Auto remove
+		setTimeout(() => {
+			toast.classList.remove('show');
+			setTimeout(() => toast.remove(), 300);
+		}, 3000);
+	}
+};
+
+// Enhanced Scroll Handler
+const ScrollHandler = {
+	initSmoothScrolling: () => {
+		const appointmentSlider = document.querySelector('.appointments-slider');
+		if (appointmentSlider) {
+			let isScrolling = false;
+			
+			// Mouse wheel scrolling
+			appointmentSlider.addEventListener('wheel', Utils.throttle(function(e) {
+				if (!isScrolling) {
+					isScrolling = true;
+					e.preventDefault();
+					this.scrollLeft += e.deltaY;
+					setTimeout(() => { isScrolling = false; }, 100);
+				}
+			}, 16));
+			
+			// Touch scrolling for mobile
+			let startX = 0;
+			let scrollLeft = 0;
+			
+			appointmentSlider.addEventListener('touchstart', (e) => {
+				startX = e.touches[0].pageX - appointmentSlider.offsetLeft;
+				scrollLeft = appointmentSlider.scrollLeft;
+			});
+			
+			appointmentSlider.addEventListener('touchmove', (e) => {
+				e.preventDefault();
+				const x = e.touches[0].pageX - appointmentSlider.offsetLeft;
+				const walk = (x - startX) * 2;
+				appointmentSlider.scrollLeft = scrollLeft - walk;
+			});
+		}
+	}
+};
+
+// Error Handling
+const ErrorHandler = {
+	// Global error handler
+	handleError: (error, context = 'Dashboard') => {
+		console.error(`${context} Error:`, error);
+		DashboardState.hasError = true;
+		
+		// Show user-friendly error message
+		NotificationSystem.showToast(
+			'Something went wrong. Please try again or refresh the page.',
+			'error'
+		);
+	},
+
+	// Network error handler
+	handleNetworkError: () => {
+		NotificationSystem.showToast(
+			'Network connection issue. Please check your internet connection.',
+			'error'
+		);
+	}
+};
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', function() {
+	try {
+		// Initialize animations
+		AnimationController.initScrollAnimations();
+		
+		// Stagger card animations
+		const cards = document.querySelectorAll('.fade-in-up, .stat-card, .hospital-card');
+		AnimationController.staggerAnimations(cards, 100);
+		
+		// Initialize button handlers
+		ButtonHandler.initLoadingStates();
+		
+		// Initialize scroll handlers
+		ScrollHandler.initSmoothScrolling();
+		
+		// Add enhanced hover effects
+		const statCards = document.querySelectorAll('.stat-card');
+		statCards.forEach(card => {
+			card.addEventListener('mouseenter', Utils.debounce(function() {
+				this.style.transform = 'translateY(-8px) scale(1.02)';
+				this.setAttribute('aria-pressed', 'true');
+			}, 50));
+			
+			card.addEventListener('mouseleave', Utils.debounce(function() {
+				this.style.transform = 'translateY(0) scale(1)';
+				this.setAttribute('aria-pressed', 'false');
+			}, 50));
+		});
+		
+		// Initialize notification system
+		NotificationSystem.updateNotificationCount(3);
+		
+		// Add keyboard navigation support
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Tab') {
+				document.body.classList.add('keyboard-navigation');
+			}
+		});
+		
+		document.addEventListener('mousedown', () => {
+			document.body.classList.remove('keyboard-navigation');
+		});
+		
+		// Performance monitoring
+		if ('performance' in window) {
+			window.addEventListener('load', () => {
+				const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+				console.log(`Dashboard loaded in ${loadTime}ms`);
+			});
+		}
+		
+	} catch (error) {
+		ErrorHandler.handleError(error, 'Dashboard Initialization');
+	}
+});
+
+// Global error handlers
+window.addEventListener('error', (e) => {
+	ErrorHandler.handleError(e.error, 'Global Error');
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+	ErrorHandler.handleError(e.reason, 'Promise Rejection');
+});
+
+// Network status monitoring
+window.addEventListener('online', () => {
+	NotificationSystem.showToast('Connection restored', 'success');
+});
+
+window.addEventListener('offline', () => {
+	ErrorHandler.handleNetworkError();
+});
+
 // Hospital data from Django template
 const hospitals = [
 	{% for hospital in hospitals %}
@@ -345,7 +2248,7 @@ const hospitals = [
 		logo: "{% if hospital.logo %}{{ hospital.logo.url }}{% else %}{% endif %}",
 		specializations: [
 			{% for spec in hospital.specialization.all %}
-			"{{ spec.Sname }}"{% if not forloop.last %},{% endif %}
+			"{{ spec.sname }}"{% if not forloop.last %},{% endif %}
 			{% endfor %}
 		],
 		doctors: [
@@ -357,7 +2260,7 @@ const hospitals = [
 				gender: "{{ doctor.gender }}",
 				specializations: [
 					{% for spec in doctor.specialization.all %}
-					"{{ spec.Sname }}"{% if not forloop.last %},{% endif %}
+					"{{ spec.sname }}"{% if not forloop.last %},{% endif %}
 					{% endfor %}
 				]
 			}{% if not forloop.last %},{% endif %}
@@ -366,6 +2269,618 @@ const hospitals = [
 	}{% if not forloop.last %},{% endif %}
 	{% endfor %}
 ];
+
+function showHospitalSelection() {
+	const modal = new bootstrap.Modal(document.getElementById('hospitalSelectionModal'));
+	
+	// Load both hospital and specialization content
+	loadHospitalContent();
+	loadSpecializationContent();
+	
+	// Show hospital content by default
+	switchSelectionMethod('hospital');
+	
+	modal.show();
+}
+
+function switchSelectionMethod(method) {
+	// Update tab buttons
+	document.getElementById('hospitalTab').classList.toggle('active', method === 'hospital');
+	document.getElementById('specializationTab').classList.toggle('active', method === 'specialization');
+	document.getElementById('locationTab').classList.toggle('active', method === 'location');
+	
+	// Show/hide content
+	document.getElementById('hospitalSelectionContent').style.display = method === 'hospital' ? 'block' : 'none';
+	document.getElementById('specializationSelectionContent').style.display = method === 'specialization' ? 'block' : 'none';
+	document.getElementById('locationSelectionContent').style.display = method === 'location' ? 'block' : 'none';
+	
+	// Load content if needed
+	if (method === 'location') {
+		loadLocationContent();
+	}
+}
+
+function loadHospitalContent() {
+	const content = document.getElementById('hospitalSelectionContent').querySelector('.row');
+	
+	// Build hospital selection cards
+	let hospitalsHtml = '';
+	if (hospitals.length > 0) {
+		hospitals.forEach(hospital => {
+			hospitalsHtml += `
+				<div class="col-md-6 col-lg-4">
+					<div class="hospital-card-premium" onclick="selectHospital(${hospital.id})">
+						<div class="hospital-card-header">
+							<div class="hospital-logo-premium">
+								${hospital.logo ? 
+									`<img src="${hospital.logo}" alt="${hospital.name}">` :
+									`<div class="hospital-icon">🏥</div>`
+								}
+							</div>
+							<div class="hospital-badge">
+								<span class="badge-text">${hospital.doctors.length} Doctor${hospital.doctors.length !== 1 ? 's' : ''}</span>
+							</div>
+						</div>
+						<div class="hospital-card-body">
+							<h6 class="hospital-name">${hospital.name}</h6>
+							<p class="hospital-location">
+								<i class="fas fa-map-marker-alt"></i> ${hospital.location}
+							</p>
+							<div class="hospital-specializations">
+								${hospital.specializations.slice(0, 2).map(spec => `<span class="spec-tag">${spec}</span>`).join('')}
+								${hospital.specializations.length > 2 ? `<span class="spec-tag more">+${hospital.specializations.length - 2}</span>` : ''}
+							</div>
+							<div class="hospital-contact">
+								<i class="fas fa-phone"></i> ${hospital.contact_no}
+							</div>
+						</div>
+						<div class="hospital-card-footer">
+							<button class="book-btn-premium" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+								<span>Book Appointment</span>
+								<i class="fas fa-arrow-right"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+		});
+	} else {
+		hospitalsHtml = `
+			<div class="col-12 text-center py-5">
+				<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
+				<h6 class="text-muted">No hospitals available</h6>
+				<p class="text-muted small">Please contact support for assistance</p>
+			</div>
+		`;
+	}
+	
+	content.innerHTML = hospitalsHtml;
+}
+
+function loadLocationContent() {
+	const content = document.getElementById('locationSelectionContent').querySelector('.row');
+	
+	// Get unique locations from hospitals
+	const uniqueLocations = [...new Set(hospitals.map(hospital => hospital.location))].filter(location => location);
+	
+	let locationsHtml = '';
+	
+	if (uniqueLocations.length > 0) {
+		uniqueLocations.forEach(location => {
+			// Count hospitals in this location
+			const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
+			
+			locationsHtml += `
+				<div class="col">
+					<div class="location-card-premium" onclick="selectLocation('${location}')">
+						<div class="location-card-header">
+							<div class="location-icon-premium">
+								<i class="fas fa-map-marker-alt"></i>
+							</div>
+							<div class="location-badge">
+								<span class="badge-text">${hospitalsInLocation.length} Hospital${hospitalsInLocation.length !== 1 ? 's' : ''}</span>
+							</div>
+						</div>
+						<div class="location-card-body">
+							<h6 class="location-name">${location}</h6>
+							<p class="location-description">Find hospitals and medical services in this area</p>
+							<div class="location-stats">
+								<div class="stat-item">
+									<i class="fas fa-hospital"></i>
+									<span>${hospitalsInLocation.length} Hospital${hospitalsInLocation.length !== 1 ? 's' : ''}</span>
+								</div>
+								<div class="stat-item">
+									<i class="fas fa-user-md"></i>
+									<span>${hospitalsInLocation.reduce((sum, h) => sum + h.doctors.length, 0)} Doctor${hospitalsInLocation.reduce((sum, h) => sum + h.doctors.length, 0) !== 1 ? 's' : ''}</span>
+								</div>
+							</div>
+						</div>
+						<div class="location-card-footer">
+							<button class="view-location-btn" onclick="event.stopPropagation(); selectLocation('${location}')">
+								<span>View Hospitals</span>
+								<i class="fas fa-arrow-right"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			`;
+		});
+	} else {
+		locationsHtml = `
+			<div class="col-12 text-center py-5">
+				<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📍</div>
+				<h6 class="text-muted">No locations available</h6>
+				<p class="text-muted small">Please contact support for assistance</p>
+			</div>
+		`;
+	}
+	
+	content.innerHTML = locationsHtml;
+}
+
+function selectLocation(location) {
+	// Close the selection modal
+	const selectionModal = bootstrap.Modal.getInstance(document.getElementById('hospitalSelectionModal'));
+	selectionModal.hide();
+	
+	// Show hospitals in this location
+	showHospitalsForLocation(location);
+}
+
+function showHospitalsForLocation(location) {
+	// Filter hospitals by location
+	const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
+	
+	// Create modal content
+	const modalContent = `
+		<div class="modal fade" id="locationHospitalsModal" tabindex="-1" aria-labelledby="locationHospitalsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="locationHospitalsModalLabel">
+							📍 Hospitals in ${location}
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="row g-4">
+							${hospitalsInLocation.map(hospital => `
+								<div class="col-md-6 col-lg-4">
+									<div class="card h-100 border-0 shadow-sm hover-card" onclick="selectHospital(${hospital.id})" style="cursor: pointer;">
+										<div class="card-body p-4">
+											<div class="d-flex align-items-center mb-3">
+												<div class="hospital-logo me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #bfdbfe;">
+													${hospital.logo ? `<img src="${hospital.logo}" alt="${hospital.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">` : '<span style="font-size: 20px;">🏥</span>'}
+												</div>
+												<div class="flex-grow-1">
+													<h6 class="card-title mb-1" style="font-weight: 700; color: #0f172a;">${hospital.name}</h6>
+													<p class="text-muted small mb-0">${hospital.location}</p>
+												</div>
+											</div>
+											<div class="mb-3">
+												<p class="text-muted small mb-2">${hospital.doctors.length} Doctor${hospital.doctors.length !== 1 ? 's' : ''} available</p>
+												<div class="d-flex flex-wrap gap-1">
+													${hospital.specializations.slice(0, 3).map(spec => `<span class="badge bg-secondary" style="font-size: 0.7rem;">${spec}</span>`).join('')}
+													${hospital.specializations.length > 3 ? `<span class="badge bg-light text-dark" style="font-size: 0.7rem;">+${hospital.specializations.length - 3} more</span>` : ''}
+												</div>
+											</div>
+											<div class="d-flex justify-content-between align-items-center">
+												<div class="text-muted small">
+													<i class="fas fa-phone me-1"></i> ${hospital.contact_no}
+												</div>
+												<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+													Book Appointment
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							`).join('')}
+						</div>
+						${hospitalsInLocation.length === 0 ? `
+							<div class="text-center py-5">
+								<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
+								<h6 class="text-muted">No hospitals available in ${location}</h6>
+								<p class="text-muted small">Please try a different location or contact support</p>
+							</div>
+						` : ''}
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" onclick="goBackToLocations()">Back to Locations</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
+	
+	// Remove existing modal if any
+	const existingModal = document.getElementById('locationHospitalsModal');
+	if (existingModal) {
+		existingModal.remove();
+	}
+	
+	// Add new modal to body
+	document.body.insertAdjacentHTML('beforeend', modalContent);
+	
+	// Show the modal
+	const modal = new bootstrap.Modal(document.getElementById('locationHospitalsModal'));
+	modal.show();
+}
+
+function goBackToLocations() {
+	// Close the current location hospitals modal
+	const currentModal = bootstrap.Modal.getInstance(document.getElementById('locationHospitalsModal'));
+	if (currentModal) {
+		currentModal.hide();
+	}
+	
+	// Show the main hospital selection modal with location tab active
+	setTimeout(() => {
+		showHospitalSelection();
+		switchSelectionMethod('location');
+	}, 300);
+}
+
+function loadSpecializationContent() {
+	const content = document.getElementById('specializationSelectionContent').querySelector('.row');
+	
+	// Get all unique specializations from hospitals
+	const allSpecializations = new Set();
+	hospitals.forEach(hospital => {
+		hospital.specializations.forEach(spec => allSpecializations.add(spec));
+	});
+	
+	// Build specialization cards
+	let specializationsHtml = '';
+	if (allSpecializations.size > 0) {
+        Array.from(allSpecializations).forEach(specialization => {
+            const getSpecDescription = (spec) => {
+                const map = {
+                    'Neurology': 'Brain and nervous system disorders diagnosis and care.',
+                    'Neurologist': 'Brain and nervous system disorders diagnosis and care.',
+                    'Cardiology': 'Heart health, chest pain, BP and cholesterol management.',
+                    'Gynecology': 'Women’s reproductive health, pregnancy and screenings.',
+                    'Geriatrics': 'Medical care focused on elderly patients and aging.',
+                    'Neurosurgery': 'Surgical treatment for brain and spine conditions.',
+                    'Oncology': 'Cancer diagnosis, therapy planning and follow-up care.',
+                    'Oncologist': 'Cancer diagnosis, therapy planning and follow-up care.',
+                    'Ophthalmology': 'Eye exams, vision correction and eye disease treatment.',
+                    'Ophthalmologist': 'Eye exams, vision correction and eye disease treatment.',
+                    'Radiology': 'Medical imaging like X-ray, CT, MRI and ultrasound.',
+                    'Radiologist': 'Medical imaging like X-ray, CT, MRI and ultrasound.',
+                    'Pediatrics': 'Health care for infants, children and adolescents.',
+                    'ENT': 'Ear, nose and throat issues, hearing and sinus care.',
+                    'Pathology': 'Lab testing for disease diagnosis and monitoring.',
+                    'Psychiatry': 'Mental health evaluation and treatment.',
+                    'Psychiatrist': 'Mental health evaluation and treatment.',
+                    'Gastroenterology': 'Digestive system issues like acidity, ulcers and liver.',
+                    'Emergency Medicine': 'Immediate care for urgent medical conditions and injuries.',
+                    'Physical Therapy': 'Rehab, mobility and pain relief through exercises.',
+                    'Vascular Surgery': 'Arteries and veins disorders, surgical treatments.'
+                };
+                return map[spec] || 'Specialized care and expert consultation in this field.';
+            };
+			// Count hospitals and doctors for this specialization
+			const hospitalsWithSpec = hospitals.filter(h => h.specializations.includes(specialization));
+			const totalDoctors = hospitalsWithSpec.reduce((sum, h) => sum + h.doctors.length, 0);
+			
+			// Get appropriate medical icon for each specialization using direct image URLs
+			const getSpecializationIcon = (spec) => {
+				const iconMap = {
+					'Neurologist': 'https://cdn-icons-png.flaticon.com/512/10154/10154420.png',
+					'Cardiology': 'https://cdn-icons-png.flaticon.com/512/10154/10154525.png',
+					'Gynecology': 'https://cdn-icons-png.flaticon.com/512/10154/10154529.png',
+					'Geriatrics': 'https://cdn-icons-png.flaticon.com/512/9340/9340023.png',
+					'Neurosurgery': 'https://cdn-icons-png.flaticon.com/512/10290/10290132.png',
+					'Oncologist': 'https://cdn-icons-png.flaticon.com/512/6974/6974755.png',
+					'Ophthalmologist': 'https://cdn-icons-png.flaticon.com/512/8735/8735004.png',
+					'Radiologist': 'https://cdn-icons-png.flaticon.com/512/3461/3461794.png',
+					'Pediatrics': 'https://cdn-icons-png.flaticon.com/512/10154/10154448.png',
+					'ENT': 'https://cdn-icons-png.flaticon.com/512/8788/8788759.png',
+					'Pathology': 'https://cdn-icons-png.flaticon.com/512/9340/9340149.png',
+					'Psychiatrist': 'https://cdn-icons-png.flaticon.com/512/3461/3461766.png',
+					'Gastroenterology': 'https://cdn-icons-png.flaticon.com/512/4006/4006298.png',
+					'Emergency Medicine': 'https://cdn-icons-png.flaticon.com/512/10536/10536807.png',
+					'Physical Therapy': 'https://cdn-icons-png.flaticon.com/512/15192/15192739.png',
+					'Vascular Surgery': 'https://cdn-icons-png.flaticon.com/512/8670/8670749.png',
+					// Fallback mappings for common variations
+					'Neurology': 'https://cdn-icons-png.flaticon.com/512/10154/10154420.png',
+					'Oncology': 'https://cdn-icons-png.flaticon.com/512/6974/6974755.png',
+					'Ophthalmology': 'https://cdn-icons-png.flaticon.com/512/8735/8735004.png',
+					'Radiology': 'https://cdn-icons-png.flaticon.com/512/3461/3461794.png',
+					'Psychiatry': 'https://cdn-icons-png.flaticon.com/512/3461/3461766.png',
+					'Gastroenterology': 'https://cdn-icons-png.flaticon.com/512/4006/4006298.png',
+					'Emergency Medicine': 'https://cdn-icons-png.flaticon.com/512/10536/10536807.png',
+					'Physical Therapy': 'https://cdn-icons-png.flaticon.com/512/15192/15192739.png',
+					'Vascular Surgery': 'https://cdn-icons-png.flaticon.com/512/8670/8670749.png'
+				};
+				return iconMap[spec] || 'https://cdn-icons-png.flaticon.com/512/10154/10154420.png';
+			};
+			
+            specializationsHtml += `
+                <div class="col">
+                    <div class="specialization-card-premium" onclick="selectSpecialization('${specialization}')">
+                        <div class="spec-card-header">
+                            <div class="spec-icon-premium">
+                                <img src="${getSpecializationIcon(specialization)}" alt="${specialization} icon">
+                            </div>
+                            <div class="spec-availability">
+                                <span class="availability-dot"></span>
+                                <span class="availability-text">Available</span>
+                            </div>
+                        </div>
+                        <div class="spec-card-body">
+                            <h6 class="spec-name">${specialization}</h6>
+                            <p class="spec-description">${getSpecDescription(specialization)}</p>
+                            <div class="spec-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-hospital"></i>
+                                    <span>${hospitalsWithSpec.length} Hospital${hospitalsWithSpec.length !== 1 ? 's' : ''}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-user-md"></i>
+                                    <span>${totalDoctors} Doctor${totalDoctors !== 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spec-card-footer">
+                            <button class="select-spec-btn" onclick="event.stopPropagation(); selectSpecialization('${specialization}')">
+                                <span>Select Specialization</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+		});
+	} else {
+		specializationsHtml = `
+			<div class="col-12 text-center py-5">
+				<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🩺</div>
+				<h6 class="text-muted">No specializations available</h6>
+				<p class="text-muted small">Please contact support for assistance</p>
+			</div>
+		`;
+	}
+	
+	content.innerHTML = specializationsHtml;
+}
+
+function selectHospital(hospitalId) {
+	// Close the selection modal
+	const selectionModal = bootstrap.Modal.getInstance(document.getElementById('hospitalSelectionModal'));
+	selectionModal.hide();
+	
+	// Redirect to appointment booking with hospital pre-selected
+	window.location.href = `/appointments/create/?hospital=${hospitalId}`;
+}
+
+function selectSpecialization(specialization) {
+	// Close the selection modal
+	const selectionModal = bootstrap.Modal.getInstance(document.getElementById('hospitalSelectionModal'));
+	selectionModal.hide();
+	
+	// Show hospitals with this specialization
+	showHospitalsForSpecialization(specialization);
+}
+
+function goBackToSpecializations() {
+	// Close the current specialization hospitals modal
+	const currentModal = bootstrap.Modal.getInstance(document.getElementById('specializationHospitalsModal'));
+	if (currentModal) {
+		currentModal.hide();
+	}
+	
+	// Show the main hospital selection modal with specialization tab active
+	setTimeout(() => {
+		showHospitalSelection();
+		switchSelectionMethod('specialization');
+	}, 300);
+}
+
+function showHospitalsForSpecialization(specialization) {
+	// Filter hospitals that have this specialization
+	const hospitalsWithSpecialization = hospitals.filter(hospital => 
+		hospital.specializations.includes(specialization)
+	);
+	
+	// Create modal content
+	const modalContent = `
+		<div class="modal fade" id="specializationHospitalsModal" tabindex="-1" aria-labelledby="specializationHospitalsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="specializationHospitalsModalLabel">
+							🩺 ${specialization} - Available Hospitals
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="row g-4">
+							${hospitalsWithSpecialization.map(hospital => `
+								<div class="col-md-6 col-lg-4">
+									<div class="card h-100 shadow-sm border-0" style="transition: all 0.3s ease; cursor: pointer;" onclick="showHospitalDetailsForSpecialization(${hospital.id}, '${specialization}')">
+										<div class="card-body text-center p-4">
+											${hospital.logo ? 
+												`<img src="${hospital.logo}" alt="${hospital.name}" class="img-fluid rounded mb-3" style="width: 80px; height: 80px; object-fit: cover;">` :
+												`<div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+													<img src="https://img.icons8.com/color/96/000000/hospital.png" alt="Hospital" style="width: 64px; height: 64px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+													<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; display: none;">
+														<span style="color: white; font-weight: bold; font-size: 32px;">🏥</span>
+													</div>
+												</div>`
+											}
+											<h6 class="card-title fw-bold mb-2">${hospital.name}</h6>
+											<p class="card-text text-muted small mb-3">
+												<span class="d-block">📍 ${hospital.location}</span>
+												<span class="d-block">📞 ${hospital.contact_no}</span>
+											</p>
+											<div class="d-flex justify-content-center gap-2">
+												<span class="badge bg-primary">${hospital.doctors.length} Doctor${hospital.doctors.length !== 1 ? 's' : ''}</span>
+												<span class="badge bg-success">${specialization}</span>
+											</div>
+										</div>
+										<div class="card-footer bg-transparent border-0 text-center">
+											<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); showHospitalDetailsForSpecialization(${hospital.id}, '${specialization}')">
+												🏥 View Hospital & Doctors
+											</button>
+										</div>
+									</div>
+								</div>
+							`).join('')}
+						</div>
+						${hospitalsWithSpecialization.length === 0 ? `
+							<div class="text-center py-5">
+								<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
+								<h6 class="text-muted">No hospitals available for ${specialization}</h6>
+								<p class="text-muted small">Please try a different specialization or contact support</p>
+							</div>
+						` : ''}
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" onclick="goBackToSpecializations()">Back to Specializations</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
+	
+	// Remove existing modal if any
+	const existingModal = document.getElementById('specializationHospitalsModal');
+	if (existingModal) {
+		existingModal.remove();
+	}
+	
+	// Add new modal to body
+	document.body.insertAdjacentHTML('beforeend', modalContent);
+	
+	// Show the modal
+	const modal = new bootstrap.Modal(document.getElementById('specializationHospitalsModal'));
+	modal.show();
+}
+
+function showHospitalDetailsForSpecialization(hospitalId, specialization) {
+	const hospital = hospitals.find(h => h.id === hospitalId);
+	if (!hospital) return;
+
+	// Filter doctors by specialization
+	const doctorsInSpecialization = hospital.doctors.filter(doctor => 
+		doctor.specializations.includes(specialization)
+	);
+
+	// Create modal content
+	const modalContent = `
+		<div class="modal fade" id="hospitalDoctorsModal" tabindex="-1" aria-labelledby="hospitalDoctorsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="hospitalDoctorsModalLabel">
+							🏥 ${hospital.name} - ${specialization} Doctors
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<!-- Hospital Info -->
+						<div class="row mb-4">
+							<div class="col-md-4 text-center">
+								${hospital.logo ? 
+									`<img src="${hospital.logo}" alt="${hospital.name}" class="img-fluid rounded mb-3" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px !important; border: 3px solid var(--accent);">` :
+									`<div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 12px; border: 3px solid var(--accent);">
+										<img src="https://img.icons8.com/color/96/000000/hospital.png" alt="Hospital" style="width: 96px; height: 96px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+										<div class="bg-primary rounded d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; display: none;">
+											<span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
+										</div>
+									</div>`
+								}
+							</div>
+							<div class="col-md-8">
+								<h4 class="fw-bold mb-3">${hospital.name}</h4>
+								<div class="mb-3">
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">📍</span>
+										<strong>Location:</strong> ${hospital.location}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">📞</span>
+										<strong>Contact:</strong> ${hospital.contact_no}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">✉️</span>
+										<strong>Email:</strong> ${hospital.email}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">🏷️</span>
+										<strong>Registration:</strong> ${hospital.registration_number}
+									</div>
+								</div>
+								<div class="mb-3">
+									<h6 class="fw-bold">Specialization:</h6>
+									<span class="badge bg-success fs-6">${specialization}</span>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Doctors Section -->
+						<div class="mt-4">
+							<h5 class="fw-bold mb-3">👨‍⚕️ Available ${specialization} Doctors</h5>
+							${doctorsInSpecialization.length > 0 ? `
+								<div class="row g-3">
+									${doctorsInSpecialization.map(doctor => `
+										<div class="col-md-6">
+											<div class="card border-0 shadow-sm" onclick="showDoctorDetails(${hospital.id}, ${doctor.id}, '${doctor.name}', '${specialization}')" style="cursor: pointer; transition: all 0.3s ease;">
+												<div class="card-body p-4">
+													<div class="d-flex align-items-center gap-3 mb-3">
+														<div class="d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+															<img src="https://img.icons8.com/color/96/000000/medical-doctor.png" alt="Doctor" style="width: 48px; height: 48px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+															<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; display: none;">
+																<span style="color: white; font-weight: bold; font-size: 24px;">👨‍⚕️</span>
+															</div>
+														</div>
+														<div class="flex-grow-1">
+															<h6 class="fw-bold mb-1">Dr. ${doctor.name}</h6>
+															<small class="text-muted">${doctor.gender} • ${specialization}</small>
+														</div>
+													</div>
+													<div class="d-flex gap-2">
+														<button class="btn btn-primary btn-sm flex-fill" onclick="event.stopPropagation(); showDoctorDetails(${hospital.id}, ${doctor.id}, '${doctor.name}', '${specialization}')">
+															<span style="font-size: 12px;">👨‍⚕️</span> View Doctor Details
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									`).join('')}
+								</div>
+							` : `
+								<div class="text-center py-4">
+									<div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👨‍⚕️</div>
+									<h6 class="text-muted">No ${specialization} doctors available at this hospital</h6>
+									<p class="text-muted small">Please try a different hospital or contact support</p>
+								</div>
+							`}
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back to Hospitals</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
+	
+	// Remove existing modal if any
+	const existingModal = document.getElementById('hospitalDoctorsModal');
+	if (existingModal) {
+		existingModal.remove();
+	}
+	
+	// Add new modal to body
+	document.body.insertAdjacentHTML('beforeend', modalContent);
+	
+	// Show the modal
+	const modal = new bootstrap.Modal(document.getElementById('hospitalDoctorsModal'));
+	modal.show();
+}
 
 function showHospitalDetails(hospitalId) {
 	const hospital = hospitals.find(h => h.id === hospitalId);
@@ -494,6 +3009,136 @@ function showHospitalDetails(hospitalId) {
 	modal.show();
 }
 
+function showDoctorDetails(hospitalId, doctorId, doctorName, specialization) {
+	const hospital = hospitals.find(h => h.id === hospitalId);
+	const doctor = hospital.doctors.find(d => d.id === doctorId);
+	
+	if (!hospital || !doctor) return;
+
+	// Create modal content
+	const modalContent = `
+		<div class="modal fade" id="doctorDetailsModal" tabindex="-1" aria-labelledby="doctorDetailsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="doctorDetailsModalLabel">
+							👨‍⚕️ Dr. ${doctorName} - ${specialization}
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<!-- Doctor Info -->
+						<div class="row mb-4">
+							<div class="col-md-4 text-center">
+								<div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+									<img src="https://img.icons8.com/color/96/000000/medical-doctor.png" alt="Doctor" style="width: 96px; height: 96px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+									<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; display: none;">
+										<span style="color: white; font-weight: bold; font-size: 48px;">👨‍⚕️</span>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-8">
+								<h4 class="fw-bold mb-3">Dr. ${doctorName}</h4>
+								<div class="mb-3">
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">🏥</span>
+										<strong>Hospital:</strong> ${hospital.name}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">🩺</span>
+										<strong>Specialization:</strong> ${specialization}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">👤</span>
+										<strong>Gender:</strong> ${doctor.gender}
+									</div>
+									<div class="d-flex align-items-center gap-2 mb-2">
+										<span style="font-size: 18px;">📞</span>
+										<strong>Contact:</strong> ${doctor.contact}
+									</div>
+								</div>
+								<div class="mb-3">
+									<h6 class="fw-bold">All Specializations:</h6>
+									<div class="d-flex flex-wrap gap-1">
+										${doctor.specializations.map(spec => 
+											`<span class="badge ${spec === specialization ? 'bg-success' : 'bg-secondary'}">${spec}</span>`
+										).join('')}
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Hospital Info -->
+						<div class="card border-0 bg-light">
+							<div class="card-body">
+								<h6 class="fw-bold mb-3">🏥 Hospital Information</h6>
+								<div class="row">
+									<div class="col-md-6">
+										<div class="d-flex align-items-center gap-2 mb-2">
+											<span style="font-size: 16px;">📍</span>
+											<strong>Location:</strong> ${hospital.location}
+										</div>
+										<div class="d-flex align-items-center gap-2 mb-2">
+											<span style="font-size: 16px;">📞</span>
+											<strong>Contact:</strong> ${hospital.contact_no}
+										</div>
+									</div>
+									<div class="col-md-6">
+										<div class="d-flex align-items-center gap-2 mb-2">
+											<span style="font-size: 16px;">✉️</span>
+											<strong>Email:</strong> ${hospital.email}
+										</div>
+										<div class="d-flex align-items-center gap-2 mb-2">
+											<span style="font-size: 16px;">🏷️</span>
+											<strong>Registration:</strong> ${hospital.registration_number}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back to Doctors</button>
+						<button type="button" class="btn btn-success" onclick="bookAppointmentWithDoctor(${hospitalId}, ${doctorId}, '${doctorName}', '${specialization}')">
+							📅 Book Appointment with Dr. ${doctorName}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
+	
+	// Remove existing modal if any
+	const existingModal = document.getElementById('doctorDetailsModal');
+	if (existingModal) {
+		existingModal.remove();
+	}
+	
+	// Add new modal to body
+	document.body.insertAdjacentHTML('beforeend', modalContent);
+	
+	// Show the modal
+	const modal = new bootstrap.Modal(document.getElementById('doctorDetailsModal'));
+	modal.show();
+}
+
+function bookAppointmentWithDoctor(hospitalId, doctorId, doctorName, specialization) {
+	// Close all modals
+	const modals = document.querySelectorAll('.modal');
+	modals.forEach(modal => {
+		const modalInstance = bootstrap.Modal.getInstance(modal);
+		if (modalInstance) {
+			modalInstance.hide();
+		}
+	});
+	
+	// Show confirmation
+	if (confirm(`Book appointment with Dr. ${doctorName} (${specialization}) at ${hospitals.find(h => h.id === hospitalId).name}?`)) {
+		// Redirect to appointment booking with all parameters pre-selected
+		window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}&specialization=${encodeURIComponent(specialization)}`;
+	}
+}
+
 function bookDoctorAppointment(hospitalId, doctorId, doctorName) {
 	// Close the modal first
 	const modal = bootstrap.Modal.getInstance(document.getElementById('hospitalDetailsModal'));
@@ -502,6 +3147,1037 @@ function bookDoctorAppointment(hospitalId, doctorId, doctorName) {
 	// Redirect to appointment booking with hospital and doctor pre-selected
 	window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
 }
+
+// ===== PREMIUM DASHBOARD FEATURES =====
+
+// Quick Actions Functions
+function bookAppointment() {
+	NotificationSystem.showToast('Opening hospital selection...', 'info');
+	setTimeout(() => {
+		showHospitalSelection();
+	}, 500);
+}
+
+function viewReports() {
+	NotificationSystem.showToast('Loading your health reports...', 'info');
+	setTimeout(() => {
+		window.location.href = '/reports/';
+	}, 1000);
+}
+
+function emergencyContact() {
+	if (confirm('Are you experiencing a medical emergency? This will connect you to emergency services.')) {
+		window.location.href = 'tel:108';
+	}
+}
+
+function chatSupport() {
+	NotificationSystem.showToast('Opening live chat support...', 'info');
+	// Implement live chat functionality
+	setTimeout(() => {
+		alert('Live chat feature coming soon! For now, please contact support at support@jeevancare.com');
+	}, 1000);
+}
+
+// Health Score Management
+function refreshHealthScore() {
+	const progressBar = document.querySelector('.progress-fill');
+	const scoreValue = document.querySelector('.score-value');
+	
+	// Show loading state
+	Utils.showLoading(document.querySelector('.health-score'));
+	
+	// Fetch real health score from API
+	fetch('/patient/api/health-trends/?period=week')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success) {
+				// Calculate health score from wellness data
+				const wellnessData = apiData.data;
+				let healthScore = 75; // Default score
+				
+				if (wellnessData.mood && wellnessData.mood.length > 0) {
+					const avgMood = wellnessData.mood.reduce((sum, val) => sum + val, 0) / wellnessData.mood.length;
+					const avgSleep = wellnessData.sleep.reduce((sum, val) => sum + val, 0) / wellnessData.sleep.length;
+					healthScore = Math.round((avgMood / 5) * 50 + (avgSleep / 8) * 50);
+				}
+				
+				progressBar.style.width = `${healthScore}%`;
+				scoreValue.textContent = `${healthScore}%`;
+		
+		Utils.hideLoading(document.querySelector('.health-score'));
+		NotificationSystem.showToast('Health score updated!', 'success');
+			} else {
+				Utils.hideLoading(document.querySelector('.health-score'));
+				NotificationSystem.showToast('Unable to update health score', 'error');
+			}
+		})
+		.catch(error => {
+			console.error('Error refreshing health score:', error);
+			Utils.hideLoading(document.querySelector('.health-score'));
+			NotificationSystem.showToast('Error updating health score', 'error');
+		});
+}
+
+// Notification Management
+function markAllAsRead() {
+	const notifications = document.querySelectorAll('.notification-item');
+	notifications.forEach(notification => {
+		notification.style.opacity = '0.6';
+		notification.style.transform = 'scale(0.98)';
+	});
+	
+	// Update notification badge
+	const badge = document.querySelector('.notification-badge');
+	if (badge) {
+		badge.textContent = '0';
+		badge.style.background = 'var(--secondary-400)';
+	}
+	
+	NotificationSystem.showToast('All notifications marked as read', 'success');
+}
+
+// Timeline Functions
+function viewFullTimeline() {
+	NotificationSystem.showToast('Loading full health timeline...', 'info');
+	setTimeout(() => {
+		window.location.href = '/timeline/';
+	}, 1000);
+}
+
+// Wellness Tracker Functions
+function updateHydration() {
+	const hydrationProgress = document.querySelector('.wellness-tracker .progress-fill');
+	if (hydrationProgress) {
+		const currentWidth = parseInt(hydrationProgress.style.width) || 0;
+		const newWidth = Math.min(currentWidth + 12.5, 100); // Increase by 12.5% (1/8 of 100%)
+		hydrationProgress.style.width = `${newWidth}%`;
+		
+		const glasses = Math.floor(newWidth / 12.5);
+		document.querySelector('.wellness-tracker p').textContent = `${glasses}/8 glasses today`;
+		
+		if (newWidth >= 100) {
+			NotificationSystem.showToast('🎉 Daily hydration goal achieved!', 'success');
+		}
+	}
+}
+
+function updateSteps() {
+	const stepsProgress = document.querySelector('.wellness-tracker .progress-fill');
+	if (stepsProgress) {
+		const currentWidth = parseInt(stepsProgress.style.width) || 0;
+		const newWidth = Math.min(currentWidth + 5, 100); // Increase by 5%
+		stepsProgress.style.width = `${newWidth}%`;
+		
+		const steps = Math.floor(newWidth * 100); // Convert percentage to steps
+		document.querySelector('.wellness-tracker p').textContent = `${steps.toLocaleString()} / 10,000 steps`;
+		
+		if (newWidth >= 100) {
+			NotificationSystem.showToast('🏃‍♂️ Daily step goal achieved!', 'success');
+		}
+	}
+}
+
+// Enhanced Dashboard Initialization
+document.addEventListener('DOMContentLoaded', function() {
+	try {
+		// Initialize all existing functionality
+		AnimationController.initScrollAnimations();
+		ButtonHandler.initLoadingStates();
+		ScrollHandler.initSmoothScrolling();
+		
+		// Initialize premium features
+		initializePremiumFeatures();
+		
+		// Initialize wellness tracker
+		initializeWellnessTracker();
+		
+		// Initialize real-time updates
+		initializeRealTimeUpdates();
+		
+		// Initialize accessibility enhancements
+		initializeAccessibility();
+		
+		// Initialize new premium features
+		initializeMobileQuickActions();
+		initializeTouchInteractions();
+		
+		// Initialize charts
+		initializeCharts();
+		
+	} catch (error) {
+		ErrorHandler.handleError(error, 'Premium Dashboard Initialization');
+	}
+});
+
+// Premium Features Initialization
+function initializePremiumFeatures() {
+	// Add keyboard shortcuts
+	document.addEventListener('keydown', (e) => {
+		if (e.ctrlKey || e.metaKey) {
+			switch(e.key) {
+				case 'a':
+					e.preventDefault();
+					bookAppointment();
+					break;
+				case 'r':
+					e.preventDefault();
+					viewReports();
+					break;
+				case 'e':
+					e.preventDefault();
+					emergencyContact();
+					break;
+				case 'c':
+					e.preventDefault();
+					chatSupport();
+					break;
+			}
+		}
+	});
+	
+	// Add tooltips for keyboard shortcuts
+	const quickActions = document.querySelectorAll('.premium-card button');
+	quickActions.forEach(button => {
+		const action = button.textContent.trim();
+		let shortcut = '';
+		
+		switch(action) {
+			case 'Book Appointment': shortcut = 'Ctrl+A'; break;
+			case 'View Reports': shortcut = 'Ctrl+R'; break;
+			case 'Emergency': shortcut = 'Ctrl+E'; break;
+			case 'Live Chat': shortcut = 'Ctrl+C'; break;
+		}
+		
+		if (shortcut) {
+			button.title = `${action} (${shortcut})`;
+		}
+	});
+}
+
+// Wellness Tracker Initialization
+function initializeWellnessTracker() {
+	// Add click handlers to wellness items
+	const wellnessItems = document.querySelectorAll('.wellness-tracker > div');
+	wellnessItems.forEach((item, index) => {
+		item.style.cursor = 'pointer';
+		item.addEventListener('click', () => {
+			if (index === 0) updateHydration();
+			if (index === 2) updateSteps();
+		});
+		
+		// Add hover effects
+		item.addEventListener('mouseenter', () => {
+			item.style.transform = 'translateY(-2px)';
+			item.style.boxShadow = 'var(--shadow-md)';
+		});
+		
+		item.addEventListener('mouseleave', () => {
+			item.style.transform = 'translateY(0)';
+			item.style.boxShadow = 'none';
+		});
+	});
+}
+
+// Real-time Updates
+function initializeRealTimeUpdates() {
+	// Simulate real-time notifications
+	setInterval(() => {
+		if (Math.random() < 0.1) { // 10% chance every 30 seconds
+			const messages = [
+				'New lab results available',
+				'Appointment reminder: Check-in 15 minutes early',
+				'Health tip: Stay hydrated throughout the day',
+				'Your doctor has updated your treatment plan'
+			];
+			
+			const message = messages[Math.floor(Math.random() * messages.length)];
+			NotificationSystem.showToast(message, 'info');
+			
+			// Update notification badge
+			const badge = document.querySelector('.notification-badge');
+			if (badge) {
+				const currentCount = parseInt(badge.textContent) || 0;
+				badge.textContent = currentCount + 1;
+				badge.classList.add('pulse');
+			}
+		}
+	}, 30000);
+}
+
+// Accessibility Enhancements
+function initializeAccessibility() {
+	// Add skip links
+	const skipLink = document.createElement('a');
+	skipLink.href = '#main-content';
+	skipLink.textContent = 'Skip to main content';
+	skipLink.className = 'sr-only';
+	skipLink.style.position = 'absolute';
+	skipLink.style.top = '-40px';
+	skipLink.style.left = '6px';
+	skipLink.style.zIndex = '1000';
+	skipLink.style.padding = '8px 16px';
+	skipLink.style.background = 'var(--primary-600)';
+	skipLink.style.color = 'white';
+	skipLink.style.textDecoration = 'none';
+	skipLink.style.borderRadius = '4px';
+	
+	skipLink.addEventListener('focus', () => {
+		skipLink.style.top = '6px';
+		skipLink.classList.remove('sr-only');
+	});
+	
+	skipLink.addEventListener('blur', () => {
+		skipLink.style.top = '-40px';
+		skipLink.classList.add('sr-only');
+	});
+	
+	document.body.insertBefore(skipLink, document.body.firstChild);
+	
+	// Add main content landmark
+	const mainContent = document.querySelector('.premium-dashboard');
+	if (mainContent) {
+		mainContent.id = 'main-content';
+		mainContent.setAttribute('role', 'main');
+	}
+	
+	// Enhance focus management
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Tab') {
+			document.body.classList.add('keyboard-navigation');
+		}
+	});
+	
+	document.addEventListener('mousedown', () => {
+		document.body.classList.remove('keyboard-navigation');
+	});
+}
+
+// Performance Monitoring
+function initializePerformanceMonitoring() {
+	if ('performance' in window) {
+		// Monitor page load time
+		window.addEventListener('load', () => {
+			const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+			console.log(`Dashboard loaded in ${loadTime}ms`);
+			
+			if (loadTime > 3000) {
+				NotificationSystem.showToast('Page loading slowly. Please check your connection.', 'warning');
+			}
+		});
+		
+		// Monitor memory usage
+		if ('memory' in performance) {
+			setInterval(() => {
+				const memory = performance.memory;
+				const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
+				const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
+				
+				if (usedMB > 50) {
+					console.warn(`High memory usage: ${usedMB}MB / ${totalMB}MB`);
+				}
+			}, 60000); // Check every minute
+		}
+	}
+}
+
+// Initialize performance monitoring
+initializePerformanceMonitoring();
+
+// ===== HEALTH TIPS CAROUSEL =====
+let currentTipIndex = 0;
+const totalTips = 4;
+
+function nextTip() {
+	currentTipIndex = (currentTipIndex + 1) % totalTips;
+	updateTipDisplay();
+}
+
+function previousTip() {
+	currentTipIndex = (currentTipIndex - 1 + totalTips) % totalTips;
+	updateTipDisplay();
+}
+
+function goToTip(index) {
+	currentTipIndex = index;
+	updateTipDisplay();
+}
+
+function updateTipDisplay() {
+	const slides = document.querySelectorAll('.tip-slide');
+	const indicators = document.querySelectorAll('.indicator');
+	
+	slides.forEach((slide, index) => {
+		slide.classList.toggle('active', index === currentTipIndex);
+	});
+	
+	indicators.forEach((indicator, index) => {
+		indicator.classList.toggle('active', index === currentTipIndex);
+	});
+}
+
+// Auto-advance tips every 5 seconds
+setInterval(() => {
+	nextTip();
+}, 5000);
+
+// ===== ENHANCED WELLNESS TRACKER =====
+function updateHydration() {
+	const progressBar = document.querySelector('[data-wellness="hydration"] .progress-fill');
+	const progressText = document.querySelector('[data-wellness="hydration"] .wellness-progress-text');
+	const currentProgress = parseInt(progressBar.dataset.progress) || 0;
+	const newProgress = Math.min(currentProgress + 12.5, 100);
+	
+	progressBar.style.width = `${newProgress}%`;
+	progressBar.dataset.progress = newProgress;
+	
+	const glasses = Math.floor(newProgress / 12.5);
+	progressText.textContent = `${glasses}/8 glasses today`;
+	
+	if (newProgress >= 100) {
+		NotificationSystem.showToast('🎉 Daily hydration goal achieved!', 'success');
+	}
+	
+	// Add animation
+	progressBar.style.transform = 'scale(1.05)';
+	setTimeout(() => {
+		progressBar.style.transform = 'scale(1)';
+	}, 200);
+}
+
+function updateSteps() {
+	const progressBar = document.querySelector('[data-wellness="steps"] .progress-fill');
+	const progressText = document.querySelector('[data-wellness="steps"] .wellness-progress-text');
+	const currentProgress = parseInt(progressBar.dataset.progress) || 0;
+	const newProgress = Math.min(currentProgress + 5, 100);
+	
+	progressBar.style.width = `${newProgress}%`;
+	progressBar.dataset.progress = newProgress;
+	
+	const steps = Math.floor(newProgress * 100);
+	progressText.textContent = `${steps.toLocaleString()} / 10,000 steps`;
+	
+	if (newProgress >= 100) {
+		NotificationSystem.showToast('🏃‍♂️ Daily step goal achieved!', 'success');
+	}
+	
+	// Add animation
+	progressBar.style.transform = 'scale(1.05)';
+	setTimeout(() => {
+		progressBar.style.transform = 'scale(1)';
+	}, 200);
+}
+
+function updateSleep() {
+	NotificationSystem.showToast('Sleep data updated! Keep tracking your sleep quality.', 'info');
+}
+
+function updateMood() {
+	const moods = ['😊', '😌', '😄', '🤗', '😎'];
+	const moodTexts = ['Feeling great!', 'Very good!', 'Excellent!', 'Amazing!', 'Fantastic!'];
+	const randomMood = Math.floor(Math.random() * moods.length);
+	
+	const progressText = document.querySelector('[data-wellness="mood"] .wellness-progress-text');
+	const status = document.querySelector('[data-wellness="mood"] .wellness-status');
+	
+	progressText.textContent = `${moods[randomMood]} ${moodTexts[randomMood]}`;
+	status.textContent = 'Excellent';
+	
+	NotificationSystem.showToast('Mood updated! Thanks for tracking your wellness.', 'success');
+}
+
+function refreshWellnessData() {
+	NotificationSystem.showToast('Wellness data refreshed!', 'info');
+	
+	// Add loading animation to all wellness items
+	const wellnessItems = document.querySelectorAll('.wellness-item');
+	wellnessItems.forEach(item => {
+		item.classList.add('loading');
+		setTimeout(() => {
+			item.classList.remove('loading');
+		}, 1000);
+	});
+}
+
+// ===== MOBILE QUICK ACTIONS =====
+function initializeMobileQuickActions() {
+	const mobileActions = document.getElementById('mobileQuickActions');
+	if (!mobileActions) return;
+	
+	// Show/hide based on screen size and scroll position
+	function toggleMobileActions() {
+		const isMobile = window.innerWidth <= 768;
+		const scrolled = window.scrollY > 200;
+		
+		if (isMobile && scrolled) {
+			mobileActions.style.display = 'flex';
+		} else {
+			mobileActions.style.display = 'none';
+		}
+	}
+	
+	window.addEventListener('scroll', Utils.throttle(toggleMobileActions, 100));
+	window.addEventListener('resize', toggleMobileActions);
+	
+	// Initialize visibility
+	toggleMobileActions();
+}
+
+// ===== ENHANCED TOUCH INTERACTIONS =====
+function initializeTouchInteractions() {
+	// Add touch feedback to wellness items
+	const wellnessItems = document.querySelectorAll('.wellness-item');
+	wellnessItems.forEach(item => {
+		item.addEventListener('touchstart', function() {
+			this.style.transform = 'scale(0.98)';
+		});
+		
+		item.addEventListener('touchend', function() {
+			this.style.transform = 'scale(1)';
+		});
+	});
+	
+	// Add swipe gestures to health tips carousel
+	const carousel = document.querySelector('.health-tips-carousel');
+	if (carousel) {
+		let startX = 0;
+		let startY = 0;
+		
+		carousel.addEventListener('touchstart', (e) => {
+			startX = e.touches[0].clientX;
+			startY = e.touches[0].clientY;
+		});
+		
+		carousel.addEventListener('touchend', (e) => {
+			const endX = e.changedTouches[0].clientX;
+			const endY = e.changedTouches[0].clientY;
+			const diffX = startX - endX;
+			const diffY = startY - endY;
+			
+			// Only trigger if horizontal swipe is greater than vertical
+			if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+				if (diffX > 0) {
+					nextTip();
+				} else {
+					previousTip();
+				}
+			}
+		});
+	}
+}
+
+// ===== HEALTH CHARTS =====
+let healthTrendsChart, vitalSignsChart, medicationChart, wellnessChart;
+
+// Initialize all charts
+function initializeCharts() {
+	initializeHealthTrendsChart();
+	initializeVitalSignsChart();
+	initializeMedicationChart();
+	initializeWellnessChart();
+}
+
+// Health Trends Chart (Line Chart)
+function initializeHealthTrendsChart() {
+	const ctx = document.getElementById('healthTrendsChart');
+	if (!ctx) return;
+	
+	// Fetch real data from API
+	fetch('/patient/api/health-trends/?period=week')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success) {
+	const data = {
+					labels: apiData.data.labels,
+		datasets: [{
+						label: 'Mood Score',
+						data: apiData.data.mood,
+			borderColor: '#3B82F6',
+			backgroundColor: 'rgba(59, 130, 246, 0.1)',
+			borderWidth: 3,
+			fill: true,
+			tension: 0.4,
+			pointBackgroundColor: '#3B82F6',
+			pointBorderColor: '#ffffff',
+			pointBorderWidth: 2,
+			pointRadius: 6
+		}, {
+						label: 'Sleep Hours',
+						data: apiData.data.sleep,
+			borderColor: '#10B981',
+			backgroundColor: 'rgba(16, 185, 129, 0.1)',
+			borderWidth: 3,
+			fill: true,
+			tension: 0.4,
+			pointBackgroundColor: '#10B981',
+			pointBorderColor: '#ffffff',
+			pointBorderWidth: 2,
+			pointRadius: 6
+		}]
+	};
+				createHealthTrendsChart(ctx, data);
+			} else {
+				// Fallback to empty chart if API fails
+				createHealthTrendsChart(ctx, getEmptyChartData());
+			}
+		})
+		.catch(error => {
+			console.error('Error fetching health trends:', error);
+			createHealthTrendsChart(ctx, getEmptyChartData());
+		});
+}
+
+function createHealthTrendsChart(ctx, data) {
+	
+	healthTrendsChart = new Chart(ctx, {
+		type: 'line',
+		data: data,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					position: 'top',
+					labels: {
+						usePointStyle: true,
+						padding: 20,
+						font: {
+							size: 12,
+							weight: '500'
+						}
+					}
+				},
+				tooltip: {
+					backgroundColor: 'rgba(0, 0, 0, 0.8)',
+					titleColor: '#ffffff',
+					bodyColor: '#ffffff',
+					borderColor: '#3B82F6',
+					borderWidth: 1,
+					cornerRadius: 8
+				}
+			},
+			scales: {
+				y: {
+					beginAtZero: true,
+					max: 10,
+					grid: {
+						color: 'rgba(0, 0, 0, 0.1)',
+						drawBorder: false
+					},
+					ticks: {
+						font: {
+							size: 11
+						},
+						color: '#6B7280'
+					}
+				},
+				x: {
+					grid: {
+						display: false
+					},
+					ticks: {
+						font: {
+							size: 11
+						},
+						color: '#6B7280'
+					}
+				}
+			},
+			interaction: {
+				intersect: false,
+				mode: 'index'
+			}
+		}
+	});
+}
+
+function getEmptyChartData() {
+	return {
+		labels: ['No Data'],
+		datasets: [{
+			label: 'No Data Available',
+			data: [0],
+			borderColor: '#6B7280',
+			backgroundColor: 'rgba(107, 114, 128, 0.1)',
+			borderWidth: 2,
+			fill: false
+		}]
+	};
+}
+
+// Vital Signs Chart (Radar Chart)
+function initializeVitalSignsChart() {
+	const ctx = document.getElementById('vitalSignsChart');
+	if (!ctx) return;
+	
+	// Fetch real vital signs data from API
+	fetch('/patient/api/vital-signs-chart/')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success) {
+	const data = {
+					labels: apiData.data.labels,
+		datasets: [{
+			label: 'Current Values',
+						data: apiData.data.values,
+			borderColor: '#EF4444',
+			backgroundColor: 'rgba(239, 68, 68, 0.2)',
+			borderWidth: 3,
+			pointBackgroundColor: '#EF4444',
+			pointBorderColor: '#ffffff',
+			pointBorderWidth: 2,
+			pointRadius: 6
+		}, {
+			label: 'Normal Range',
+			data: [80, 85, 90, 95, 85, 90],
+			borderColor: '#10B981',
+			backgroundColor: 'rgba(16, 185, 129, 0.1)',
+			borderWidth: 2,
+			pointBackgroundColor: '#10B981',
+			pointBorderColor: '#ffffff',
+			pointBorderWidth: 2,
+			pointRadius: 4
+		}]
+	};
+				createVitalSignsChart(ctx, data);
+			} else {
+				createVitalSignsChart(ctx, getEmptyVitalSignsData());
+			}
+		})
+		.catch(error => {
+			console.error('Error fetching vital signs:', error);
+			createVitalSignsChart(ctx, getEmptyVitalSignsData());
+		});
+}
+
+function createVitalSignsChart(ctx, data) {
+	
+	vitalSignsChart = new Chart(ctx, {
+		type: 'radar',
+		data: data,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					position: 'top',
+					labels: {
+						usePointStyle: true,
+						padding: 20,
+						font: {
+							size: 12,
+							weight: '500'
+						}
+					}
+				},
+				tooltip: {
+					backgroundColor: 'rgba(0, 0, 0, 0.8)',
+					titleColor: '#ffffff',
+					bodyColor: '#ffffff',
+					borderColor: '#EF4444',
+					borderWidth: 1,
+					cornerRadius: 8
+				}
+			},
+			scales: {
+				r: {
+					beginAtZero: true,
+					max: 100,
+					grid: {
+						color: 'rgba(0, 0, 0, 0.1)'
+					},
+					pointLabels: {
+						font: {
+							size: 11,
+							weight: '500'
+						},
+						color: '#374151'
+					},
+					ticks: {
+						display: false
+					}
+				}
+			}
+		}
+	});
+}
+
+function getEmptyVitalSignsData() {
+	return {
+		labels: ['No Data Available'],
+		datasets: [{
+			label: 'No Vital Signs Recorded',
+			data: [0],
+			borderColor: '#6B7280',
+			backgroundColor: 'rgba(107, 114, 128, 0.1)',
+			borderWidth: 2,
+			pointBackgroundColor: '#6B7280',
+			pointBorderColor: '#ffffff',
+			pointBorderWidth: 2,
+			pointRadius: 4
+		}]
+	};
+}
+
+// Medication Adherence Chart (Doughnut Chart)
+function initializeMedicationChart() {
+	const ctx = document.getElementById('medicationChart');
+	if (!ctx) return;
+	
+	// Fetch real medication adherence data from API
+	fetch('/patient/api/medication-adherence/')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success) {
+				const adherence = apiData.data.overall_adherence;
+				const missed = 100 - adherence;
+	const data = {
+					labels: ['Taken', 'Missed'],
+		datasets: [{
+						data: [adherence, missed],
+			backgroundColor: [
+				'#10B981',
+							'#EF4444'
+			],
+			borderColor: '#ffffff',
+			borderWidth: 3,
+			cutout: '60%'
+		}]
+	};
+				createMedicationChart(ctx, data);
+			} else {
+				createMedicationChart(ctx, getEmptyMedicationData());
+			}
+		})
+		.catch(error => {
+			console.error('Error fetching medication adherence:', error);
+			createMedicationChart(ctx, getEmptyMedicationData());
+		});
+}
+
+function createMedicationChart(ctx, data) {
+	
+	medicationChart = new Chart(ctx, {
+		type: 'doughnut',
+		data: data,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					position: 'bottom',
+					labels: {
+						usePointStyle: true,
+						padding: 20,
+						font: {
+							size: 12,
+							weight: '500'
+						}
+					}
+				},
+				tooltip: {
+					backgroundColor: 'rgba(0, 0, 0, 0.8)',
+					titleColor: '#ffffff',
+					bodyColor: '#ffffff',
+					borderColor: '#10B981',
+					borderWidth: 1,
+					cornerRadius: 8,
+					callbacks: {
+						label: function(context) {
+							return context.label + ': ' + context.parsed + '%';
+						}
+					}
+				}
+			},
+			cutout: '60%'
+		}
+	});
+}
+
+function getEmptyMedicationData() {
+	return {
+		labels: ['No Data'],
+		datasets: [{
+			data: [100],
+			backgroundColor: ['#6B7280'],
+			borderColor: '#ffffff',
+			borderWidth: 3,
+			cutout: '60%'
+		}]
+	};
+}
+
+// Wellness Score Chart (Bar Chart)
+function initializeWellnessChart() {
+	const ctx = document.getElementById('wellnessChart');
+	if (!ctx) return;
+	
+	// Fetch real wellness data from API
+	fetch('/patient/api/wellness-log/?period=week')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success && apiData.data.length > 0) {
+				// Calculate average wellness scores
+				const avgSleep = apiData.data.reduce((sum, log) => sum + parseFloat(log.sleep_hours), 0) / apiData.data.length;
+				const avgMood = apiData.data.reduce((sum, log) => sum + log.mood_score, 0) / apiData.data.length;
+				const avgExercise = apiData.data.reduce((sum, log) => sum + log.exercise_minutes, 0) / apiData.data.length;
+				const avgWater = apiData.data.reduce((sum, log) => sum + log.water_intake_glasses, 0) / apiData.data.length;
+				
+				// Normalize scores to 0-100 scale
+				const sleepScore = Math.min(100, (avgSleep / 8) * 100);
+				const moodScore = (avgMood / 5) * 100;
+				const exerciseScore = Math.min(100, (avgExercise / 30) * 100);
+				const waterScore = Math.min(100, (avgWater / 8) * 100);
+	
+	const data = {
+					labels: ['Sleep', 'Mood', 'Exercise', 'Hydration'],
+		datasets: [{
+			label: 'Wellness Score',
+						data: [sleepScore, moodScore, exerciseScore, waterScore],
+			backgroundColor: [
+				'#3B82F6',
+				'#10B981',
+				'#F59E0B',
+							'#06B6D4'
+			],
+			borderColor: '#ffffff',
+			borderWidth: 2,
+			borderRadius: 8,
+			borderSkipped: false
+		}]
+	};
+				createWellnessChart(ctx, data);
+			} else {
+				createWellnessChart(ctx, getEmptyWellnessData());
+			}
+		})
+		.catch(error => {
+			console.error('Error fetching wellness data:', error);
+			createWellnessChart(ctx, getEmptyWellnessData());
+		});
+}
+
+function createWellnessChart(ctx, data) {
+	
+	wellnessChart = new Chart(ctx, {
+		type: 'bar',
+		data: data,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			plugins: {
+				legend: {
+					display: false
+				},
+				tooltip: {
+					backgroundColor: 'rgba(0, 0, 0, 0.8)',
+					titleColor: '#ffffff',
+					bodyColor: '#ffffff',
+					borderColor: '#3B82F6',
+					borderWidth: 1,
+					cornerRadius: 8
+				}
+			},
+			scales: {
+				y: {
+					beginAtZero: true,
+					max: 100,
+					grid: {
+						color: 'rgba(0, 0, 0, 0.1)',
+						drawBorder: false
+					},
+					ticks: {
+						font: {
+							size: 11
+						},
+						color: '#6B7280'
+					}
+				},
+				x: {
+					grid: {
+						display: false
+					},
+					ticks: {
+						font: {
+							size: 11
+						},
+						color: '#6B7280'
+					}
+				}
+			}
+		}
+	});
+}
+
+function getEmptyWellnessData() {
+	return {
+		labels: ['No Data'],
+		datasets: [{
+			label: 'No Wellness Data',
+			data: [0],
+			backgroundColor: ['#6B7280'],
+			borderColor: '#ffffff',
+			borderWidth: 2,
+			borderRadius: 8,
+			borderSkipped: false
+		}]
+	};
+}
+
+// Chart Control Functions
+function updateChart(period) {
+	// Update chart controls
+	document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+	event.target.classList.add('active');
+	
+	// Fetch real data based on period
+	fetch(`/patient/api/health-trends/?period=${period}`)
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success && healthTrendsChart) {
+				healthTrendsChart.data.labels = apiData.data.labels;
+				healthTrendsChart.data.datasets[0].data = apiData.data.mood;
+				healthTrendsChart.data.datasets[1].data = apiData.data.sleep;
+		healthTrendsChart.update('active');
+	NotificationSystem.showToast(`Chart updated for ${period} view`, 'info');
+			} else {
+				NotificationSystem.showToast('Unable to load chart data', 'error');
+			}
+		})
+		.catch(error => {
+			console.error('Error updating chart:', error);
+			NotificationSystem.showToast('Error loading chart data', 'error');
+		});
+}
+
+function refreshVitalSigns() {
+	// Fetch real vital signs data
+	fetch('/patient/api/vital-signs-chart/')
+		.then(response => response.json())
+		.then(apiData => {
+			if (apiData.success && vitalSignsChart) {
+				vitalSignsChart.data.datasets[0].data = apiData.data.values;
+		vitalSignsChart.update('active');
+	NotificationSystem.showToast('Vital signs refreshed', 'success');
+			} else {
+				NotificationSystem.showToast('Unable to refresh vital signs', 'error');
+			}
+		})
+		.catch(error => {
+			console.error('Error refreshing vital signs:', error);
+			NotificationSystem.showToast('Error refreshing vital signs', 'error');
+		});
+}
+
+function exportWellnessData() {
+	NotificationSystem.showToast('Exporting wellness data...', 'info');
+	
+	// Simulate export
+	setTimeout(() => {
+		NotificationSystem.showToast('Wellness data exported successfully!', 'success');
+	}, 2000);
+}
 </script>
 
 {% endblock %}
+

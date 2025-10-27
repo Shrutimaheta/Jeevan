@@ -27,8 +27,16 @@ urlpatterns = [
     path('test/', views.test, name='test'),  # test page
     path('debug/', views.debug, name='debug'),  # debug page
     path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
+    path('test-logo/', views.test_logo, name='test_logo'),  # logo test page
     path('patient-home/', views.patient_home, name='patient_home'),
     path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
+    path('hospitals/<int:hospital_id>/doctors/', views.hospital_doctors, name='hospital_doctors'),
+    path('appointments/book/', views.book_appointment, name='book_appointment'),
+    path('chat/dialogflow/webhook/', views.dialogflow_webhook, name='dialogflow_webhook'),
+    path('htmx/hospitals/', views.htmx_filter_hospitals, name='htmx_filter_hospitals'),
+    path('htmx/doctors/', views.htmx_filter_doctors, name='htmx_filter_doctors'),
+    path('emergency/guide/', views.emergency_guide, name='emergency_guide'),
+    path('emergency/nearest-hospitals/', views.emergency_nearest_hospitals, name='emergency_nearest_hospitals'),
     # Catch-all route for React app - must be last
     re_path(r'^.*$', views.index, name='index'),
 ]
@@ -47,10 +55,18 @@ if settings.DEBUG:
 
         path('test/', views.test, name='test'),  # test page
         path('debug/', views.debug, name='debug'),  # debug page
-    path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
+        path('simple-test/', views.simple_test, name='simple_test'),  # simple test page
+        path('test-logo/', views.test_logo, name='test_logo'),  # logo test page
         path('react-debug/', views.react_debug, name='react_debug'),  # react debug page
-    path('patient-home/', views.patient_home, name='patient_home'),
-    path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
+        path('patient-home/', views.patient_home, name='patient_home'),
+        path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
+        path('hospitals/<int:hospital_id>/doctors/', views.hospital_doctors, name='hospital_doctors'),
+        path('appointments/book/', views.book_appointment, name='book_appointment'),
+        path('chat/dialogflow/webhook/', views.dialogflow_webhook, name='dialogflow_webhook'),
+        path('htmx/hospitals/', views.htmx_filter_hospitals, name='htmx_filter_hospitals'),
+        path('htmx/doctors/', views.htmx_filter_doctors, name='htmx_filter_doctors'),
+        path('emergency/guide/', views.emergency_guide, name='emergency_guide'),
+        path('emergency/nearest-hospitals/', views.emergency_nearest_hospitals, name='emergency_nearest_hospitals'),
     ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
     static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
         # Catch-all route for React app - must be last

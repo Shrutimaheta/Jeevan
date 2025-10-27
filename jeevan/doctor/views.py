@@ -15,18 +15,16 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view
 from datetime import datetime, date, timedelta
 import json
 
-from .models import Doctor
-from .serializers import DoctorSerializer
+from .models import Doctor, Review
+from care.models import CustomUser
 from .forms import DoctorProfileForm
 from appointments.models import Appointment
 from .models import AppointmentPrescription
 from .forms import AppointmentPrescriptionForm
+from care.models import Hospital, Specialization
 
 def doctor_login(request):
     """Doctor login (simple username/password using auth system)."""
@@ -199,15 +197,14 @@ def update_appointment_status(request, appointment_id):
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 # API Views for React integration
-@api_view(['GET'])
 def doctor_appointments_api(request):
     """API to get doctor appointments"""
     try:
         doctor = Doctor.objects.first()
         if not doctor:
-            return Response({'error': 'No doctor found'}, status=404)
+            return JsonResponse({'error': 'No doctor found'}, status=404)
     except Doctor.DoesNotExist:
-        return Response({'error': 'No doctor found'}, status=404)
+        return JsonResponse({'error': 'No doctor found'}, status=404)
     
     appointments = Appointment.objects.filter(doctor=doctor).order_by('-appointment_date', '-appointment_time')
     
@@ -226,29 +223,87 @@ def doctor_appointments_api(request):
             'created_at': appointment.created_at.strftime('%Y-%m-%d %H:%M'),
         })
     
-    return Response(appointments_data)
+    return JsonResponse(appointments_data, safe=False)
 
-@api_view(['GET'])
 def doctor_profile_api(request):
     """API to get doctor profile"""
     try:
         doctor = Doctor.objects.first()
         if not doctor:
-            return Response({'error': 'No doctor found'}, status=404)
+            return JsonResponse({'error': 'No doctor found'}, status=404)
     except Doctor.DoesNotExist:
-        return Response({'error': 'No doctor found'}, status=404)
+        return JsonResponse({'error': 'No doctor found'}, status=404)
     
-    serializer = DoctorSerializer(doctor)
-    return Response(serializer.data)
+    doctor_data = {
+        'id': doctor.id,
+        'full_name': doctor.full_name,
+        'specialization': doctor.specialization.sname if doctor.specialization else None,
+        'hospital': doctor.hospital.name if doctor.hospital else None,
+        'experience': doctor.experience,
+        'qualification': doctor.qualification,
+        'consultation_fee': doctor.consultation_fee,
+        'bio': doctor.bio,
+        'profile_photo': doctor.profile_photo.url if doctor.profile_photo else None,
+    }
+    
+    return JsonResponse(doctor_data)
 
 def doctor_home(request):
     return HttpResponse("Doctor Home Page")
 
-class DoctorListView(APIView):
-    def get(self, request):
-        doctors = Doctor.objects.all()
-        serializer = DoctorSerializer(doctors, many=True)
-        return Response(serializer.data)
+def get_specializations_by_hospital(request):
+    """AJAX endpoint to get specializations available at a specific hospital"""
+    if request.method == 'GET':
+        hospital_id = request.GET.get('hospital_id')
+        if hospital_id:
+            try:
+                hospital = Hospital.objects.get(id=hospital_id)
+                specializations = hospital.specialization.all()
+                specializations_data = [
+                    {'id': spec.id, 'name': spec.sname} 
+                    for spec in specializations
+                ]
+                return JsonResponse({'specializations': specializations_data})
+            except Hospital.DoesNotExist:
+                return JsonResponse({'error': 'Hospital not found'}, status=404)
+        else:
+            return JsonResponse({'error': 'Hospital ID required'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_user_info(request):
+    """AJAX endpoint to get selected user info for autofill in admin"""
+    if request.method == 'GET':
+        user_id = request.GET.get('user_id')
+        if not user_id:
+            return JsonResponse({'error': 'user_id required'}, status=400)
+        try:
+            user = CustomUser.objects.only('id', 'full_name', 'contact_number', 'email', 'role').get(id=user_id)
+            return JsonResponse({
+                'id': user.id,
+                'full_name': user.full_name or '',
+                'contact_number': user.contact_number or '',
+                'email': user.email or ''
+            })
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def doctor_list_api(request):
+    """API to get list of doctors"""
+    doctors = Doctor.objects.all()
+    doctors_data = []
+    for doctor in doctors:
+        doctors_data.append({
+            'id': doctor.id,
+            'full_name': doctor.full_name,
+            'specialization': doctor.specialization.sname if doctor.specialization else None,
+            'hospital': doctor.hospital.name if doctor.hospital else None,
+            'experience': doctor.experience,
+            'consultation_fee': doctor.consultation_fee,
+            'profile_photo': doctor.profile_photo.url if doctor.profile_photo else None,
+        })
+    
+    return JsonResponse(doctors_data, safe=False)
 
 def appointment_prescription(request, appointment_id):
     """Create or edit prescription for an accepted appointment; on save mark completed."""
@@ -280,3 +335,28 @@ def appointment_prescription(request, appointment_id):
         'form': form,
         'is_edit': prescription is not None,
     })
+
+
+def doctor_detail(request, doctor_id):
+    doctor = get_object_or_404(Doctor.objects.select_related('hospital').prefetch_related('specialization', 'languages'), id=doctor_id)
+
+    sort = request.GET.get('sort', 'newest')
+    page = request.GET.get('page')
+
+    reviews_qs = doctor.reviews.all()
+    if sort == 'rating_desc':
+        reviews_qs = reviews_qs.order_by('-rating', '-created_at')
+    elif sort == 'rating_asc':
+        reviews_qs = reviews_qs.order_by('rating', '-created_at')
+    else:
+        reviews_qs = reviews_qs.order_by('-created_at')
+
+    paginator = Paginator(reviews_qs, 5)
+    page_obj = paginator.get_page(page)
+
+    context = {
+        'doctor': doctor,
+        'page_obj': page_obj,
+        'sort': sort,
+    }
+    return render(request, 'doctor/doctor_detail.html', context)

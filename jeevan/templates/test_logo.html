@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo Test</title>
+    <style>
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .logo-test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        img { border: 2px solid #007bff; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Ayushman Bharat Logo Test</h1>
+    
+    <div class="logo-test">
+        <h3>PNG Version:</h3>
+        <img src="{% static 'images/ayushman_bharat_logo.png' %}" alt="Ayushman Bharat PNG" style="width: 100px; height: 100px;">
+    </div>
+    
+    <div class="logo-test">
+        <h3>SVG Version:</h3>
+        <img src="{% static 'images/ayushman_bharat_logo.svg' %}" alt="Ayushman Bharat SVG" style="width: 100px; height: 100px;">
+    </div>
+    
+    <div class="logo-test">
+        <h3>Direct URL Test:</h3>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Ayushman_Bharat_logo.svg/200px-Ayushman_Bharat_logo.svg.png" alt="External Logo" style="width: 100px; height: 100px;">
+    </div>
+    
+    <div class="logo-test">
+        <h3>ABHA Logo Test:</h3>
+        <img src="{% static 'images/abha_logo.png' %}" alt="ABHA Logo" style="width: 100px; height: 100px;">
+    </div>
+    
+    <script>
+        console.log('Logo test page loaded');
+        document.querySelectorAll('img').forEach((img, index) => {
+            img.onload = () => console.log(`Image ${index + 1} loaded successfully`);
+            img.onerror = () => console.log(`Image ${index + 1} failed to load`);
+        });
+    </script>
+</body>
+</html>

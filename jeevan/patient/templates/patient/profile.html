@@ -2,2630 +2,1085 @@
 
 {% load static %}
 
-
-
 {% block title %}Profile - {{ patient.full_name }}{% endblock %}
-
-
 
 {% block content %}
 
 <style>
-
     :root {
-
         --primary-dark-blue: #1e3a8a;
-
         --primary-blue: #3b82f6;
-
         --light-blue-bg: #f0f9ff;
-
         --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-
         --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-
         --border-radius: 16px;
-
         --transition: all 0.3s ease;
-
     }
-
-
 
     body {
-
-        background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-
+        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 50%, #60a5fa 100%);
         min-height: 100vh;
-
     }
-
-
 
     .profile-header {
-
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-
+        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 50%, #60a5fa 100%);
         color: white;
-
-        padding: 2rem 0;
-
-        margin-bottom: 2rem;
-
-        border-radius: 0 0 24px 24px;
-
-        box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
-
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+        position: relative;
+        overflow: hidden;
     }
 
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="healthcare-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23healthcare-pattern)"/></svg>');
+        opacity: 0.3;
+    }
 
+    .profile-header .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .welcome-section h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin-bottom: 0.25rem;
+    }
+
+    .welcome-section p {
+        font-size: 1rem;
+        opacity: 0.9;
+        font-weight: 400;
+    }
+
+    .quick-stats {
+        margin-top: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .profile-status-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }
+
+    .profile-status-card .status-badge {
+        background: rgba(16, 185, 129, 0.9);
+        margin-bottom: 0.75rem;
+    }
+
+    .profile-status-card .patient-id,
+    .profile-status-card .last-updated {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.25rem;
+    }
 
     .profile-card {
-
         background: white;
-
         border-radius: var(--border-radius);
-
         box-shadow: var(--card-shadow);
-
         transition: var(--transition);
-
         border: none;
-
         overflow: hidden;
-
         position: relative;
-
     }
-
-
 
     .profile-card:hover {
-
         transform: translateY(-5px);
-
         box-shadow: var(--card-hover-shadow);
-
     }
-
-
 
     .profile-card::before {
-
         content: '';
-
         position: absolute;
-
         top: 0;
-
         left: 0;
-
         right: 0;
-
         height: 4px;
-
         background: linear-gradient(90deg, var(--primary-dark-blue), var(--primary-blue));
-
     }
-
-
 
     .card-header-custom {
-
         background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-
         color: white;
-
         border: none;
-
         padding: 1.5rem;
-
         font-weight: 600;
-
         font-size: 1.1rem;
-
     }
-
-
 
     .form-section {
-
         background: #f8fafc;
-
-        border-radius: 12px;
-
-        padding: 1.5rem;
-
-        margin-bottom: 1.5rem;
-
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
         border-left: 4px solid var(--primary-blue);
-
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
+    .form-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 58, 138, 0.05));
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
 
+    .form-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
 
-    .form-section h6 {
+    .section-header {
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
 
+    .section-header h6 {
         color: var(--primary-dark-blue);
-
-        font-weight: 600;
-
-        margin-bottom: 1rem;
-
+        font-weight: 700;
+        margin-bottom: 0.5rem;
         display: flex;
-
         align-items: center;
-
-        gap: 0.5rem;
-
+        gap: 0.75rem;
+        font-size: 1.1rem;
     }
 
+    .section-description {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0;
+        font-weight: 400;
+    }
 
+    /* Form Navigation */
+    .form-navigation {
+        background: white;
+        border-radius: 12px;
+        padding: 0.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    .nav-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .nav-tab:hover {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-blue);
+    }
+
+    .nav-tab.active {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark-blue));
+        color: white;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .nav-tab i {
+        font-size: 1rem;
+    }
+
+    /* Form Progress */
+    .form-progress {
+        display: flex;
+        align-items: center;
+    }
+
+    .progress-indicator {
+        text-align: right;
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .progress-bar-custom {
+        width: 120px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    /* Premium Form Styling */
+    .premium-form {
+        position: relative;
+    }
 
     .form-control {
-
         border: 2px solid #e2e8f0;
-
-        border-radius: 8px;
-
-        padding: 0.75rem 1rem;
-
-        transition: var(--transition);
-
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        transition: all 0.3s ease;
         background: white;
-
+        font-size: 0.95rem;
+        font-weight: 500;
+        position: relative;
     }
-
-
 
     .form-control:focus {
-
         border-color: var(--primary-blue);
-
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         background: white;
-
+        transform: translateY(-1px);
     }
 
-
+    .form-control:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
 
     .form-label {
-
-        font-weight: 600;
-
+        font-weight: 700;
         color: var(--primary-dark-blue);
-
-        margin-bottom: 0.5rem;
-
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-
+    .form-label::before {
+        content: '';
+        width: 4px;
+        height: 4px;
+        background: var(--primary-blue);
+        border-radius: 50%;
+    }
 
     .btn-primary-custom {
-
         background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-
         border: none;
-
-        border-radius: 8px;
-
-        padding: 0.75rem 2rem;
-
-        font-weight: 600;
-
-        transition: var(--transition);
-
-        box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
-
+        border-radius: 12px;
+        padding: 1rem 2.5rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
     }
 
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
 
+    .btn-primary-custom:hover::before {
+        left: 100%;
+    }
 
     .btn-primary-custom:hover {
-
-        transform: translateY(-2px);
-
-        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
-
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(30, 58, 138, 0.4);
         background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-
     }
-
-
 
     .btn-outline-custom {
-
         border: 2px solid var(--primary-blue);
-
         color: var(--primary-blue);
-
-        border-radius: 8px;
-
-        padding: 0.75rem 2rem;
-
-        font-weight: 600;
-
-        transition: var(--transition);
-
+        border-radius: 12px;
+        padding: 1rem 2.5rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        background: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
     }
-
-
 
     .btn-outline-custom:hover {
-
         background: var(--primary-blue);
-
         color: white;
-
-        transform: translateY(-2px);
-
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
     }
-
-
 
     .profile-summary-card {
-
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-
         border-radius: var(--border-radius);
-
         box-shadow: var(--card-shadow);
-
         transition: var(--transition);
-
         border: none;
-
         overflow: hidden;
-
         position: relative;
-
     }
-
-
 
     .profile-summary-card:hover {
-
         transform: translateY(-5px);
-
         box-shadow: var(--card-hover-shadow);
-
     }
-
-
 
     .profile-photo-container {
-
         position: relative;
-
         display: inline-block;
-
         margin-bottom: 1rem;
-
     }
-
-
 
     .profile-photo {
-
         width: 120px;
-
         height: 120px;
-
         border-radius: 50%;
-
         object-fit: cover;
-
         border: 4px solid white;
-
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-
         transition: var(--transition);
-
     }
-
-
 
     .profile-photo:hover {
-
         transform: scale(1.05);
-
     }
-
-
 
     .profile-photo-placeholder {
-
         width: 120px;
-
         height: 120px;
-
         border-radius: 50%;
-
         background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         color: white;
-
         font-size: 3rem;
-
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-
         transition: var(--transition);
-
     }
-
-
 
     .profile-photo-placeholder:hover {
-
         transform: scale(1.05);
-
     }
-
-
 
     .info-item {
-
         display: flex;
-
         justify-content: space-between;
-
         align-items: center;
-
         padding: 0.75rem 0;
-
         border-bottom: 1px solid #e2e8f0;
-
     }
-
-
 
     .info-item:last-child {
-
         border-bottom: none;
-
     }
-
-
 
     .info-label {
-
         color: #64748b;
-
         font-weight: 500;
-
         font-size: 0.9rem;
-
     }
-
-
 
     .info-value {
-
         color: var(--primary-dark-blue);
-
         font-weight: 600;
-
         font-size: 0.9rem;
-
     }
-
-
 
     .status-badge {
-
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-
         color: white;
-
         padding: 0.25rem 0.75rem;
-
         border-radius: 20px;
-
         font-size: 0.8rem;
-
         font-weight: 600;
-
     }
-
-
 
     .health-indicator {
-
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-
         border: 1px solid #f59e0b;
-
         border-radius: 12px;
-
         padding: 1rem;
-
         margin-top: 1rem;
-
     }
-
-
 
     .floating-action-btn {
-
         position: fixed;
-
         bottom: 2rem;
-
         right: 2rem;
-
         background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-
         color: white;
-
         border: none;
-
         border-radius: 50%;
-
         width: 60px;
-
         height: 60px;
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         font-size: 1.5rem;
-
         box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
-
         transition: var(--transition);
-
         z-index: 1000;
-
     }
-
-
 
     .floating-action-btn:hover {
-
         transform: scale(1.1);
-
         box-shadow: 0 12px 35px rgba(30, 58, 138, 0.5);
-
         color: white;
-
     }
-
-
 
     @media (max-width: 768px) {
-
         .profile-header {
-
             padding: 1.5rem 0;
-
         }
-
-        
         
         .profile-photo, .profile-photo-placeholder {
-
             width: 100px;
-
             height: 100px;
-
         }
-
-        
         
         .floating-action-btn {
-
             bottom: 1rem;
-
             right: 1rem;
-
             width: 50px;
-
             height: 50px;
-
             font-size: 1.2rem;
-
         }
-
     }
-
 </style>
 
-
-
-<!-- Profile Header -->
-
+<!-- Enhanced Profile Header -->
 <div class="profile-header">
-
     <div class="container">
-
         <div class="row align-items-center">
-
             <div class="col-md-8">
-
-                <h1 class="mb-2">
-
-                    <i class="fas fa-user-edit me-3"></i>My Profile
-
+                <!-- Welcome Message -->
+                <div class="welcome-section mb-2">
+                    <h1 class="mb-1 fw-bold">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
                 </h1>
-
-                <p class="mb-0 opacity-90">Manage your personal information and health details</p>
-
-            </div>
-
-            <div class="col-md-4 text-md-end">
-
-                <div class="d-flex align-items-center justify-content-md-end gap-3">
-
-                    <div class="status-badge">
-
-                        <i class="fas fa-check-circle me-1"></i>Active
-
-                    </div>
-
-                    <div class="text-white-50">
-
-                        <small>Patient ID: #{{ patient.id }}</small>
-
-                    </div>
-
+                    <p class="mb-0 opacity-90">Update your personal information and health details</p>
                 </div>
-
             </div>
-
+            <div class="col-md-4 text-md-end">
+                <div class="profile-status-card">
+                    <div class="status-badge">
+                        <i class="fas fa-user me-1"></i>{{ patient.full_name }}
+                    </div>
+                    <div class="patient-id">
+                        <small>ID: #{{ patient.id }}</small>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
-
 </div>
-
-
 
 <div class="container">
-
     <div class="row g-4">
-
         <!-- Profile Information Form -->
-
         <div class="col-lg-8">
-
             <div class="profile-card">
-
                 <div class="card-header-custom">
-
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
                     <i class="fas fa-user-edit me-2"></i>Personal Information
-
+                        </div>
+                        <div class="form-progress">
+                            <div class="progress-indicator">
+                                <span class="progress-text">Complete your profile</span>
+                                <div class="progress-bar-custom">
+                                    <div class="progress-fill" style="width: 75%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
                 <div class="card-body p-4">
-
-                    <form method="post" enctype="multipart/form-data">
-
+                    <form method="post" enctype="multipart/form-data" class="premium-form">
                         {% csrf_token %}
-
                         
+                        <!-- Form Navigation -->
+                        <div class="form-navigation mb-4">
+                            <div class="nav-tabs">
+                                <button type="button" class="nav-tab active" data-section="basic">
+                                    <i class="fas fa-id-card"></i>
+                                    <span>Basic Info</span>
+                                </button>
+                                <button type="button" class="nav-tab" data-section="personal">
+                                    <i class="fas fa-user"></i>
+                                    <span>Personal</span>
+                                </button>
+                                <button type="button" class="nav-tab" data-section="address">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Address</span>
+                                </button>
+                                <button type="button" class="nav-tab" data-section="health">
+                                    <i class="fas fa-heartbeat"></i>
+                                    <span>Health</span>
+                                </button>
+                            </div>
+                        </div>
                         
                         <!-- Basic Information Section -->
-
-                        <div class="form-section">
-
+                        <div class="form-section" id="basic-section">
+                            <div class="section-header">
                             <h6>
-
                                 <i class="fas fa-id-card text-primary"></i>
-
                                 Basic Information
-
                             </h6>
-
-                            <div class="row g-3">
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name *</label>
-
-                                    {{ form.full_name }}
-
-                                    {% if form.full_name.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.contact_number.id_for_label }}" class="form-label">Contact Number *</label>
-
-                                    {{ form.contact_number }}
-
-                                    {% if form.contact_number.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.contact_number.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
-
-                                    {{ form.email }}
-
-                                    {% if form.email.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.abha_id.id_for_label }}" class="form-label">ABHA ID</label>
-
-                                    {{ form.abha_id }}
-
-                                    {% if form.abha_id.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.abha_id.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
+                                <p class="section-description">Your primary contact and identification details</p>
                             </div>
-
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name *</label>
+                                    {{ form.full_name }}
+                                    {% if form.full_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.contact_number.id_for_label }}" class="form-label">Contact Number *</label>
+                                    {{ form.contact_number }}
+                                    {% if form.contact_number.errors %}
+                                        <div class="text-danger small mt-1">{{ form.contact_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.abha_id.id_for_label }}" class="form-label">ABHA ID</label>
+                                    {{ form.abha_id }}
+                                    {% if form.abha_id.errors %}
+                                        <div class="text-danger small mt-1">{{ form.abha_id.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-
-
 
                         <!-- Personal Details Section -->
-
-                        <div class="form-section">
-
+                        <div class="form-section" id="personal-section">
+                            <div class="section-header">
                             <h6>
-
                                 <i class="fas fa-user text-primary"></i>
-
                                 Personal Details
-
                             </h6>
-
-                            <div class="row g-3">
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
-
-                                    {{ form.gender }}
-
-                                    {% if form.gender.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.dob.id_for_label }}" class="form-label">Date of Birth</label>
-
-                                    {{ form.dob }}
-
-                                    {% if form.dob.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.dob.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
+                                <p class="section-description">Your personal information and demographics</p>
                             </div>
-
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                                    {{ form.gender }}
+                                    {% if form.gender.errors %}
+                                        <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.dob.id_for_label }}" class="form-label">Date of Birth</label>
+                                    {{ form.dob }}
+                                    {% if form.dob.errors %}
+                                        <div class="text-danger small mt-1">{{ form.dob.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-
-
 
                         <!-- Address Information Section -->
-
-                        <div class="form-section">
-
+                        <div class="form-section" id="address-section">
+                            <div class="section-header">
                             <h6>
-
                                 <i class="fas fa-map-marker-alt text-primary"></i>
-
                                 Address Information
-
                             </h6>
-
-                            <div class="row g-3">
-
-                                <div class="col-12">
-
-                                    <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
-
-                                    {{ form.address }}
-
-                                    {% if form.address.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
-
-                                    {{ form.city }}
-
-                                    {% if form.city.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode</label>
-
-                                    {{ form.pincode }}
-
-                                    {% if form.pincode.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.pincode.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
+                                <p class="section-description">Your residential address details</p>
                             </div>
-
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                                    {{ form.address }}
+                                    {% if form.address.errors %}
+                                        <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode</label>
+                                    {{ form.pincode }}
+                                    {% if form.pincode.errors %}
+                                        <div class="text-danger small mt-1">{{ form.pincode.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-
-
 
                         <!-- Health Information Section -->
-
-                        <div class="form-section">
-
+                        <div class="form-section" id="health-section">
+                            <div class="section-header">
                             <h6>
-
                                 <i class="fas fa-heartbeat text-primary"></i>
-
                                 Health Information
-
                             </h6>
-
+                                <p class="section-description">Your medical and health details</p>
+                            </div>
                             <div class="row g-3">
-
                                 <div class="col-md-6">
-
                                     <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
-
                                     {{ form.blood_group }}
-
                                     {% if form.blood_group.errors %}
-
                                         <div class="text-danger small mt-1">{{ form.blood_group.errors.0 }}</div>
-
                                     {% endif %}
-
                                 </div>
-
                                 <div class="col-md-6">
-
                                     <label for="{{ form.emergency_number.id_for_label }}" class="form-label">Emergency Contact</label>
-
                                     {{ form.emergency_number }}
-
                                     {% if form.emergency_number.errors %}
-
                                         <div class="text-danger small mt-1">{{ form.emergency_number.errors.0 }}</div>
-
                                     {% endif %}
-
                                 </div>
-
                                 <div class="col-12">
-
                                     <label for="{{ form.existing_condition.id_for_label }}" class="form-label">Existing Medical Conditions</label>
-
                                     {{ form.existing_condition }}
-
                                     {% if form.existing_condition.errors %}
-
                                         <div class="text-danger small mt-1">{{ form.existing_condition.errors.0 }}</div>
-
                                     {% endif %}
-
                                 </div>
-
                                 <div class="col-12">
-
                                     <label for="{{ form.allergies.id_for_label }}" class="form-label">Allergies</label>
-
                                     {{ form.allergies }}
-
                                     {% if form.allergies.errors %}
-
                                         <div class="text-danger small mt-1">{{ form.allergies.errors.0 }}</div>
-
                                     {% endif %}
-
                                 </div>
-
                             </div>
-
                         </div>
-
-
 
                         <!-- Hidden Photo Upload Field -->
-
                         <div style="display: none;">
-
                             {{ form.profile_photo }}
-
                         </div>
-
-
 
                         <!-- Action Buttons -->
-
                         <div class="d-flex gap-3 mt-4">
-
                             <button type="submit" class="btn btn-primary-custom">
-
                                 <i class="fas fa-save me-2"></i>Update Profile
-
                             </button>
-
                             <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-outline-custom">
-
                                 <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-
                             </a>
-
                         </div>
-
                     </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Available Hospitals Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-hospital me-2"></i>Available Hospitals
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-4">
-                        {% for hospital in hospitals %}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start mb-3">
-                                        <div class="me-3">
-                                            {% if hospital.logo %}
-                                                <img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" 
-                                                     class="rounded" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px !important;">
-                                            {% else %}
-                                                <div class="bg-primary text-white d-flex align-items-center justify-content-center" 
-                                                     style="width: 80px; height: 80px; border-radius: 12px;">
-                                                    <i class="fas fa-hospital fa-lg"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h5 class="card-title mb-1">{{ hospital.name }}</h5>
-                                            <p class="text-muted mb-2">{{ hospital.address|default:"Address not available" }}</p>
-                                            <div class="d-flex align-items-center text-muted small">
-                                                <i class="fas fa-user-md me-1"></i>
-                                                <span>{{ hospital.doctor_set.count }} doctor{{ hospital.doctor_set.count|pluralize }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex gap-2">
-                                        <a href="{% url 'appointments:doctor_selection' hospital.id %}" 
-                                           class="btn btn-primary flex-grow-1" style="font-weight: bold; color: white;">
-                                            <i class="fas fa-eye me-1"></i>View Details
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Appointments Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-calendar-check me-2"></i>Recent Appointments
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        {% for appointment in recent_appointments %}
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3 border rounded">
-                                <div class="me-3">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                                         style="width: 50px; height: 50px;">
-                                        <i class="fas fa-calendar"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ appointment.doctor.full_name }}</h6>
-                                    <p class="text-muted mb-1">{{ appointment.hospital.name }}</p>
-                                    <small class="text-muted">{{ appointment.appointment_date }} at {{ appointment.appointment_time }}</small>
-                                </div>
-                                <div>
-                                    <span class="badge bg-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'pending' %}warning{% else %}secondary{% endif %}">
-                                        {{ appointment.status|title }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="col-12 text-center py-4">
-                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Recent Appointments</h5>
-                            <p class="text-muted">You haven't booked any appointments yet.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Health Records Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-file-medical me-2"></i>Health Records
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-file-medical fa-2x text-primary mb-2"></i>
-                                <h6>Medical Reports</h6>
-                                <p class="text-muted mb-2">{{ medical_documents }} documents</p>
-                                <a href="{% url 'patient:document_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-prescription-bottle-alt fa-2x text-success mb-2"></i>
-                                <h6>Prescriptions</h6>
-                                <p class="text-muted mb-2">0 prescriptions</p>
-                                <a href="#" class="btn btn-outline-success btn-sm">View All</a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
-                                <h6>Vital Signs</h6>
-                                <p class="text-muted mb-2">0 records</p>
-                                <a href="#" class="btn btn-outline-danger btn-sm">View All</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Summary Sidebar -->
-
+        <!-- Profile Photo Sidebar -->
         <div class="col-lg-4">
-
             <!-- Profile Photo Card -->
-
             <div class="profile-summary-card mb-4">
-
                 <div class="card-header-custom">
-
                     <i class="fas fa-user-circle me-2"></i>Profile Photo
-
                 </div>
-
                 <div class="card-body p-4 text-center">
-
                     <div class="profile-photo-container">
-
                         {% if patient.profile_photo %}
-
                             <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">
-
                         {% else %}
-
                             <div class="profile-photo-placeholder" id="profile-photo-placeholder">
-
                                 <i class="fas fa-user"></i>
-
                             </div>
-
                         {% endif %}
-
                     </div>
-
                     <h5 class="mb-1 fw-bold text-dark">{{ patient.full_name }}</h5>
-
                     <p class="text-muted mb-3">{{ patient.email }}</p>
-
-                    
                     
                     <!-- Photo Upload Section -->
-
                     <button type="button" class="btn btn-outline-custom btn-sm" id="photo-upload-btn">
-
                         <i class="fas fa-camera me-1"></i>Change Photo
-
                     </button>
-
                     {% if form.profile_photo.errors %}
-
                         <div class="text-danger small mt-2">
-
                             <i class="fas fa-exclamation-circle me-1"></i>{{ form.profile_photo.errors.0 }}
-
                         </div>
-
                     {% endif %}
-
                     <div class="form-text small text-muted mt-2">
-
                         <i class="fas fa-info-circle me-1"></i>
-
                         JPG, PNG, GIF • Max 5MB
-
                     </div>
-
                 </div>
-
             </div>
-
-
-
-            <!-- Account Information Card -->
-
-            <div class="profile-summary-card mb-4">
-
-                <div class="card-header-custom">
-
-                    <i class="fas fa-id-badge me-2"></i>Account Information
-
                 </div>
-
-                <div class="card-body p-4">
-
-                    <div class="info-item">
-
-                        <span class="info-label">Patient ID</span>
-
-                        <span class="info-value">#{{ patient.id }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Gender</span>
-
-                        <span class="info-value">{{ patient.gender|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Date of Birth</span>
-
-                        <span class="info-value">{{ patient.dob|default:"Not specified" }}</span>
-
-                    </div>
-
-                    {% if patient.abha_id %}
-
-                    <div class="info-item">
-
-                        <span class="info-label">ABHA ID</span>
-
-                        <span class="info-value">{{ patient.abha_id }}</span>
-
-                    </div>
-
-                    {% endif %}
-
-                    <div class="info-item">
-
-                        <span class="info-label">Contact</span>
-
-                        <span class="info-value">{{ patient.contact_number|default:"Not specified" }}</span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Health Summary Card -->
-
-            <div class="profile-summary-card mb-4">
-
-                <div class="card-header-custom">
-
-                    <i class="fas fa-heartbeat me-2"></i>Health Summary
-
-                </div>
-
-                <div class="card-body p-4">
-
-                    <div class="info-item">
-
-                        <span class="info-label">Blood Group</span>
-
-                        <span class="info-value">{{ patient.blood_group|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">City</span>
-
-                        <span class="info-value">{{ patient.city|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Emergency Contact</span>
-
-                        <span class="info-value">{{ patient.emergency_number|default:"Not specified" }}</span>
-
-                    </div>
-
-                    
-                    
-                    <!-- Health Status Indicator -->
-
-                    <div class="health-indicator">
-
-                        <div class="d-flex align-items-center gap-2 mb-2">
-
-                            <i class="fas fa-shield-alt text-warning"></i>
-
-                            <span class="fw-semibold small">Health Status</span>
-
-                        </div>
-
-                        <div class="progress mb-2" style="height: 6px;">
-
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
-
-                        </div>
-
-                        <small class="text-muted">Profile completion: 85%</small>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-
-        </div>
-
     </div>
-
 </div>
 
-
-
 <!-- Floating Action Button -->
-
 <button class="floating-action-btn" onclick="scrollToTop()" title="Back to Top">
-
     <i class="fas fa-arrow-up"></i>
-
 </button>
 
-
-
 <!-- Success/Error Messages -->
-
 {% if messages %}
-
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-
         {% for message in messages %}
-
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-
                 <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
-
                 {{ message }}
-
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
             </div>
-
         {% endfor %}
-
     </div>
-
 {% endif %}
 
-
-
 <script>
-
 // Enhanced Profile Page Functionality
-
 document.addEventListener('DOMContentLoaded', function() {
-
-    // Auto-hide alerts after 5 seconds
-
-    const alerts = document.querySelectorAll('.alert');
-
-    alerts.forEach(function(alert) {
-
-        setTimeout(function() {
-
-            const bsAlert = new bootstrap.Alert(alert);
-
-            bsAlert.close();
-
-        }, 5000);
-
+    // Form Navigation Functionality
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const formSections = document.querySelectorAll('.form-section');
+    
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetSection = this.getAttribute('data-section');
+            
+            // Update active tab
+            navTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show/hide sections
+            formSections.forEach(section => {
+                if (section.id === targetSection + '-section') {
+                    section.style.display = 'block';
+                    section.style.animation = 'fadeInUp 0.5s ease-out';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+            
+            // Smooth scroll to section
+            const targetElement = document.getElementById(targetSection + '-section');
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
     });
 
-    
+    // Initialize first section as active
+    if (formSections.length > 0) {
+        formSections.forEach((section, index) => {
+            if (index === 0) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
 
     // Enhanced form validation and submission
-
     const form = document.querySelector('form');
-
     if (form) {
-
         form.addEventListener('submit', function(e) {
-
             const submitBtn = form.querySelector('button[type="submit"]');
-
             if (submitBtn) {
-
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
-
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating Profile...';
                 submitBtn.disabled = true;
-
                 
-
                 // Add loading animation to form sections
-
                 const formSections = document.querySelectorAll('.form-section');
-
                 formSections.forEach(section => {
-
                     section.style.opacity = '0.7';
-
                     section.style.pointerEvents = 'none';
-
                 });
-
             }
-
         });
 
-        
-
-        // Real-time form validation
-
+        // Real-time form validation with enhanced feedback
         const inputs = form.querySelectorAll('.form-control');
-
         inputs.forEach(input => {
-
             input.addEventListener('blur', function() {
-
                 validateField(this);
-
+                updateFormProgress();
             });
-
             
-
             input.addEventListener('input', function() {
-
                 clearFieldError(this);
-
+                updateFormProgress();
             });
-
         });
-
     }
-
-    
 
     // Enhanced photo upload functionality
-
     const photoInput = document.getElementById('{{ form.profile_photo.id_for_label }}');
-
     const photoUploadBtn = document.getElementById('photo-upload-btn');
-
     const photoPreview = document.getElementById('profile-photo-preview');
-
     const photoPlaceholder = document.getElementById('profile-photo-placeholder');
 
-    
-
     if (photoInput && photoUploadBtn) {
-
-        // Connect button to file input
-
         photoUploadBtn.addEventListener('click', function() {
-
             photoInput.click();
-
         });
-
-        
 
         photoInput.addEventListener('change', function(e) {
-
             const file = e.target.files[0];
-
             if (file) {
-
                 // Validate file type
-
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-
                 if (!allowedTypes.includes(file.type)) {
-
                     showNotification('Please select a valid image file (JPG, PNG, GIF)', 'error');
-
                     this.value = '';
-
                     return;
-
                 }
-
-                
 
                 // Validate file size (5MB max)
-
-                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-
+                const maxSize = 5 * 1024 * 1024;
                 if (file.size > maxSize) {
-
                     showNotification('File size must be less than 5MB', 'error');
-
                     this.value = '';
-
                     return;
-
                 }
 
-                
-
                 // Show loading state
-
                 photoUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
-
                 photoUploadBtn.disabled = true;
 
-                
-
                 // Preview the selected image
-
                 const reader = new FileReader();
-
                 reader.onload = function(e) {
-
                     if (photoPreview) {
-
                         photoPreview.src = e.target.result;
-
                     } else if (photoPlaceholder) {
-
-                        // Convert placeholder to image
-
                         photoPlaceholder.outerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">`;
-
                     }
 
-                    
-
-                    // Reset button state
-
                     photoUploadBtn.innerHTML = '<i class="fas fa-camera me-1"></i>Change Photo';
-
                     photoUploadBtn.disabled = false;
-
                     
-
                     showNotification('Photo updated successfully!', 'success');
-
                 };
-
                 reader.readAsDataURL(file);
-
             }
-
         });
-
     }
-
-    
 
     // Add smooth scrolling to form sections
-
     const formSections = document.querySelectorAll('.form-section');
-
     formSections.forEach((section, index) => {
-
         section.style.animationDelay = `${index * 0.1}s`;
-
         section.classList.add('animate-fade-in');
-
     });
-
-    
 
     // Initialize tooltips
-
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-
     tooltipTriggerList.map(function (tooltipTriggerEl) {
-
         return new bootstrap.Tooltip(tooltipTriggerEl);
-
     });
 
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
 });
 
-
-
-// Utility Functions
-
+// Enhanced Utility Functions
 function validateField(field) {
-
     const value = field.value.trim();
-
     const fieldName = field.name;
 
-    
-
-    // Basic validation rules
-
     if (field.required && !value) {
-
         showFieldError(field, 'This field is required');
-
         return false;
-
     }
-
-    
 
     if (fieldName === 'email' && value) {
-
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
         if (!emailRegex.test(value)) {
-
             showFieldError(field, 'Please enter a valid email address');
-
             return false;
-
         }
-
     }
-
-    
 
     if (fieldName === 'contact_number' && value) {
-
         const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-
         if (!phoneRegex.test(value.replace(/\s/g, ''))) {
-
             showFieldError(field, 'Please enter a valid phone number');
-
             return false;
-
         }
-
     }
 
-    
-
     clearFieldError(field);
-
     return true;
-
 }
-
-
 
 function showFieldError(field, message) {
-
     clearFieldError(field);
-
     field.classList.add('is-invalid');
-
     
-
     const errorDiv = document.createElement('div');
-
     errorDiv.className = 'invalid-feedback';
-
-    errorDiv.textContent = message;
-
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
     field.parentNode.appendChild(errorDiv);
-
 }
-
-
 
 function clearFieldError(field) {
-
     field.classList.remove('is-invalid');
-
     const errorDiv = field.parentNode.querySelector('.invalid-feedback');
-
     if (errorDiv) {
-
         errorDiv.remove();
-
     }
-
 }
 
-
+function updateFormProgress() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('.form-control');
+    const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+    const progressPercentage = (filledInputs.length / inputs.length) * 100;
+    
+    const progressFill = document.querySelector('.progress-fill');
+    if (progressFill) {
+        progressFill.style.width = `${progressPercentage}%`;
+    }
+}
 
 function showNotification(message, type = 'info') {
-
     const notification = document.createElement('div');
-
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
-
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);';
     notification.innerHTML = `
-
         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-
         ${message}
-
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
     `;
-
     
-
     document.body.appendChild(notification);
-
     
-
-    // Auto-remove after 5 seconds
-
     setTimeout(() => {
-
         if (notification.parentNode) {
-
             notification.remove();
-
         }
-
     }, 5000);
-
 }
-
-
 
 function scrollToTop() {
-
     window.scrollTo({
-
         top: 0,
-
         behavior: 'smooth'
-
     });
-
 }
 
-
-
 // Add CSS animations
-
 const style = document.createElement('style');
-
 style.textContent = `
-
     .animate-fade-in {
-
         animation: fadeInUp 0.6s ease-out forwards;
-
         opacity: 0;
-
         transform: translateY(20px);
-
     }
-
     
-
     @keyframes fadeInUp {
-
         to {
-
             opacity: 1;
-
             transform: translateY(0);
-
         }
-
     }
-
     
-
     .form-control.is-invalid {
-
         border-color: #dc3545;
-
         box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-
     }
-
     
-
     .invalid-feedback {
-
         display: block;
-
         color: #dc3545;
-
         font-size: 0.875rem;
-
         margin-top: 0.25rem;
-
     }
-
 `;
-
 document.head.appendChild(style);
-
 </script>
 
 {% endblock %}
-
-
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <label for="{{ form.emergency_number.id_for_label }}" class="form-label">Emergency Contact</label>
-
-                                    {{ form.emergency_number }}
-
-                                    {% if form.emergency_number.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.emergency_number.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-12">
-
-                                    <label for="{{ form.existing_condition.id_for_label }}" class="form-label">Existing Medical Conditions</label>
-
-                                    {{ form.existing_condition }}
-
-                                    {% if form.existing_condition.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.existing_condition.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                                <div class="col-12">
-
-                                    <label for="{{ form.allergies.id_for_label }}" class="form-label">Allergies</label>
-
-                                    {{ form.allergies }}
-
-                                    {% if form.allergies.errors %}
-
-                                        <div class="text-danger small mt-1">{{ form.allergies.errors.0 }}</div>
-
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- Hidden Photo Upload Field -->
-
-                        <div style="display: none;">
-
-                            {{ form.profile_photo }}
-
-                        </div>
-
-
-
-                        <!-- Action Buttons -->
-
-                        <div class="d-flex gap-3 mt-4">
-
-                            <button type="submit" class="btn btn-primary-custom">
-
-                                <i class="fas fa-save me-2"></i>Update Profile
-
-                            </button>
-
-                            <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-outline-custom">
-
-                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-
-                            </a>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Available Hospitals Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-hospital me-2"></i>Available Hospitals
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-4">
-                        {% for hospital in hospitals %}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start mb-3">
-                                        <div class="me-3">
-                                            {% if hospital.logo %}
-                                                <img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" 
-                                                     class="rounded" style="width: 80px; height: 80px; object-fit: cover; border-radius: 12px !important;">
-                                            {% else %}
-                                                <div class="bg-primary text-white d-flex align-items-center justify-content-center" 
-                                                     style="width: 80px; height: 80px; border-radius: 12px;">
-                                                    <i class="fas fa-hospital fa-lg"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h5 class="card-title mb-1">{{ hospital.name }}</h5>
-                                            <p class="text-muted mb-2">{{ hospital.address|default:"Address not available" }}</p>
-                                            <div class="d-flex align-items-center text-muted small">
-                                                <i class="fas fa-user-md me-1"></i>
-                                                <span>{{ hospital.doctor_set.count }} doctor{{ hospital.doctor_set.count|pluralize }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex gap-2">
-                                        <a href="{% url 'appointments:doctor_selection' hospital.id %}" 
-                                           class="btn btn-primary flex-grow-1" style="font-weight: bold; color: white;">
-                                            <i class="fas fa-eye me-1"></i>View Details
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-                    </div>
-                    
-        <!-- Recent Appointments Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-calendar-check me-2"></i>Recent Appointments
-                    </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        {% for appointment in recent_appointments %}
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3 border rounded">
-                                <div class="me-3">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                                         style="width: 50px; height: 50px;">
-                                        <i class="fas fa-calendar"></i>
-                </div>
-            </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ appointment.doctor.full_name }}</h6>
-                                    <p class="text-muted mb-1">{{ appointment.hospital.name }}</p>
-                                    <small class="text-muted">{{ appointment.appointment_date }} at {{ appointment.appointment_time }}</small>
-                                </div>
-                                <div>
-                                    <span class="badge bg-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'pending' %}warning{% else %}secondary{% endif %}">
-                                        {{ appointment.status|title }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="col-12 text-center py-4">
-                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Recent Appointments</h5>
-                            <p class="text-muted">You haven't booked any appointments yet.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-        </div>
-    </div>
-</div>
-
-        <!-- Health Records Section -->
-        <div class="col-12 mb-4">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <i class="fas fa-file-medical me-2"></i>Health Records
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-file-medical fa-2x text-primary mb-2"></i>
-                                <h6>Medical Reports</h6>
-                                <p class="text-muted mb-2">{{ medical_documents }} documents</p>
-                                <a href="{% url 'patient:document_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-prescription-bottle-alt fa-2x text-success mb-2"></i>
-                                <h6>Prescriptions</h6>
-                                <p class="text-muted mb-2">0 prescriptions</p>
-                                <a href="#" class="btn btn-outline-success btn-sm">View All</a>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 border rounded">
-                                <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
-                                <h6>Vital Signs</h6>
-                                <p class="text-muted mb-2">0 records</p>
-                                <a href="#" class="btn btn-outline-danger btn-sm">View All</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Summary Sidebar -->
-
-        <div class="col-lg-4">
-
-            <!-- Profile Photo Card -->
-
-            <div class="profile-summary-card mb-4">
-
-                <div class="card-header-custom">
-
-                    <i class="fas fa-user-circle me-2"></i>Profile Photo
-
-                </div>
-
-                <div class="card-body p-4 text-center">
-
-                    <div class="profile-photo-container">
-
-                        {% if patient.profile_photo %}
-
-                            <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">
-
-                        {% else %}
-
-                            <div class="profile-photo-placeholder" id="profile-photo-placeholder">
-
-                                <i class="fas fa-user"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                    </div>
-
-                    <h5 class="mb-1 fw-bold text-dark">{{ patient.full_name }}</h5>
-
-                    <p class="text-muted mb-3">{{ patient.email }}</p>
-
-                    
-
-                    <!-- Photo Upload Section -->
-
-                    <button type="button" class="btn btn-outline-custom btn-sm" id="photo-upload-btn">
-
-                        <i class="fas fa-camera me-1"></i>Change Photo
-
-                    </button>
-
-                    {% if form.profile_photo.errors %}
-
-                        <div class="text-danger small mt-2">
-
-                            <i class="fas fa-exclamation-circle me-1"></i>{{ form.profile_photo.errors.0 }}
-
-                        </div>
-
-                    {% endif %}
-
-                    <div class="form-text small text-muted mt-2">
-
-                        <i class="fas fa-info-circle me-1"></i>
-
-                        JPG, PNG, GIF • Max 5MB
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Account Information Card -->
-
-            <div class="profile-summary-card mb-4">
-
-                <div class="card-header-custom">
-
-                    <i class="fas fa-id-badge me-2"></i>Account Information
-
-                </div>
-
-                <div class="card-body p-4">
-
-                    <div class="info-item">
-
-                        <span class="info-label">Patient ID</span>
-
-                        <span class="info-value">#{{ patient.id }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Gender</span>
-
-                        <span class="info-value">{{ patient.gender|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Date of Birth</span>
-
-                        <span class="info-value">{{ patient.dob|default:"Not specified" }}</span>
-
-                    </div>
-
-                    {% if patient.abha_id %}
-
-                    <div class="info-item">
-
-                        <span class="info-label">ABHA ID</span>
-
-                        <span class="info-value">{{ patient.abha_id }}</span>
-
-                    </div>
-
-                    {% endif %}
-
-                    <div class="info-item">
-
-                        <span class="info-label">Contact</span>
-
-                        <span class="info-value">{{ patient.contact_number|default:"Not specified" }}</span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Health Summary Card -->
-
-            <div class="profile-summary-card mb-4">
-
-                <div class="card-header-custom">
-
-                    <i class="fas fa-heartbeat me-2"></i>Health Summary
-
-                </div>
-
-                <div class="card-body p-4">
-
-                    <div class="info-item">
-
-                        <span class="info-label">Blood Group</span>
-
-                        <span class="info-value">{{ patient.blood_group|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">City</span>
-
-                        <span class="info-value">{{ patient.city|default:"Not specified" }}</span>
-
-                    </div>
-
-                    <div class="info-item">
-
-                        <span class="info-label">Emergency Contact</span>
-
-                        <span class="info-value">{{ patient.emergency_number|default:"Not specified" }}</span>
-
-                    </div>
-
-                    
-
-                    <!-- Health Status Indicator -->
-
-                    <div class="health-indicator">
-
-                        <div class="d-flex align-items-center gap-2 mb-2">
-
-                            <i class="fas fa-shield-alt text-warning"></i>
-
-                            <span class="fw-semibold small">Health Status</span>
-
-                        </div>
-
-                        <div class="progress mb-2" style="height: 6px;">
-
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
-
-                        </div>
-
-                        <small class="text-muted">Profile completion: 85%</small>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-<!-- Floating Action Button -->
-
-<button class="floating-action-btn" onclick="scrollToTop()" title="Back to Top">
-
-    <i class="fas fa-arrow-up"></i>
-
-</button>
-
-
-
-<!-- Success/Error Messages -->
-
-{% if messages %}
-
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-
-        {% for message in messages %}
-
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-
-                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
-
-                {{ message }}
-
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
-            </div>
-
-        {% endfor %}
-
-    </div>
-
-{% endif %}
-
-
-
-<script>
-
-// Enhanced Profile Page Functionality
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    // Auto-hide alerts after 5 seconds
-
-    const alerts = document.querySelectorAll('.alert');
-
-    alerts.forEach(function(alert) {
-
-        setTimeout(function() {
-
-            const bsAlert = new bootstrap.Alert(alert);
-
-            bsAlert.close();
-
-        }, 5000);
-
-    });
-
-    
-    
-    // Enhanced form validation and submission
-
-    const form = document.querySelector('form');
-
-    if (form) {
-
-        form.addEventListener('submit', function(e) {
-
-            const submitBtn = form.querySelector('button[type="submit"]');
-
-            if (submitBtn) {
-
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
-
-                submitBtn.disabled = true;
-
-                
-                
-                // Add loading animation to form sections
-
-                const formSections = document.querySelectorAll('.form-section');
-
-                formSections.forEach(section => {
-
-                    section.style.opacity = '0.7';
-
-                    section.style.pointerEvents = 'none';
-
-                });
-
-            }
-
-        });
-
-        
-        
-        // Real-time form validation
-
-        const inputs = form.querySelectorAll('.form-control');
-
-        inputs.forEach(input => {
-
-            input.addEventListener('blur', function() {
-
-                validateField(this);
-
-            });
-
-            
-            
-            input.addEventListener('input', function() {
-
-                clearFieldError(this);
-
-            });
-
-        });
-
-    }
-
-    
-    
-    // Enhanced photo upload functionality
-
-    const photoInput = document.getElementById('{{ form.profile_photo.id_for_label }}');
-
-    const photoUploadBtn = document.getElementById('photo-upload-btn');
-
-    const photoPreview = document.getElementById('profile-photo-preview');
-
-    const photoPlaceholder = document.getElementById('profile-photo-placeholder');
-
-    
-    
-    if (photoInput && photoUploadBtn) {
-
-        // Connect button to file input
-
-        photoUploadBtn.addEventListener('click', function() {
-
-            photoInput.click();
-
-        });
-
-        
-        
-        photoInput.addEventListener('change', function(e) {
-
-            const file = e.target.files[0];
-
-            if (file) {
-
-                // Validate file type
-
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-
-                if (!allowedTypes.includes(file.type)) {
-
-                    showNotification('Please select a valid image file (JPG, PNG, GIF)', 'error');
-
-                    this.value = '';
-
-                    return;
-
-                }
-
-                
-                
-                // Validate file size (5MB max)
-
-                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-
-                if (file.size > maxSize) {
-
-                    showNotification('File size must be less than 5MB', 'error');
-
-                    this.value = '';
-
-                    return;
-
-                }
-
-                
-                
-                // Show loading state
-
-                photoUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
-
-                photoUploadBtn.disabled = true;
-
-                
-                
-                // Preview the selected image
-
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-
-                    if (photoPreview) {
-
-                        photoPreview.src = e.target.result;
-
-                    } else if (photoPlaceholder) {
-
-                        // Convert placeholder to image
-
-                        photoPlaceholder.outerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">`;
-
-                    }
-
-                    
-                    
-                    // Reset button state
-
-                    photoUploadBtn.innerHTML = '<i class="fas fa-camera me-1"></i>Change Photo';
-
-                    photoUploadBtn.disabled = false;
-
-                    
-                    
-                    showNotification('Photo updated successfully!', 'success');
-
-                };
-
-                reader.readAsDataURL(file);
-
-            }
-
-        });
-
-    }
-
-    
-    
-    // Add smooth scrolling to form sections
-
-    const formSections = document.querySelectorAll('.form-section');
-
-    formSections.forEach((section, index) => {
-
-        section.style.animationDelay = `${index * 0.1}s`;
-
-        section.classList.add('animate-fade-in');
-
-    });
-
-    
-    
-    // Initialize tooltips
-
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-
-    });
-
-});
-
-
-
-// Utility Functions
-
-function validateField(field) {
-
-    const value = field.value.trim();
-
-    const fieldName = field.name;
-
-    
-    
-    // Basic validation rules
-
-    if (field.required && !value) {
-
-        showFieldError(field, 'This field is required');
-
-        return false;
-
-    }
-
-    
-    
-    if (fieldName === 'email' && value) {
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(value)) {
-
-            showFieldError(field, 'Please enter a valid email address');
-
-            return false;
-
-        }
-
-    }
-
-    
-    
-    if (fieldName === 'contact_number' && value) {
-
-        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-
-        if (!phoneRegex.test(value.replace(/\s/g, ''))) {
-
-            showFieldError(field, 'Please enter a valid phone number');
-
-            return false;
-
-        }
-
-    }
-
-    
-    
-    clearFieldError(field);
-
-    return true;
-
-}
-
-
-
-function showFieldError(field, message) {
-
-    clearFieldError(field);
-
-    field.classList.add('is-invalid');
-
-    
-    
-    const errorDiv = document.createElement('div');
-
-    errorDiv.className = 'invalid-feedback';
-
-    errorDiv.textContent = message;
-
-    field.parentNode.appendChild(errorDiv);
-
-}
-
-
-
-function clearFieldError(field) {
-
-    field.classList.remove('is-invalid');
-
-    const errorDiv = field.parentNode.querySelector('.invalid-feedback');
-
-    if (errorDiv) {
-
-        errorDiv.remove();
-
-    }
-
-}
-
-
-
-function showNotification(message, type = 'info') {
-
-    const notification = document.createElement('div');
-
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
-
-    notification.innerHTML = `
-
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-
-        ${message}
-
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
-    `;
-
-    
-    
-    document.body.appendChild(notification);
-
-    
-    
-    // Auto-remove after 5 seconds
-
-    setTimeout(() => {
-
-        if (notification.parentNode) {
-
-            notification.remove();
-
-        }
-
-    }, 5000);
-
-}
-
-
-
-function scrollToTop() {
-
-    window.scrollTo({
-
-        top: 0,
-
-        behavior: 'smooth'
-
-    });
-
-}
-
-
-
-// Add CSS animations
-
-const style = document.createElement('style');
-
-style.textContent = `
-
-    .animate-fade-in {
-
-        animation: fadeInUp 0.6s ease-out forwards;
-
-        opacity: 0;
-
-        transform: translateY(20px);
-
-    }
-
-    
-    
-    @keyframes fadeInUp {
-
-        to {
-
-            opacity: 1;
-
-            transform: translateY(0);
-
-        }
-
-    }
-
-    
-    
-    .form-control.is-invalid {
-
-        border-color: #dc3545;
-
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-
-    }
-
-    
-    
-    .invalid-feedback {
-
-        display: block;
-
-        color: #dc3545;
-
-        font-size: 0.875rem;
-
-        margin-top: 0.25rem;
-
-    }
-
-`;
-
-document.head.appendChild(style);
-
-</script>
-
-{% endblock %}
-
-

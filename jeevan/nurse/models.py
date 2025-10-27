@@ -37,7 +37,7 @@ class Nurse(models.Model):
     )
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name='nurses')
     full_name = models.CharField(max_length=255)
-    contact_number = models.CharField(max_length=15)
+    # contact_number is inherited from CustomUser
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     is_active = models.BooleanField(default=True)
 

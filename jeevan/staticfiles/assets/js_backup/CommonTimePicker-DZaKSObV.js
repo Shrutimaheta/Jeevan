@@ -1,0 +1,1 @@
+import{j as r}from"./ui-CS7-p66C.js";import{T as m}from"./index-B9dN2CeY.js";const s=({className:e="",ariaLabel:i="Time picker",...a})=>r.jsx(m,{className:"form-control flatpickr-input",format:"HH:mm",suffixIcon:r.jsx("i",{className:"ti ti-clock-hour-10 text-dark","aria-hidden":"true"}),"aria-label":i,...a});export{s as C};
