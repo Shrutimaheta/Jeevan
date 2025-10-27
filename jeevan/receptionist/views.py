@@ -1,6 +1,4 @@
-from rest_framework import viewsets
 from .models import Receptionist
-from .serializers import ReceptionistSerializer
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -15,9 +13,6 @@ from care.models import CustomUser, Hospital
 from appointments.models import Appointment
 from doctor.models import Doctor
 
-class ReceptionistViewSet(viewsets.ModelViewSet):
-    queryset = Receptionist.objects.all()
-    serializer_class = ReceptionistSerializer
 
 def receptionist_login(request):
     """Receptionist login view"""

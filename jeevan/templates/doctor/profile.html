@@ -452,7 +452,7 @@
                     <p><strong>Hospital:</strong> {{ doctor.hospital.name }}</p>
                     <p><strong>Specializations:</strong> 
                         {% for spec in doctor.specialization.all %}
-                            {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                            {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
                             None selected
                         {% endfor %}

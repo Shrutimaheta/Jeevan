@@ -1,0 +1,37 @@
+{% for doctor in doctors %}
+<div class="col-lg-4 col-md-6 mb-4">
+    <div class="doctor-card">
+        <div class="d-flex align-items-center mb-3">
+            <div class="doctor-avatar me-3">{{ doctor.full_name|first }}</div>
+            <div>
+                <h6 class="mb-1 fw-bold">{{ doctor.full_name }}</h6>
+                <p class="text-muted mb-0 small">{{ doctor.hospital.name }}</p>
+                <p class="mb-0"><i class="fas fa-star text-warning"></i> {{ doctor.rating|default:0 }}</p>
+                {% if doctor.accepts_insurance %}
+                <span class="badge bg-success mt-1"><i class="fas fa-shield-heart me-1"></i> Insurance</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <h6 class="fw-semibold mb-2">Specializations:</h6>
+            {% for spec in doctor.specialization.all %}
+            <span class="specialization-badge">{{ spec.sname }}</span>
+            {% endfor %}
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/appointments/book/?doctor={{ doctor.id }}" class="btn btn-primary-custom btn-sm flex-fill">
+                <i class="fas fa-calendar-plus me-1"></i>Book Appointment
+            </a>
+            <a href="/doctor/{{ doctor.id }}/" class="btn btn-outline-primary btn-sm flex-fill">
+                <i class="fas fa-info-circle me-1"></i>View Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="col-12 text-center py-5">
+    <i class="fas fa-user-md text-muted" style="font-size: 4rem;"></i>
+    <h4 class="text-muted mt-3">No doctors available</h4>
+ </div>
+{% endfor %}
+

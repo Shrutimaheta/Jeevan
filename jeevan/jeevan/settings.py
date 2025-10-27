@@ -46,8 +46,6 @@ INSTALLED_APPS = [
     'abha',
     'records',
     'appointments',
-    'rest_framework',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',  # Temporarily disabled
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -155,3 +153,16 @@ AUTH_USER_MODEL = 'care.CustomUser'
 
 # Redirect patients after successful login to their mixed dashboard
 LOGIN_REDIRECT_URL = '/patient/myprofile/'
+
+# Email Configuration
+# For development, we'll use console backend to print emails to console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production, you would use SMTP settings like this:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+# DEFAULT_FROM_EMAIL = 'your-email@gmail.com'

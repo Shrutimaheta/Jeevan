@@ -427,7 +427,7 @@
                                             <div class="fw-bold">{{ appointment.doctor.full_name }}</div>
                                             <small class="text-muted">
                                                 {% for spec in appointment.doctor.specialization.all %}
-                                                    {{ spec.Sname }}{% if not forloop.last %}, {% endif %}
+                                                    {{ spec.sname }}{% if not forloop.last %}, {% endif %}
                                                 {% endfor %}
                                             </small>
                                         </div>

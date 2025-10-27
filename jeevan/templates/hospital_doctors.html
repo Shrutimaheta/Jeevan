@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ hospital.name }} - Doctors | Jeevan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .hospital-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 60px 0;
+        }
+
+        .hospital-logo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid white;
+        }
+
+        .doctor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+            height: 100%;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .doctor-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .specialization-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-top: -30px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .section-title {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: white !important;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .navbar-custom .btn-outline-primary {
+            color: white;
+            border-color: white;
+        }
+
+        .navbar-custom .btn-outline-primary:hover {
+            background-color: white;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/" style="color: var(--primary-color);">
+                <i class="fas fa-hospital me-2"></i>Jeevan
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#hospitals">Hospitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#doctors">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#contact">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-outline-primary btn-sm" href="/patient/login/">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hospital Header -->
+    <section class="hospital-header" style="margin-top: 40px;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-2 text-center">
+                    {% if hospital.logo %}
+                    <img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" class="hospital-logo">
+                    {% else %}
+                    <div class="hospital-logo d-flex align-items-center justify-content-center" style="background: white; color: var(--primary-color);">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-lg-8">
+                    <h1 class="display-5 fw-bold mb-2">{{ hospital.name }}</h1>
+                    <p class="lead mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ hospital.location }}
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-phone me-2"></i>{{ hospital.contact_no }}
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-envelope me-2"></i>{{ hospital.email }}
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-id-card me-2"></i>{{ hospital.registration_number }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-2 text-end">
+                    <a href="/" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="container">
+        <div class="search-section">
+            <h3 class="text-center mb-4">Find Doctors at {{ hospital.name }}</h3>
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Search Doctors</label>
+                    <input type="text" class="form-control" name="search" placeholder="Doctor name or specialization..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Specialization</label>
+                    <select class="form-select" name="specialization">
+                        <option value="">All Specializations</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.id }}" {% if specialization_filter == spec.id|stringformat:"s" %}selected{% endif %}>
+                            {{ spec.sname }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Doctors Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="section-title">Our Medical Team</h2>
+            <div class="row">
+                {% for doctor in doctors %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="doctor-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="doctor-avatar me-3">
+                                {{ doctor.full_name|first }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1 fw-bold">{{ doctor.full_name }}</h5>
+                                <p class="text-muted mb-0 small">
+                                    <i class="fas fa-hospital me-1"></i>{{ doctor.hospital.name }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="fw-semibold mb-2">Specializations:</h6>
+                            {% for spec in doctor.specialization.all %}
+                            <span class="specialization-badge">{{ spec.sname }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-phone me-2"></i>{{ doctor.contact_number }}
+                            </p>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-venus-mars me-2"></i>{{ doctor.gender }}
+                            </p>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="/appointments/book/?doctor={{ doctor.id }}" class="btn btn-primary-custom btn-sm flex-fill">
+                                <i class="fas fa-calendar-plus me-1"></i>Book Appointment
+                            </a>
+                            <a href="/doctor/{{ doctor.id }}/" class="btn btn-outline-primary btn-sm flex-fill">
+                                <i class="fas fa-info-circle me-1"></i>View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-user-md text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No doctors found</h4>
+                    <p class="text-muted">Try adjusting your search criteria</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Hospital Specializations -->
+    <section class="py-5" style="background: var(--light-bg);">
+        <div class="container">
+            <h2 class="section-title text-center">Hospital Specializations</h2>
+            <div class="row justify-content-center">
+                {% for spec in hospital.specialization.all %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                    <div class="text-center">
+                        <div class="specialization-badge" style="font-size: 1rem; padding: 10px 20px;">
+                            <i class="fas fa-stethoscope me-2"></i>{{ spec.sname }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Hospital Footer -->
+    <footer class="py-5" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+        <div class="container">
+            <div class="row">
+                <!-- Hospital Info -->
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if hospital.logo %}
+                        <img src="{{ hospital.logo.url }}" alt="{{ hospital.name }}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px;">
+                        {% else %}
+                        <div style="width: 50px; height: 50px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                            <i class="fas fa-hospital" style="color: var(--primary-color);"></i>
+                        </div>
+                        {% endif %}
+                        <h4 class="mb-0">{{ hospital.name }}</h4>
+                    </div>
+                    <p class="mb-3">{{ hospital.description|default:"Providing quality healthcare services to our community." }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-id-card me-2"></i>{{ hospital.registration_number }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-lg-4 mb-4">
+                    <h5 class="mb-3">Contact Information</h5>
+                    <div class="mb-3">
+                        <p class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>{{ hospital.location }}
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-phone me-2"></i>{{ hospital.contact_no }}
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-envelope me-2"></i>{{ hospital.email }}
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/appointments/book/?hospital={{ hospital.id }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-calendar-plus me-1"></i>Book Appointment
+                        </a>
+                        <a href="tel:{{ hospital.contact_no }}" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-phone me-1"></i>Call Now
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hospital Specializations -->
+                <div class="col-lg-4 mb-4">
+                    <h5 class="mb-3">Our Specializations</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for spec in hospital.specialization.all %}
+                        <span class="badge bg-light text-dark px-2 py-1" style="font-size: 0.8rem;">
+                            {{ spec.sname }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4">
+                        <h6 class="mb-2">Quick Links</h6>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="/" class="text-white-50 text-decoration-none">
+                                <i class="fas fa-home me-2"></i>Home
+                            </a>
+                            <a href="/#hospitals" class="text-white-50 text-decoration-none">
+                                <i class="fas fa-hospital me-2"></i>All Hospitals
+                            </a>
+                            <a href="/#doctors" class="text-white-50 text-decoration-none">
+                                <i class="fas fa-user-md me-2"></i>All Doctors
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Bar -->
+            <hr style="border-color: rgba(255,255,255,0.2);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-white-50">
+                        &copy; 2024 {{ hospital.name }}. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex gap-3 justify-content-md-end">
+                        <a href="#" class="text-white-50">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white-50">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-white-50">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-white-50">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards for animation
+        document.querySelectorAll('.doctor-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>

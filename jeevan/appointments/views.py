@@ -47,6 +47,24 @@ def appointment_create(request):
             if form.is_valid():
                 appointment = form.save(commit=False)
                 appointment.patient = patient
+                
+                # Handle ABHA ID - if not provided, generate internal patient code
+                if not appointment.abha_id:
+                    from datetime import datetime
+                    # Generate internal patient code: P + YYYYMMDD + 3-digit sequence
+                    today = datetime.now()
+                    date_str = today.strftime('%Y%m%d')
+                    
+                    # Get the count of appointments for this patient today
+                    today_appointments = Appointment.objects.filter(
+                        patient=patient,
+                        created_at__date=today.date()
+                    ).count()
+                    
+                    # Generate unique internal code
+                    sequence = str(today_appointments + 1).zfill(3)
+                    appointment.abha_id = f"P{date_str}{sequence}"
+                
                 appointment.save()
                 messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
                 return redirect('appointments:appointment_list')
@@ -135,7 +153,7 @@ def get_doctors(request):
             doctors = Doctor.objects.filter(hospital_id=hospital_id).prefetch_related('specialization')
             doctor_list = []
             for doctor in doctors:
-                specializations = [spec.Sname for spec in doctor.specialization.all()]
+                specializations = [spec.sname for spec in doctor.specialization.all()]
                 doctor_list.append({
                     'id': doctor.id,
                     'full_name': doctor.full_name,
@@ -145,6 +163,24 @@ def get_doctors(request):
         return JsonResponse([], safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def doctor_selection(request, hospital_id):
+    """Display doctors available at a specific hospital"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+        hospital = get_object_or_404(Hospital, id=hospital_id)
+        doctors = Doctor.objects.filter(hospital=hospital).prefetch_related('specialization')
+        
+        context = {
+            'hospital': hospital,
+            'doctors': doctors,
+            'patient': patient
+        }
+        return render(request, 'appointments/doctor_selection.html', context)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient profile not found.")
+        return redirect('patient:patient_login')
 
 @login_required
 def appointment_detail(request, appointment_id):

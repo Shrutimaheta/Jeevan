@@ -1,0 +1,96 @@
+{% extends 'patient/base.html' %}
+{% load static %}
+
+{% block title %}Doctors at {{ hospital.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'patient:patient_profile' %}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i> Back to Profile
+                </a>
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-user-md me-2"></i>Doctors at {{ hospital.name }}
+                    </h2>
+                    <p class="text-muted mb-0">{{ hospital.address|default:"Address not available" }}</p>
+                </div>
+            </div>
+
+            {% if doctors %}
+                <div class="row g-4">
+                    {% for doctor in doctors %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="me-3">
+                                        {% if doctor.profile_photo %}
+                                            <img src="{{ doctor.profile_photo.url }}" alt="{{ doctor.full_name }}" 
+                                                 class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                                 style="width: 80px; height: 80px;">
+                                                <i class="fas fa-user-md fa-lg"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">{{ doctor.full_name }}</h5>
+                                        <p class="text-muted mb-2">
+                                            {% for spec in doctor.specialization.all %}
+                                                <span class="badge bg-info me-1">{{ spec.sname }}</span>
+                                            {% empty %}
+                                                <span class="badge bg-secondary">General Practitioner</span>
+                                            {% endfor %}
+                                        </p>
+                                        <div class="d-flex align-items-center text-muted small mb-2">
+                                            <i class="fas fa-graduation-cap me-1"></i>
+                                            <span>{{ doctor.qualification|default:"Qualification not specified" }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center text-muted small mb-2">
+                                            <i class="fas fa-clock me-1"></i>
+                                            <span>{{ doctor.experience }} years experience</span>
+                                        </div>
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="fas fa-rupee-sign me-1"></i>
+                                            <span>₹{{ doctor.consultation_fee|default:"0" }} consultation fee</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if doctor.bio %}
+                                <p class="card-text text-muted small">{{ doctor.bio|truncatewords:20 }}</p>
+                                {% endif %}
+                                
+                                <div class="d-flex gap-2 mt-3">
+                                    <a href="{% url 'appointments:appointment_create' %}?doctor={{ doctor.id }}" 
+                                       class="btn btn-primary flex-grow-1">
+                                        <i class="fas fa-calendar-plus me-1"></i>Book Appointment
+                                    </a>
+                                    <a href="{% url 'doctor:detail' doctor.id %}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Doctors Available</h4>
+                    <p class="text-muted">There are currently no doctors available at {{ hospital.name }}.</p>
+                    <a href="{% url 'patient:patient_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Profile
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

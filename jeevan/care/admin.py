@@ -29,7 +29,7 @@ class CustomUserAdmin(UserAdmin):
     # Remove first_name and last_name from fieldsets
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('full_name', 'email','role')}),
+        ('Personal info', {'fields': ('full_name', 'email', 'contact_number', 'role')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
         # ('Extra Fields', {'fields': ('role',)}),
@@ -39,21 +39,21 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'full_name', 'email', 'password1', 'password2', 'role'),
+            'fields': ('username', 'full_name', 'email', 'contact_number', 'password1', 'password2', 'role'),
         }),
     )
 
-    list_display = ('username', 'full_name', 'email', 'role', 'is_active')
-    search_fields = ('username', 'full_name', 'email')
+    list_display = ('username', 'full_name', 'email', 'contact_number', 'role', 'is_active')
+    search_fields = ('username', 'full_name', 'email', 'contact_number')
 
 admin.site.register(CustomUser, CustomUserAdmin)
 
 
 @admin.register(Specialization)
 class SpecializationAdmin(admin.ModelAdmin):
-    list_display = ('Sname',)
-    search_fields = ('Sname',)
-    list_filter = ('Sname',)
+    list_display = ('sname', 'description', 'icon')
+    search_fields = ('sname',)
+    list_filter = ('sname',)
 
 @admin.register(Hospital)
 class HospitalAdmin(admin.ModelAdmin):

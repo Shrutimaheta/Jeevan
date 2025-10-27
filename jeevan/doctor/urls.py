@@ -31,9 +31,12 @@ urlpatterns = [
     path("appointments/", views.doctor_appointments, name="appointments"),
     path("appointments/update-status/<int:appointment_id>/", views.update_appointment_status, name="update_appointment_status"),
     path("appointments/<int:appointment_id>/prescription/", views.appointment_prescription, name="appointment_prescription"),
+    path("<int:doctor_id>/", views.doctor_detail, name="detail"),
     
     # API Endpoints
     path("api/appointments/", views.doctor_appointments_api, name="appointments_api"),
     path("api/profile/", views.doctor_profile_api, name="profile_api"),
-    path("api/list/", views.DoctorListView.as_view(), name="doctor_list_api"),
+    path("api/list/", views.doctor_list_api, name="doctor_list_api"),
+    path("api/specializations/", views.get_specializations_by_hospital, name="specializations_by_hospital"),
+    path("api/user-info/", views.get_user_info, name="user_info"),
 ]

@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment | Jeevan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/ti-icons@0.1.2/css/themify-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            color: var(--text-dark);
+            background: var(--light-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .booking-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px 0;
+            flex-shrink: 0;
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -30px;
+            position: relative;
+            z-index: 3;
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 0.8rem;
+        }
+
+        .step.active .step-number {
+            background: var(--accent-color);
+        }
+
+        .step.completed .step-number {
+            background: var(--success-color);
+        }
+
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            padding: 0.5rem 0;
+        }
+
+        /* Compact form spacing */
+        .mb-4 {
+            margin-bottom: 1rem !important;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem !important;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .alert {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .specialization-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+
+        /* ABHA Panel Styles */
+        .abha-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            z-index: 1050;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .abha-panel.show {
+            right: 0;
+        }
+
+        .abha-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .abha-panel-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .abha-panel-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .abha-panel-body {
+            padding: 0;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .abha-panel-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* ABHA Header Panel */
+        .abha-header-panel {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .abha-header-panel .abha-logo-container {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin: 0 auto 20px auto;
+            width: 80px;
+            height: 80px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .abha-header-panel .abha-logo-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .abha-header-panel .abha-logo-container img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
+            border-radius: 8px;
+            width: 48px;
+            height: 48px;
+            filter: brightness(1.1);
+        }
+
+        /* ABHA Container Panel */
+        .abha-container-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -30px;
+            position: relative;
+            z-index: 3;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        /* Form Content */
+        .form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .form-group.full-width {
+            flex: 1 1 100%;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .btn-outline-secondary {
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            padding: 15px 40px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f9fafb;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #f1f3f4;
+            gap: 1rem;
+        }
+
+        /* OTP Section */
+        .otp-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            margin: 20px 0;
+        }
+
+        .otp-section.show {
+            display: block;
+        }
+
+        .otp-info {
+            margin-bottom: 20px;
+        }
+
+        .otp-info .alert {
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 0;
+        }
+
+        .otp-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .otp-buttons .btn {
+            flex: 1;
+        }
+
+        /* Error Message Box */
+        .error-message-box {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .error-message-box.show {
+            display: block;
+        }
+
+        .error-message-box .error-icon {
+            color: #dc2626;
+            margin-right: 0.5rem;
+        }
+
+        .error-message-box .error-text {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        /* Success Section */
+        .success-section {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-section.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Alert Info */
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: none;
+            border-radius: 12px;
+            color: var(--primary-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Progress Bar */
+        .progress {
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 2px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .booking-header {
+                padding: 20px 0;
+            }
+            
+            .booking-card {
+                padding: 15px;
+                margin-top: -20px;
+                max-height: calc(100vh - 150px);
+            }
+            
+            .step-indicator {
+                margin-bottom: 15px;
+            }
+            
+            .step {
+                margin: 0 8px;
+            }
+            
+            .step-number {
+                width: 25px;
+                height: 25px;
+                font-size: 0.7rem;
+            }
+            
+            .step span {
+                font-size: 0.7rem;
+            }
+            
+            .form-control, .form-select {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .btn-primary-custom {
+                padding: 8px 20px;
+                font-size: 0.85rem;
+            }
+            
+            .abha-panel {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/" style="color: var(--primary-color);">
+                <i class="fas fa-hospital me-2"></i>Jeevan
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#hospitals">Hospitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#doctors">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#contact">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-outline-primary btn-sm" href="/patient/login/">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Booking Header -->
+    <section class="booking-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="display-5 fw-bold mb-3">Book Your Appointment</h1>
+                    <p class="lead mb-0">Schedule your visit with our expert healthcare professionals</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Form -->
+    <section class="container flex-grow-1 d-flex align-items-center">
+        <div class="row justify-content-center w-100">
+            <div class="col-lg-10 col-xl-8">
+                <div class="booking-card">
+                    <!-- Step Indicator -->
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <span class="small">Select Hospital & Doctor</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <span class="small">Choose Date & Time</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span class="small">Confirm Details</span>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/appointments/create/">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-hospital me-2"></i>Select Hospital
+                                </label>
+                                <select class="form-select" name="hospital" id="hospital" required>
+                                    <option value="">Choose a hospital...</option>
+                                    {% for hospital in hospitals %}
+                                    <option value="{{ hospital.id }}" {% if selected_hospital and selected_hospital.id == hospital.id %}selected{% endif %}>
+                                        {{ hospital.name }} - {{ hospital.location }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-user-md me-2"></i>Select Doctor
+                                </label>
+                                <select class="form-select" name="doctor" id="doctor" required>
+                                    <option value="">Choose a doctor...</option>
+                                    {% for doctor in doctors %}
+                                    <option value="{{ doctor.id }}" {% if selected_doctor and selected_doctor.id == doctor.id %}selected{% endif %}>
+                                        {{ doctor.full_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-calendar me-2"></i>Appointment Date
+                                </label>
+                                <input type="date" class="form-control" name="appointment_date" required min="{{ today|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-clock me-2"></i>Preferred Time
+                                </label>
+                                <select class="form-select" name="appointment_time" required>
+                                    <option value="">Select time...</option>
+                                    <option value="09:00">9:00 AM</option>
+                                    <option value="09:30">9:30 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="10:30">10:30 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="11:30">11:30 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="14:00">2:00 PM</option>
+                                    <option value="14:30">2:30 PM</option>
+                                    <option value="15:00">3:00 PM</option>
+                                    <option value="15:30">3:30 PM</option>
+                                    <option value="16:00">4:00 PM</option>
+                                    <option value="16:30">4:30 PM</option>
+                                    <option value="17:00">5:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-stethoscope me-2"></i>Symptoms or Reason for Visit
+                            </label>
+                            <textarea class="form-control" name="symptoms" rows="3" placeholder="Please describe your symptoms or the reason for your visit..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-credit-card me-2"></i>Payment Mode
+                            </label>
+                            <select class="form-select" name="payment_mode" required>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="upi">UPI</option>
+                                <option value="netbanking">Net Banking</option>
+                                <option value="insurance">Insurance</option>
+                            </select>
+                        </div>
+
+                        <!-- ABHA ID Section -->
+                        <div class="mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title d-flex align-items-center mb-2">
+                                        <i class="fas fa-id-card me-2 text-primary"></i>
+                                        ABHA ID (Optional)
+                                    </h6>
+                                    
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="abha_option" id="has_abha" value="yes">
+                                                <label class="form-check-label fw-semibold small" for="has_abha">
+                                                    <i class="fas fa-check-circle me-1 text-success"></i>
+                                                    I have an ABHA ID
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="abha_option" id="no_abha" value="no" checked>
+                                                <label class="form-check-label fw-semibold small" for="no_abha">
+                                                    <i class="fas fa-times-circle me-1 text-muted"></i>
+                                                    I don't have an ABHA ID
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="abha_input_section" class="mb-2" style="display: none;">
+                                        <label class="form-label fw-semibold small">
+                                            <i class="fas fa-id-card me-2"></i>Enter your ABHA ID
+                                        </label>
+                                        <input type="text" class="form-control" name="abha_id" placeholder="Enter your 14-digit ABHA ID">
+                                        <div class="form-text small">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            ABHA ID is a 14-digit number or alphanumeric code
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-shield-alt me-1"></i>
+                                                ABHA helps you access your health records across different healthcare providers
+                                            </small>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="create-abha-btn">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Create ABHA ID Now
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> You need to be logged in to complete the appointment booking. If you don't have an account, please <a href="/patient/register/" class="alert-link">register here</a> first.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Home
+                            </a>
+                            <button type="submit" class="btn btn-primary-custom">
+                                <i class="fas fa-calendar-check me-2"></i>Continue to Login
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Selected Hospital/Doctor Info -->
+    {% if selected_hospital or selected_doctor %}
+    <section class="container mt-5">
+        <div class="row">
+            {% if selected_hospital %}
+            <div class="col-md-6 mb-4">
+                <div class="info-card">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-hospital me-2"></i>Selected Hospital
+                    </h5>
+                    <h6 class="fw-semibold">{{ selected_hospital.name }}</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ selected_hospital.location }}
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-phone me-2"></i>{{ selected_hospital.contact_no }}
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-envelope me-2"></i>{{ selected_hospital.email }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if selected_doctor %}
+            <div class="col-md-6 mb-4">
+                <div class="info-card">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-user-md me-2"></i>Selected Doctor
+                    </h5>
+                    <h6 class="fw-semibold">{{ selected_doctor.full_name }}</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-hospital me-2"></i>{{ selected_doctor.hospital.name }}
+                    </p>
+                    <div class="mb-2">
+                        <strong>Specializations:</strong>
+                        {% for spec in selected_doctor.specialization.all %}
+                        <span class="specialization-badge">{{ spec.sname }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-phone me-2"></i>{{ selected_doctor.contact_number }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ABHA Creation Panel -->
+    <div class="abha-panel-overlay" id="abha-panel-overlay"></div>
+    <div class="abha-panel" id="abha-panel">
+        <div class="abha-panel-header">
+            <h5 class="mb-0">
+                <i class="fas fa-id-card me-2"></i>Create ABHA ID
+            </h5>
+            <button class="abha-panel-close" id="abha-panel-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="abha-panel-body">
+            <!-- ABHA Header Section -->
+            <div class="abha-header-panel">
+                <div class="abha-logo-container">
+                    <img src="{% static 'images/abha_logo.png' %}" 
+                         alt="ABHA Logo" 
+                         style="display: block !important; visibility: visible !important; opacity: 1 !important;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">ABHA</div>
+                </div>
+                <h1 class="display-6 fw-bold mb-3">Create Your ABHA ID</h1>
+                <p class="lead mb-0">Ayushman Bharat Health Account - Your Digital Health Identity</p>
+            </div>
+
+            <!-- ABHA Form Container -->
+            <div class="abha-container-panel">
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold text-primary" id="progress-text">Step 1 of 3 - Personal Information</span>
+                        <span class="text-muted" id="step-counter">1/3</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="abha-progress" style="width: 33%"></div>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="alert alert-info border-0 mb-4">
+                    <div class="d-flex align-items-start">
+                        <i class="ti ti-info-circle me-2 mt-1"></i>
+                        <div>
+                            <strong>ABHA Benefits:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Access your health records anywhere in India</li>
+                                <li>Seamless healthcare provider integration</li>
+                                <li>Secure and privacy-protected health data</li>
+                                <li>Digital health wallet for medical records</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABHA Creation Form -->
+                <form id="abha-form" class="form-content">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="abha_name" class="form-label">
+                                <i class="ti ti-user"></i>Full Name *
+                            </label>
+                            <input type="text" class="form-control" id="abha_name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="abha_dob" class="form-label">
+                                <i class="ti ti-calendar"></i>Date of Birth *
+                            </label>
+                            <input type="date" class="form-control" id="abha_dob" name="dob" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="abha_gender" class="form-label">
+                                <i class="ti ti-gender-male"></i>Gender *
+                            </label>
+                            <select class="form-control" id="abha_gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                                <option value="O">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="abha_mobile" class="form-label">
+                                <i class="ti ti-phone"></i>Mobile Number *
+                            </label>
+                            <input type="tel" class="form-control" id="abha_mobile" name="mobile" maxlength="10" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="abha_aadhaar" class="form-label">
+                            <i class="ti ti-id"></i>Aadhaar Number *
+                        </label>
+                        <input type="text" class="form-control" id="abha_aadhaar" name="aadhaar" maxlength="12" required>
+                        <div class="form-text">
+                            <i class="ti ti-info-circle me-1"></i>
+                            Enter your 12-digit Aadhaar number for verification
+                        </div>
+                    </div>
+
+                    <!-- OTP Section -->
+                    <div class="otp-section" id="otp-section">
+                        <h5 class="mb-3" style="color: var(--text-dark); font-weight: 600;">
+                            <i class="ti ti-shield me-2"></i>Mobile Verification
+                        </h5>
+                        
+                        <div class="otp-info">
+                            <div class="alert alert-info">
+                                <i class="ti ti-info-circle me-2"></i>
+                                <strong>OTP Sent!</strong> Please check your mobile number <span id="mobile-display"></span> for the 4-digit verification code.
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="abha_otp" class="form-label">
+                                <i class="ti ti-key me-1"></i>Enter OTP
+                            </label>
+                            <input type="text" class="form-control text-center" id="abha_otp" name="otp" maxlength="4" placeholder="Enter 4-digit OTP">
+                            <div class="form-text">
+                                <i class="ti ti-info-circle me-1"></i>
+                                Enter the 4-digit OTP sent to your mobile number
+                            </div>
+                        </div>
+                        
+                        <div class="otp-buttons">
+                            <button type="button" class="btn btn-outline-secondary" id="resend-otp">
+                                <i class="ti ti-refresh me-1"></i>Resend OTP
+                            </button>
+                            <button type="button" class="btn btn-primary" id="verify-otp-btn">
+                                <i class="ti ti-shield me-1"></i>Verify OTP
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error Message Box -->
+                    <div class="error-message-box" id="error-message-box">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-alert-circle error-icon"></i>
+                            <div>
+                                <div class="fw-semibold mb-1">Error</div>
+                                <div class="error-text" id="error-message-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Section -->
+                    <div class="success-section" id="abha-success">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="abha-logo-container" style="width: 60px; height: 60px; margin-right: 15px;">
+                                <img src="{% static 'images/abha_logo.png' %}" 
+                                     alt="ABHA Logo" 
+                                     style="width: 40px; height: 40px; object-fit: contain; display: block !important; visibility: visible !important; opacity: 1 !important;">
+                            </div>
+                            <div>
+                                <h6 class="mb-0 text-success">Your ABHA ID</h6>
+                                <span id="generated-abha-id" class="fw-bold text-primary fs-4"></span>
+                            </div>
+                        </div>
+                        <div class="alert alert-success">
+                            <i class="ti ti-check-circle me-2"></i>
+                            <strong>ABHA ID Created Successfully!</strong>
+                            <p class="mb-0 mt-2">
+                                Your digital health ID is now ready for use across all healthcare providers in India.
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-outline-secondary" onclick="closeAbhaPanel()">
+                                <i class="ti ti-x me-1"></i>Close
+                            </button>
+                            <button type="button" class="btn btn-primary" id="use-abha-btn">
+                                <i class="ti ti-check me-1"></i>Use This ABHA ID
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-primary" id="send-otp-btn">
+                            <i class="ti ti-send me-1"></i>Send OTP
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Update doctors when hospital changes
+        document.getElementById('hospital').addEventListener('change', function() {
+            const hospitalId = this.value;
+            const doctorSelect = document.getElementById('doctor');
+            
+            if (hospitalId) {
+                // Fetch doctors for selected hospital
+                fetch(`/appointments/get-doctors/?hospital_id=${hospitalId}`)
+                    .then(response => response.json())
+                    .then(doctors => {
+                        doctorSelect.innerHTML = '<option value="">Choose a doctor...</option>';
+                        doctors.forEach(doctor => {
+                            const option = document.createElement('option');
+                            option.value = doctor.id;
+                            option.textContent = `${doctor.full_name} - ${doctor.specialization}`;
+                            doctorSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                doctorSelect.innerHTML = '<option value="">Choose a doctor...</option>';
+            }
+        });
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('input[name="appointment_date"]').setAttribute('min', today);
+
+        // ABHA Panel functionality
+        const abhaPanel = document.getElementById('abha-panel');
+        const abhaPanelOverlay = document.getElementById('abha-panel-overlay');
+        const createAbhaBtn = document.getElementById('create-abha-btn');
+        const abhaPanelClose = document.getElementById('abha-panel-close');
+
+        // Open ABHA panel
+        createAbhaBtn.addEventListener('click', function() {
+            abhaPanelOverlay.classList.add('show');
+            abhaPanel.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close ABHA panel
+        function closeAbhaPanel() {
+            abhaPanelOverlay.classList.remove('show');
+            abhaPanel.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        abhaPanelClose.addEventListener('click', closeAbhaPanel);
+        abhaPanelOverlay.addEventListener('click', closeAbhaPanel);
+
+        // ABHA form radio button handling
+        document.getElementById('has_abha').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('abha_input_section').style.display = 'block';
+            }
+        });
+
+        document.getElementById('no_abha').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('abha_input_section').style.display = 'none';
+            }
+        });
+
+        // ABHA Form JavaScript (from abha_create.html)
+        let generatedOTP = '';
+        let otpVerified = false;
+        let otpAttempts = 0;
+        const maxOtpAttempts = 3;
+
+        // Generate and display OTP when mobile number is entered
+        document.getElementById('abha_mobile').addEventListener('blur', function() {
+            const mobile = this.value.trim();
+            if (mobile.length === 10 && /^\d+$/.test(mobile) && !otpVerified) {
+                // Check uniqueness before generating OTP
+                checkAbhaUniqueness().then(canCreate => {
+                    if (canCreate) {
+                        generateAndDisplayOTP();
+                    }
+                });
+            }
+        });
+
+        // Check ABHA uniqueness
+        function checkAbhaUniqueness() {
+            const name = document.getElementById('abha_name').value.trim();
+            const dob = document.getElementById('abha_dob').value;
+            const gender = document.getElementById('abha_gender').value;
+            const mobile = document.getElementById('abha_mobile').value.trim();
+            const aadhaar = document.getElementById('abha_aadhaar').value.trim();
+
+            // Basic validation
+            if (!name || !dob || !gender || !mobile || !aadhaar) {
+                showErrorMessage('Please fill in all required fields before generating OTP.');
+                return Promise.resolve(false);
+            }
+
+            if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+                showErrorMessage('Please enter a valid 10-digit mobile number.');
+                return Promise.resolve(false);
+            }
+
+            if (aadhaar.length !== 12 || !/^\d+$/.test(aadhaar)) {
+                showErrorMessage('Please enter a valid 12-digit Aadhaar number.');
+                return Promise.resolve(false);
+            }
+
+            const formData = {
+                name: name,
+                dob: dob,
+                gender: gender,
+                mobile: mobile,
+                aadhaar: aadhaar
+            };
+
+            return fetch('/abha/check-uniqueness/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.can_create) {
+                    return true;
+                } else {
+                    showErrorMessage(data.error);
+                    return false;
+                }
+            })
+            .catch(error => {
+                console.error('Error checking ABHA uniqueness:', error);
+                showErrorMessage('Error checking ABHA uniqueness. Please try again.');
+                return false;
+            });
+        }
+
+        // Generate OTP
+        function generateAndDisplayOTP() {
+            // Prevent generation if already verified
+            if (otpVerified) {
+                return;
+            }
+            
+            generatedOTP = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+            const mobileNumber = document.getElementById('abha_mobile').value.trim();
+            document.getElementById('mobile-display').textContent = mobileNumber;
+            document.getElementById('otp-section').classList.add('show');
+            
+            // Update progress
+            updateProgress(2, 'Step 2 of 3 - Verify OTP');
+            
+            // Show success message
+            showSuccessMessage('OTP sent successfully to your mobile number!');
+        }
+
+        // Verify OTP
+        document.getElementById('verify-otp-btn').addEventListener('click', function() {
+            const enteredOTP = document.getElementById('abha_otp').value.trim();
+            
+            if (!enteredOTP || enteredOTP.length !== 4) {
+                showErrorMessage('Please enter a valid 4-digit OTP.');
+                return;
+            }
+            
+            if (enteredOTP === generatedOTP) {
+                otpVerified = true;
+                otpAttempts = 0;
+                
+                // Show success message
+                showSuccessMessage('OTP verified successfully!');
+                
+                // Update UI
+                document.getElementById('otp-section').classList.add('bg-success', 'border-success');
+                document.getElementById('otp-section').classList.remove('bg-light', 'border-primary');
+                document.getElementById('verify-otp-btn').innerHTML = '<i class="ti ti-check me-1"></i>Verified ✓';
+                document.getElementById('verify-otp-btn').classList.add('btn-success');
+                document.getElementById('verify-otp-btn').classList.remove('btn-primary');
+                document.getElementById('verify-otp-btn').disabled = true;
+                
+                // Disable resend OTP button
+                document.getElementById('resend-otp').disabled = true;
+                document.getElementById('resend-otp').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('resend-otp').innerHTML = '<i class="ti ti-check me-1"></i>Verified';
+                
+                // Disable OTP input
+                document.getElementById('abha_otp').disabled = true;
+                document.getElementById('abha_otp').classList.add('bg-light');
+                
+                // Update progress
+                updateProgress(3, 'Step 3 of 3 - Ready to Create');
+                
+                // Enable create button
+                document.getElementById('send-otp-btn').innerHTML = '<i class="ti ti-shield me-1"></i>Create ABHA ID';
+                document.getElementById('send-otp-btn').disabled = false;
+            } else {
+                otpAttempts++;
+                if (otpAttempts >= maxOtpAttempts) {
+                    showErrorMessage('Maximum OTP attempts reached. Please resend OTP.');
+                    document.getElementById('verify-otp-btn').disabled = true;
+                } else {
+                    showErrorMessage(`Invalid OTP. ${maxOtpAttempts - otpAttempts} attempts remaining.`);
+                }
+                
+                // Clear the OTP input for retry
+                document.getElementById('abha_otp').value = '';
+                document.getElementById('abha_otp').focus();
+            }
+        });
+
+        // Resend OTP
+        document.getElementById('resend-otp').addEventListener('click', function() {
+            // Prevent resend if already verified
+            if (otpVerified) {
+                return;
+            }
+            
+            generateAndDisplayOTP();
+            document.getElementById('abha_otp').value = '';
+            otpAttempts = 0;
+            document.getElementById('verify-otp-btn').disabled = false;
+            
+            // Show success message
+            showSuccessMessage('OTP resent successfully!');
+        });
+
+        // Create ABHA ID
+        document.getElementById('send-otp-btn').addEventListener('click', function() {
+            if (!otpVerified) {
+                showErrorMessage('Please verify your mobile number with OTP first.');
+                return;
+            }
+            
+            if (!validateAbhaForm()) return;
+            
+            this.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Creating ABHA ID...';
+            this.disabled = true;
+            
+            const formData = {
+                name: document.getElementById('abha_name').value.trim(),
+                dob: document.getElementById('abha_dob').value,
+                gender: document.getElementById('abha_gender').value,
+                mobile: document.getElementById('abha_mobile').value.trim(),
+                aadhaar: document.getElementById('abha_aadhaar').value.trim(),
+                verified_otp: generatedOTP
+            };
+            
+            fetch('/abha/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success
+                    document.getElementById('abha-form').style.display = 'none';
+                    document.getElementById('abha-success').classList.add('show');
+                    document.getElementById('generated-abha-id').textContent = data.abha_id;
+                    updateProgress(3, 'Step 3 of 3 - Complete');
+                } else {
+                    showErrorMessage(data.error || 'Failed to create ABHA ID');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating ABHA ID:', error);
+                showErrorMessage('Failed to create ABHA ID. Please try again.');
+            })
+            .finally(() => {
+                this.innerHTML = '<i class="ti ti-shield me-1"></i>Create ABHA ID';
+                this.disabled = false;
+            });
+        });
+
+        // Use ABHA ID
+        document.getElementById('use-abha-btn').addEventListener('click', function() {
+            const generatedAbhaId = document.getElementById('generated-abha-id').textContent;
+            
+            // Set the ABHA ID in the main form
+            document.querySelector('input[name="abha_id"]').value = generatedAbhaId;
+            document.getElementById('has_abha').checked = true;
+            document.getElementById('abha_input_section').style.display = 'block';
+            
+            // Close the panel
+            closeAbhaPanel();
+            
+            // Show success message
+            alert('ABHA ID has been added to your appointment form!');
+        });
+
+        // Form validation
+        function validateAbhaForm() {
+            const name = document.getElementById('abha_name').value.trim();
+            const dob = document.getElementById('abha_dob').value;
+            const gender = document.getElementById('abha_gender').value;
+            const mobile = document.getElementById('abha_mobile').value.trim();
+            const aadhaar = document.getElementById('abha_aadhaar').value.trim();
+
+            if (!name || !dob || !gender || !mobile || !aadhaar) {
+                showErrorMessage('Please fill in all required fields.');
+                return false;
+            }
+
+            if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+                showErrorMessage('Please enter a valid 10-digit mobile number.');
+                return false;
+            }
+
+            if (aadhaar.length !== 12 || !/^\d+$/.test(aadhaar)) {
+                showErrorMessage('Please enter a valid 12-digit Aadhaar number.');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Show error message box
+        function showErrorMessage(message) {
+            const errorBox = document.getElementById('error-message-box');
+            const errorText = document.getElementById('error-message-text');
+            
+            errorText.textContent = message;
+            errorBox.classList.add('show');
+            
+            // Scroll to error message
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Show success message
+        function showSuccessMessage(message) {
+            // Create a temporary success alert
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show';
+            successAlert.style.position = 'fixed';
+            successAlert.style.top = '20px';
+            successAlert.style.right = '20px';
+            successAlert.style.zIndex = '9999';
+            successAlert.style.minWidth = '300px';
+            successAlert.innerHTML = `
+                <i class="ti ti-check-circle me-2"></i>
+                <strong>Success!</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(successAlert);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (successAlert.parentNode) {
+                    successAlert.parentNode.removeChild(successAlert);
+                }
+            }, 3000);
+        }
+
+        // Update progress
+        function updateProgress(step, text) {
+            const progress = document.getElementById('abha-progress');
+            const progressText = document.getElementById('progress-text');
+            const stepCounter = document.getElementById('step-counter');
+            
+            const percentage = (step / 3) * 100;
+            progress.style.width = percentage + '%';
+            progressText.textContent = text;
+            stepCounter.textContent = step + '/3';
+        }
+
+        // Input formatting
+        document.getElementById('abha_mobile').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('abha_aadhaar').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('abha_otp').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html>

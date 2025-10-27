@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Care Guide - Patient Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--light-bg);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            color: white;
+            padding: 60px 0 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="emergency-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23emergency-pattern)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .emergency-number {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .emergency-number h3 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: #ff6b6b;
+        }
+
+        .guide-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title i {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .tip-card {
+            background: #f8fafc;
+            border-left: 5px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .tip-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tip-card h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tip-card h5 i {
+            color: var(--accent-color);
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid var(--success-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            padding-left: 60px;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background: var(--success-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .warning-box h5 {
+            color: #92400e;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .info-card h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card h6 i {
+            color: var(--accent-color);
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .contact-card h5 {
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .contact-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .back-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .back-btn:hover {
+            background: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .guide-section {
+                padding: 25px;
+                margin: 20px 0;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content text-center">
+                <h1 class="hero-title">
+                    <i class="fas fa-ambulance me-3"></i>Emergency Care Guide
+                </h1>
+                <p class="hero-subtitle">
+                    Essential information and tips for medical emergencies
+                </p>
+                
+                <div class="emergency-number">
+                    <h3>108</h3>
+                    <p class="mb-0">National Emergency Number</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container py-5">
+        <!-- Back Button -->
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Home
+        </a>
+
+        <!-- Emergency Numbers -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-phone"></i>
+                Emergency Contact Numbers
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="contact-card">
+                        <h5><i class="fas fa-ambulance me-2"></i>Ambulance</h5>
+                        <div class="contact-number">108</div>
+                        <p class="mb-0">24/7 Emergency Medical Service</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="contact-card">
+                        <h5><i class="fas fa-fire me-2"></i>Fire Service</h5>
+                        <div class="contact-number">101</div>
+                        <p class="mb-0">Fire & Rescue Services</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="contact-card">
+                        <h5><i class="fas fa-shield-alt me-2"></i>Police</h5>
+                        <div class="contact-number">100</div>
+                        <p class="mb-0">Police Emergency</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic First Aid Steps -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-first-aid"></i>
+                Basic First Aid Steps
+            </h2>
+            
+            <div class="warning-box">
+                <h5><i class="fas fa-exclamation-triangle"></i>Important Reminder</h5>
+                <p class="mb-0">Always call emergency services (108) immediately before attempting first aid. These steps are meant to provide immediate assistance until professional help arrives.</p>
+            </div>
+
+            <ol class="step-list">
+                <li>
+                    <strong>Assess the Situation</strong>
+                    <p>Check if the scene is safe for you and the victim. Look for any immediate dangers like fire, electrical hazards, or traffic.</p>
+                </li>
+                <li>
+                    <strong>Call Emergency Services</strong>
+                    <p>Dial 108 immediately and provide clear information about the location and nature of the emergency.</p>
+                </li>
+                <li>
+                    <strong>Check Responsiveness</strong>
+                    <p>Gently tap the person's shoulder and ask loudly, "Are you okay?" If there's no response, the person is unconscious.</p>
+                </li>
+                <li>
+                    <strong>Open the Airway</strong>
+                    <p>Place one hand on the person's forehead and gently tilt the head back. Lift the chin with two fingers to open the airway.</p>
+                </li>
+                <li>
+                    <strong>Check for Breathing</strong>
+                    <p>Look, listen, and feel for breathing for no more than 10 seconds. If the person is not breathing normally, begin CPR.</p>
+                </li>
+                <li>
+                    <strong>Control Bleeding</strong>
+                    <p>Apply direct pressure to any bleeding wounds using a clean cloth or bandage. Elevate the injured area if possible.</p>
+                </li>
+                <li>
+                    <strong>Keep the Person Comfortable</strong>
+                    <p>Cover the person with a blanket to maintain body temperature. Stay with them until emergency services arrive.</p>
+                </li>
+            </ol>
+        </div>
+
+        <!-- Common Emergency Situations -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-heartbeat"></i>
+                Common Emergency Situations
+            </h2>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h6><i class="fas fa-heart"></i>Heart Attack</h6>
+                    <ul>
+                        <li>Chest pain or discomfort</li>
+                        <li>Shortness of breath</li>
+                        <li>Nausea or vomiting</li>
+                        <li>Cold sweat</li>
+                        <li>Pain in arm, neck, or jaw</li>
+                    </ul>
+                    <p><strong>Action:</strong> Call 108 immediately. Have the person sit down and rest. Give aspirin if available and not allergic.</p>
+                </div>
+
+                <div class="info-card">
+                    <h6><i class="fas fa-brain"></i>Stroke</h6>
+                    <ul>
+                        <li>Sudden numbness or weakness</li>
+                        <li>Confusion or trouble speaking</li>
+                        <li>Severe headache</li>
+                        <li>Vision problems</li>
+                        <li>Loss of balance</li>
+                    </ul>
+                    <p><strong>Action:</strong> Call 108 immediately. Note the time symptoms started. Keep the person calm and comfortable.</p>
+                </div>
+
+                <div class="info-card">
+                    <h6><i class="fas fa-lungs"></i>Choking</h6>
+                    <ul>
+                        <li>Inability to speak or cough</li>
+                        <li>Blue lips or face</li>
+                        <li>Clutching at throat</li>
+                        <li>Panic or distress</li>
+                    </ul>
+                    <p><strong>Action:</strong> Perform Heimlich maneuver. Call 108 if the person becomes unconscious. Continue CPR if needed.</p>
+                </div>
+
+                <div class="info-card">
+                    <h6><i class="fas fa-thermometer-half"></i>Heat Stroke</h6>
+                    <ul>
+                        <li>High body temperature</li>
+                        <li>Hot, dry skin</li>
+                        <li>Rapid pulse</li>
+                        <li>Confusion or unconsciousness</li>
+                        <li>Nausea or vomiting</li>
+                    </ul>
+                    <p><strong>Action:</strong> Move to a cool place. Remove excess clothing. Apply cool water or ice packs. Call 108 immediately.</p>
+                </div>
+
+                <div class="info-card">
+                    <h6><i class="fas fa-snowflake"></i>Hypothermia</h6>
+                    <ul>
+                        <li>Shivering</li>
+                        <li>Slurred speech</li>
+                        <li>Slow breathing</li>
+                        <li>Weak pulse</li>
+                        <li>Confusion</li>
+                    </ul>
+                    <p><strong>Action:</strong> Move to a warm place. Remove wet clothing. Cover with blankets. Call 108 if severe.</p>
+                </div>
+
+                <div class="info-card">
+                    <h6><i class="fas fa-bolt"></i>Electric Shock</h6>
+                    <ul>
+                        <li>Burns at entry/exit points</li>
+                        <li>Muscle contractions</li>
+                        <li>Unconsciousness</li>
+                        <li>Irregular heartbeat</li>
+                        <li>Difficulty breathing</li>
+                    </ul>
+                    <p><strong>Action:</strong> Turn off power source first. Call 108 immediately. Do not touch the person until power is off.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Kit Checklist -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-medkit"></i>
+                Emergency Kit Checklist
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-list-check"></i>Essential Items</h5>
+                        <ul>
+                            <li>First aid kit</li>
+                            <li>Emergency contact numbers</li>
+                            <li>Flashlight with extra batteries</li>
+                            <li>Whistle</li>
+                            <li>Emergency blanket</li>
+                            <li>Water bottles</li>
+                            <li>Non-perishable food</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-pills"></i>Medical Supplies</h5>
+                        <ul>
+                            <li>Bandages (various sizes)</li>
+                            <li>Antiseptic wipes</li>
+                            <li>Pain relievers</li>
+                            <li>Thermometer</li>
+                            <li>Prescription medications</li>
+                            <li>Medical alert information</li>
+                            <li>CPR face shield</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prevention Tips -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-shield-alt"></i>
+                Prevention Tips
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-home"></i>Home Safety</h5>
+                        <ul>
+                            <li>Keep emergency numbers visible</li>
+                            <li>Install smoke detectors</li>
+                            <li>Keep first aid kit accessible</li>
+                            <li>Remove tripping hazards</li>
+                            <li>Secure heavy furniture</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-car"></i>Travel Safety</h5>
+                        <ul>
+                            <li>Carry emergency contact info</li>
+                            <li>Know local emergency numbers</li>
+                            <li>Keep medications accessible</li>
+                            <li>Wear seatbelts</li>
+                            <li>Don't drive under influence</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-heart"></i>Health Monitoring</h5>
+                        <ul>
+                            <li>Regular health checkups</li>
+                            <li>Know your medical conditions</li>
+                            <li>Keep medical records updated</li>
+                            <li>Monitor vital signs</li>
+                            <li>Take medications as prescribed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- When to Call Emergency Services -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-phone-alt"></i>
+                When to Call Emergency Services
+            </h2>
+            
+            <div class="warning-box">
+                <h5><i class="fas fa-exclamation-circle"></i>Call 108 Immediately For:</h5>
+                <ul class="mb-0">
+                    <li>Severe chest pain or pressure</li>
+                    <li>Difficulty breathing or shortness of breath</li>
+                    <li>Severe bleeding that won't stop</li>
+                    <li>Unconsciousness or unresponsiveness</li>
+                    <li>Signs of stroke (F.A.S.T. - Face drooping, Arm weakness, Speech difficulty, Time to call)</li>
+                    <li>Severe allergic reactions</li>
+                    <li>Suicidal thoughts or self-harm</li>
+                    <li>Any life-threatening situation</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Additional Resources -->
+        <div class="guide-section">
+            <h2 class="section-title">
+                <i class="fas fa-book"></i>
+                Additional Resources
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-graduation-cap"></i>Learn First Aid</h5>
+                        <p>Consider taking a certified first aid and CPR course. These skills can save lives in emergency situations.</p>
+                        <ul>
+                            <li>Red Cross First Aid Training</li>
+                            <li>Local hospital courses</li>
+                            <li>Online certification programs</li>
+                            <li>Community health centers</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="tip-card">
+                        <h5><i class="fas fa-mobile-alt"></i>Emergency Apps</h5>
+                        <p>Download emergency apps for quick access to help and information.</p>
+                        <ul>
+                            <li>Emergency contact apps</li>
+                            <li>First aid guide apps</li>
+                            <li>Hospital finder apps</li>
+                            <li>Medical ID apps</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center py-4">
+            <p class="text-muted">
+                <i class="fas fa-info-circle me-2"></i>
+                This guide is for informational purposes only. Always seek professional medical help in emergencies.
+            </p>
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

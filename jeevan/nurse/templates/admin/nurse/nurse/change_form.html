@@ -1,0 +1,57 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+function populateFullName(selectElement) {
+    console.log('populateFullName called with:', selectElement.value);
+    var fullNameField = document.querySelector('input[name="full_name"]');
+    console.log('fullNameField found:', fullNameField);
+    
+    if (fullNameField && selectElement.value) {
+        // Make AJAX call to get user's full name
+        fetch('/admin/care/customuser/' + selectElement.value + '/change/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Extract full_name from the response HTML
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var fullNameInput = doc.querySelector('input[name="full_name"]');
+            if (fullNameInput && fullNameInput.value) {
+                fullNameField.value = fullNameInput.value;
+                console.log('Set full_name to:', fullNameInput.value);
+            }
+        })
+        .catch(error => {
+            console.log('Error fetching user data:', error);
+        });
+    }
+}
+
+// Auto-populate on page load if user is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - setting up auto-population');
+    var userSelect = document.querySelector('select[name="user"]');
+    console.log('userSelect found:', userSelect);
+    
+    if (userSelect) {
+        // Add event listener for change
+        userSelect.addEventListener('change', function() {
+            console.log('User selection changed to:', this.value);
+            populateFullName(this);
+        });
+        
+        // Auto-populate if user is already selected
+        if (userSelect.value) {
+            console.log('User already selected:', userSelect.value);
+            populateFullName(userSelect);
+        }
+    }
+});
+</script>
+{% endblock %}

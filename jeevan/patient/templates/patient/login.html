@@ -4,192 +4,288 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patient Portal Login</title>
+    <title>Patient Management System - Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="{% static 'css/vaidya_login.css' %}">
-                <style>
-            :root {
-                --vm-primary: #3da9ff; /* light blue */
-                --vm-primary-hover: #1d8fe9;
-                --vm-focus: 0 0 0 3px rgba(61,169,255,0.28);
-                        --panel-width: 460px;
-                        --panel-height: 520px;
-                        /* Font scale tokens */
-                        --fs-brand: clamp(24px, 2.6vw, 32px);
-                        --fs-heading: clamp(17px, 2.1vw, 21px);
-                        --fs-tagline: clamp(11px, 1.3vw, 13px);
-                        --fs-label: 12.5px;
-                        --fs-body: 14px;
-                        --fs-button: 14.5px;
-            }
-            .vm-auth-panel::before {
-                background:linear-gradient(120deg, rgba(61,169,255,0.10), rgba(61,169,255,0) 60%),
-                                    linear-gradient(200deg, rgba(29,143,233,0.14), rgba(29,143,233,0) 70%);
-            }
-            body { font-size: var(--fs-body); -webkit-font-smoothing: antialiased; }
-            .btn-primary {
-                background:linear-gradient(135deg,#3da9ff,#62b9ff 60%,#8acaff);
-                color:#fff;
-                box-shadow:0 4px 14px -4px rgba(61,169,255,0.45);
-            }
-            .btn-primary:hover { background:linear-gradient(135deg,#2d95ec,#4babff 60%,#76c2ff); }
-            .tagline { color: var(--vm-primary); }
-            .welcome-text h2 span { color: var(--vm-primary); }
-            .vm-media-logo-wrap { box-shadow:0 4px 10px -2px rgba(61,169,255,0.28), 0 1px 3px rgba(61,169,255,0.18); }
-            .vm-msg-success { border-color:#b6def9; background:#e6f6ff; color:#0b4f7e; }
-            .remember input { accent-color: var(--vm-primary); }
-        </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/patient_login_premium.css' %}">
+    <style>
+    /* Hide native password reveal icons to avoid duplicate eyes (Edge/IE) */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear { display:none; }
+    </style>
 </head>
 <body>
-    <div class="vm-container two-col equal-panels">
-        <div class="vm-auth-panel login-only">
-            <div class="brand-block compact">
-                <div class="logo-row">
-                    <div class="vm-media-logo-wrap">
-                        <img src="/media/patient_photos/logo.jpg" alt="Portal Logo" class="vm-media-logo" loading="lazy">
-                    </div>
-                    <div>
-                        <h1 class="brand-name">Jeevancare</h1>
-                        <p class="tagline">Secure Access</p>
-                    </div>
-                </div>
-                <div class="welcome-text">
-                    <h2 class="compact-heading">Welcome <span>Back</span></h2>
-                    <p class="subtitle">Sign in with your registered email</p>
-                </div>
-            </div>
-            <form class="login-form" action="" method="post" novalidate autocomplete="off" id="loginForm">
-                {% csrf_token %}
-                {% if messages %}
-                    <div class="vm-messages">
-                        {% for message in messages %}
-                            <div class="vm-msg vm-msg-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% if form.non_field_errors %}
-                    <div class="vm-messages">
-                        {% for error in form.non_field_errors %}
-                            <div class="vm-msg vm-msg-error">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <div class="vm-messages"><div class="vm-msg vm-msg-error">{{ form.email.errors.0 }}</div></div>
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <div class="vm-messages"><div class="vm-msg vm-msg-error">{{ form.password.errors.0 }}</div></div>
-                    {% endif %}
-                </div>
-                <div class="form-row between">
-                    <label class="remember">
-                        <input type="checkbox" name="remember" />
-                        <span>Remember my preference</span>
-                    </label>
-                    <a href="{% url 'patient:forgot_password' %}" class="forgot-link">Forgot?</a>
-                </div>
-                <button type="submit" class="btn btn-primary w-100" id="loginButton">
-                    <span class="btn-text">Login</span>
-                    <span class="btn-spinner" style="display:none;margin-left:8px;width:16px;height:16px;border:2px solid rgba(255,255,255,0.6);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span>
-                </button>
-                <p class="signup-text">Don't have an account? <a href="{% url 'patient:patient_register' %}">Sign Up</a></p>
-            </form>
-        </div>
-        <div class="side-image-panel">
-            <img src="/media/patient_photos/b2.jpg" alt="Portal visual" class="side-img" loading="lazy" decoding="async">
+    <!-- Premium Background with Animated Elements -->
+    <div class="premium-bg">
+        <div class="bg-gradient-1"></div>
+        <div class="bg-gradient-2"></div>
+        <div class="bg-gradient-3"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
         </div>
     </div>
-<script>
-    (function(){
-        const form = document.getElementById('loginForm');
-        const btn = document.getElementById('loginButton');
-        if(form && btn){
-            form.addEventListener('submit', function(){
-                if(btn.dataset.loading === '1') return; // prevent double
-                btn.dataset.loading = '1';
-                btn.classList.add('loading');
-                btn.querySelector('.btn-text').textContent = 'Logging in...';
-                btn.querySelector('.btn-spinner').style.display = 'inline-block';
-                btn.setAttribute('disabled','disabled');
+
+    <div class="vm-container premium-container">
+        <!-- Premium Auth Panel -->
+        <div class="vm-auth-panel premium-panel">
+            <!-- Premium Header Section -->
+            <div class="premium-header">
+                <div class="brand-section">
+                    <div class="logo-container">
+                        <div class="logo-wrapper">
+                            <img src="/media/patient_photos/logo.jpg" alt="Patient Management System Logo" class="premium-logo" loading="lazy">
+                            <div class="logo-glow"></div>
+                        </div>
+                        <div class="brand-info">
+                            <h1 class="premium-brand-name">Patient Management System</h1>
+                            <div class="brand-accent"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="welcome-section">
+                    <h2 class="premium-welcome">Welcome Back</h2>
+                    <p class="premium-subtitle">Sign in to access your healthcare dashboard</p>
+                    <div class="welcome-decoration"></div>
+                </div>
+            </div>
+
+            <!-- Premium Form Section -->
+            <form class="premium-login-form" action="" method="post" novalidate autocomplete="off" id="loginForm">
+                {% csrf_token %}
+                
+                <!-- Premium Messages -->
+                {% if messages %}
+                    <div class="premium-messages">
+                        {% for message in messages %}
+                            <div class="premium-msg premium-msg-{{ message.tags }}">
+                                <div class="msg-icon"></div>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% if form.non_field_errors %}
+                    <div class="premium-messages">
+                        {% for error in form.non_field_errors %}
+                            <div class="premium-msg premium-msg-error">
+                                <div class="msg-icon"></div>
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Premium Form Fields -->
+                <div class="premium-form-group">
+                    <label for="username" class="premium-label">
+                        <span class="label-text">Username or Email</span>
+                        <span class="label-accent"></span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" placeholder="Enter your username or email" class="premium-input" required />
+                        <div class="input-icon user-icon"></div>
+                        <div class="input-focus-line"></div>
+                    </div>
+                </div>
+
+                {% comment %}
+                <div class="premium-form-group">
+                    <label for="role" class="premium-label">
+                        <span class="label-text">Select Role</span>
+                        <span class="label-accent"></span>
+                    </label>
+                    <div class="input-wrapper">
+                        <select id="role" name="role" class="premium-input premium-select" required>
+                            <option value="">Choose your role</option>
+                            <option value="patient">Patient</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="nurse">Nurse</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <div class="input-icon role-icon"></div>
+                        <div class="input-focus-line"></div>
+                    </div>
+                </div>
+                {% endcomment %}
+
+                <div class="premium-form-group">
+                    <label for="password" class="premium-label">
+                        <span class="label-text">Password</span>
+                        <span class="label-accent"></span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" class="premium-input" required />
+                        <div class="input-icon password-icon"></div>
+                        <div class="input-focus-line"></div>
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <div class="toggle-icon"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Premium Options -->
+                <div class="premium-options">
+                    <a href="{% url 'patient:forgot_password' %}" class="forgot-link">Forgot Password?</a>
+                    <div class="security-indicator">
+                        <div class="security-icon"></div>
+                        <span>Secure Login</span>
+                    </div>
+                </div>
+
+                <!-- Premium Submit Buttons -->
+                <div class="premium-button-group" style="margin-top: 6px;">
+                    <button type="submit" class="premium-btn premium-btn-primary" id="loginButton">
+                        <span class="btn-text">Sign In</span>
+                        <div class="btn-icon"></div>
+                        <div class="btn-shine"></div>
+                        <div class="btn-spinner" style="display:none;">
+                            <div class="spinner"></div>
+                        </div>
+                    </button>
+                    
+                </div>
+
+                <div class="text-center" style="margin: 4px 0 0; position: relative; z-index: 5; text-align: center;">
+                    <a href="{% url 'patient:patient_register' %}" style="font-size: 0.875rem; color: #0d6efd; text-decoration: underline; font-weight: 500;">
+                        New here? Create your patient account
+                    </a>
+                </div>
+
+                <!-- Premium Footer -->
+                <div class="premium-footer">
+                    <p class="signup-text">
+                        Secure access to your healthcare dashboard
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Premium Illustration Section -->
+        <div class="vm-illustration premium-illustration">
+            <div class="illustration-container">
+                <div class="illustration-bg"></div>
+                <div class="illustration-content">
+                    <div class="hero-image-wrapper">
+                        <img src="/media/patient_photos/b2.jpg" alt="Patient Management System" class="premium-hero-image" loading="lazy" decoding="async" />
+                        <div class="image-overlay"></div>
+                    </div>
+                    <div class="illustration-text">
+                        <h3 class="illustration-title">Patient Management System</h3>
+                        <p class="illustration-description">Comprehensive healthcare management for modern medical facilities</p>
+                        <div class="feature-highlights">
+                            <div class="feature-item">
+                                <div class="feature-icon"></div>
+                                <span>Secure & Private</span>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon"></div>
+                                <span>24/7 Access</span>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon"></div>
+                                <span>AI-Powered</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="illustration-decoration">
+                    <div class="decoration-circle circle-1"></div>
+                    <div class="decoration-circle circle-2"></div>
+                    <div class="decoration-circle circle-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Loading Animation -->
+    <div class="premium-loader" id="premiumLoader">
+            <div class="loader-content">
+                <div class="loader-logo"></div>
+                <div class="loader-text">Patient Management System</div>
+                <div class="loader-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+    </div>
+    <script>
+        // Premium interactions and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loader after page load
+            setTimeout(() => {
+                const loader = document.getElementById('premiumLoader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 300);
+                }
+            }, 1000);
+
+            // Premium form interactions
+            const form = document.getElementById('loginForm');
+            const btn = document.getElementById('loginButton');
+            
+            if(form && btn) {
+                form.addEventListener('submit', function() {
+                    if(btn.dataset.loading === '1') return;
+                    
+                    btn.dataset.loading = '1';
+                    btn.classList.add('loading');
+                    btn.querySelector('.btn-text').textContent = 'Signing In...';
+                    btn.querySelector('.btn-spinner').style.display = 'flex';
+                    btn.setAttribute('disabled', 'disabled');
+                });
+            }
+
+            // Password toggle functionality
+            const passwordToggle = document.querySelector('.password-toggle');
+            const passwordInput = document.querySelector('#password');
+            
+            if(passwordToggle && passwordInput) {
+                passwordToggle.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('active');
+                });
+            }
+
+            // Form validation with premium feedback
+            const inputs = document.querySelectorAll('.premium-input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.parentElement.classList.remove('focused');
+                    }
+                });
             });
-        }
-        // After render (e.g., server-side validation failure) ensure button visible
-        window.addEventListener('DOMContentLoaded', function(){
-            const errorMsgs = document.querySelectorAll('.vm-msg-error');
-            if(errorMsgs.length){
-                // Restore button state if page re-rendered with errors
+
+            // Restore button state if page re-rendered with errors
+            const errorMsgs = document.querySelectorAll('.premium-msg-error');
+            if(errorMsgs.length) {
                 const b = document.getElementById('loginButton');
-                if(b){
+                if(b) {
                     b.removeAttribute('disabled');
                     b.classList.remove('loading');
                     const spinner = b.querySelector('.btn-spinner');
-                    if(spinner) spinner.style.display='none';
+                    if(spinner) spinner.style.display = 'none';
                     const textSpan = b.querySelector('.btn-text');
-                    if(textSpan) textSpan.textContent='Login';
-                }
-                const panel = document.querySelector('.login-only');
-                if(panel){
-                    // Scroll card into center so button & errors both visible
-                    panel.scrollIntoView({behavior:'smooth', block:'center'});
+                    if(textSpan) textSpan.textContent = 'Sign In';
                 }
             }
         });
-    })();
-</script>
+    </script>
 </body>
-<style>
-@keyframes spin { to { transform: rotate(360deg); } }
-#loginButton.loading { opacity:0.85; }
-                    .two-col { display:flex; justify-content:center; gap:40px; padding: clamp(20px,2.5vw,44px); min-height:100vh; align-items:center; }
-                    .equal-panels .side-image-panel { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); height:var(--panel-height); }
-                    .equal-panels .login-only { flex:0 0 var(--panel-width); width:var(--panel-width); max-width:var(--panel-width); min-height:var(--panel-height); height:auto; }
-                    .login-only { overflow-y:visible; }
-                    .login-only { padding:26px 28px 36px !important; display:flex; flex-direction:column; }
-                    .login-only .brand-block { margin-bottom:22px; }
-                    .login-only .login-form { gap:16px; }
-                    .side-image-panel { position:relative; border-radius:26px; overflow:hidden; background:#e8f4fd; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px -6px rgba(20,53,73,0.12), 0 2px 6px rgba(20,53,73,0.09); }
-                    .side-image-panel::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(255,255,255,0.0), rgba(255,255,255,0.32) 72%); }
-                    .side-img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
-                    /* Typography scaling for tighter card */
-                    .brand-name { font-size: var(--fs-brand); line-height:1.05; letter-spacing:-0.5px; }
-                    .tagline { font-size: var(--fs-tagline); margin-top:2px; letter-spacing:0.5px; }
-                    .compact-heading, .welcome-text h2 { font-size: var(--fs-heading); font-weight:600; letter-spacing:-0.3px; margin:14px 0 4px; }
-                    .welcome-text .subtitle { font-size: 12.5px; line-height:1.35; }
-                    .form-label { font-size: var(--fs-label); font-weight:600; letter-spacing:0.4px; }
-                    .login-form .btn-primary { padding:12px 16px; font-size: var(--fs-button); font-weight:600; letter-spacing:0.6px; }
-                    .vm-msg { font-size:12.5px; }
-                    .signup-text { font-size:12.8px; }
-                .side-caption { position:absolute; bottom:22px; right:22px; left:22px; background:rgba(255,255,255,0.80); padding:12px 20px; border-radius:18px; font-size:14px; text-align:center; font-weight:500; backdrop-filter:blur(6px); box-shadow:0 4px 14px -4px rgba(0,0,0,0.15); }
-            .forgot-link { font-size:13px; font-weight:600; color:var(--vm-primary); text-decoration:none; }
-            .forgot-link:hover { text-decoration:underline; }
-                        @media (max-width:1220px){ .two-col { gap:34px; } }
-                        @media (max-width:1040px){
-                            :root { --panel-width: 420px; --panel-height: 500px; }
-                            .two-col { gap:30px; }
-                        }
-                        @media (max-width:900px){
-                            .two-col { flex-direction:column; }
-                            :root { --panel-width: 420px; --panel-height: auto; }
-                            .equal-panels .login-only, .equal-panels .side-image-panel { width:100%; max-width:520px; height:auto; }
-                            .side-image-panel { height:340px; order:2; }
-                        }
-                        @media (max-width:520px){
-                            :root { --fs-brand:28px; --fs-heading:18px; --fs-button:14px; }
-                            .login-only { padding:24px 22px 32px !important; }
-                        }
-                        @media (max-height:760px){ .login-only { padding-top:22px !important; } }
-                        @media (max-width:620px){ .side-image-panel { display:none; } .two-col { padding:28px 18px 40px; } .login-only { width:100%; max-width:480px; } }
-                        @media (max-height:760px){ :root { --panel-height: 480px; } }
-                        @media (max-height:680px){ :root { --panel-height: 440px; } }
-                        @media (max-height:620px){ .two-col { align-items:flex-start; padding-top:26px; } }
-</style>
 </html>
+
