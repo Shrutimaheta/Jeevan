@@ -24,7 +24,7 @@
             {% endfor %}
         </div>
         <div class="d-flex gap-2 mt-auto">
-            <a href="/appointments/book/?hospital={{ hospital.id }}" class="btn btn-primary-custom btn-sm flex-fill">
+            <a href="/login/?next={% url 'appointments:appointment_create' %}?hospital={{ hospital.id }}" class="btn btn-primary-custom btn-sm flex-fill" onclick="if (window.twOpenBooking) { event.preventDefault(); window.twOpenBooking(); }">
                 <i class="fas fa-calendar-plus me-1"></i>Book Appointment
             </a>
             <a href="/hospitals/{{ hospital.id }}/doctors/" class="btn btn-primary-custom btn-sm flex-fill">

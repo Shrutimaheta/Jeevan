@@ -4,21 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Jeevan Healthcare{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="{% static 'css/healthcare-theme.css' %}" rel="stylesheet">
     <style>
-        /* Modern Header Styles */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        
+        /* Modern Header Styles - Match home.html exactly */
         .modern-header {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 4px 20px rgba(44, 90, 160, 0.2);
-            position: sticky;
+            background: var(--primary-color);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
             top: 0;
-            z-index: 1000;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            overflow: hidden;
+            min-height: 72px;
+            padding: 12px 0;
         }
         
         .logo-container {
@@ -35,10 +54,23 @@
         }
         
         .logo-text {
-            font-size: 28px;
+            font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
             color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+            line-height: 1.3;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-text:hover {
+            transform: scale(1.05);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
         }
         
         .main-nav {
@@ -46,21 +78,175 @@
         }
         
         .nav-link {
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
+            font-weight: 500 !important;
+            color: white !important;
+            padding: 10px 20px !important;
+            border-radius: 20px;
             transition: all 0.3s ease;
+            position: relative;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            margin: 2px 4px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            text-decoration: none;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         
         .nav-link:hover {
+            color: #ffffff !important;
             background: rgba(255, 255, 255, 0.15);
-            color: white;
             transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Dropdown Styling */
+        .dropdown-menu {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            margin-top: 8px;
+            padding: 8px 0;
+            min-width: 200px;
+            z-index: 1050 !important;
+            position: absolute !important;
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+            z-index: 1050 !important;
+        }
+        
+        .dropdown-item {
+            padding: 10px 16px;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 2px 8px;
+        }
+        
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            margin: 8px 16px;
+            border-color: #e5e7eb;
+        }
+        
+        /* Small button styling for header */
+        .btn-sm.btn-outline-light {
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-sm.btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        /* Ensure dropdown visibility */
+        .navbar-nav .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            left: auto !important;
+            right: 0 !important;
+            z-index: 9999 !important;
+            display: none;
+            transform: none !important;
+        }
+        
+        .navbar-nav .dropdown-menu.show {
+            display: block !important;
+        }
+        
+        /* Fix navbar z-index */
+        .modern-header {
+            z-index: 1030;
+            overflow: visible !important;
+        }
+        
+        .navbar-nav {
+            overflow: visible !important;
+        }
+        
+        .dropdown {
+            overflow: visible !important;
+        }
+        
+        /* Dropdown Menu Styling - Matching profile.html */
+        .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            right: 0 !important;
+            left: auto !important;
+            z-index: 9999 !important;
+            display: none !important;
+            min-width: 200px !important;
+            padding: 0.4rem 0 !important;
+            margin-top: 0.4rem !important;
+            background-color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+        }
+        
+        .dropdown-menu:not(.show) {
+            display: none !important;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            font-size: 0.9rem !important;
+            color: #212529 !important;
+            text-decoration: none !important;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa !important;
+            color: #2c5aa0 !important;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2 !important;
+            color: #dc2626 !important;
+        }
+        
+        .dropdown-divider {
+            margin: 0.4rem 0 !important;
+            border-top: 1px solid #e9ecef !important;
         }
         
         .nav-link.active {
@@ -447,58 +633,102 @@
                 font-size: 18px;
             }
         }
+        
+        /* Add body padding to account for fixed navbar */
+        body {
+            padding-top: 80px;
+        }
+        
+        @media (max-width: 768px) {
+            .modern-header {
+                min-height: 65px;
+                padding: 8px 0;
+            }
+            
+            .logo-text {
+                font-size: 1.3rem !important;
+                padding: 6px 0;
+            }
+            
+            .nav-link {
+                padding: 8px 16px !important;
+                font-size: 0.9rem;
+                margin: 2px 0;
+                border-radius: 18px;
+            }
+            
+            .dropdown-menu {
+                min-width: 180px;
+                margin-top: 4px;
+            }
+            
+            .dropdown-item {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            body {
+                padding-top: 70px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Modern Header with Integrated Navigation -->
-    <header class="modern-header">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-3">
-                    <a href="{% url 'patient:profile_dashboard' %}" class="d-flex align-items-center text-decoration-none">
-                        <div class="logo-container">
-                            <i class="fas fa-heartbeat"></i>
-                        </div>
-                        <h1 class="logo-text">Patient Management System</h1>
-                    </a>
-                </div>
-                <div class="col-md-6">
-                    <nav class="main-nav d-none d-md-flex justify-content-center">
-                        <!-- Navigation menu items removed -->
-                    </nav>
-                </div>
-                <div class="col-md-3">
-                    <div class="user-section d-flex align-items-center justify-content-end gap-3">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            {% if unread_notifications_count > 0 %}
-                                <span class="notification-badge">{{ unread_notifications_count }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="dropdown">
-                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                {% if patient.profile_photo %}
-                                    <img src="{{ patient.profile_photo.url }}" alt="Profile" class="user-avatar">
-                                {% else %}
-                                    <div class="user-avatar-placeholder">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                {% endif %}
-                                <span class="user-name">{{ patient.full_name|default:user.username }}</span>
+    <!-- Navigation - Patient Welcome Header -->
+    <nav class="navbar navbar-expand-lg navbar-light modern-header">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="{% url 'patient:profile_dashboard' %}" style="color: white;">
+                <i class="fas fa-heartbeat me-2"></i>Patient Management System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
                             </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" style="color: white;">
+                            <i class="fas fa-user me-2"></i>{{ patient.full_name|default:user.username }}
+                        </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'patient:patient_profile' %}"><i class="fas fa-user me-2"></i>My Profile</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                                <li><a class="dropdown-item" href="{% url 'patient:help_support' %}"><i class="fas fa-question-circle me-2"></i>Help & Support</a></li>
+                            <li><a class="dropdown-item" href="{% url 'patient:profile_dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'patient:patient_profile' %}">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'appointments:appointment_list' %}">
+                                <i class="fas fa-calendar me-2"></i>Appointments
+                            </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'patient:patient_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'patient:patient_logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#hospitals" style="color: white;">Hospitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#doctors" style="color: white;">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#about" style="color: white;">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/#contact" style="color: white;">Contact</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-login-custom" href="/patient/login/" style="padding: 10px 24px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 3px 10px rgba(255, 255, 255, 0.1); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); font-size: 0.95rem;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </li>
+                    {% endif %}
                             </ul>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    </nav>
     
     <main class="main-content">
         
@@ -585,6 +815,77 @@
                 }
             });
         });
+        
+        // Simple dropdown toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle dropdown toggle
+            document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var dropdown = this.closest('.dropdown');
+                    var menu = dropdown.querySelector('.dropdown-menu');
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(function(otherMenu) {
+                        if (otherMenu !== menu) {
+                            otherMenu.classList.remove('show');
+                            otherMenu.style.display = 'none';
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    if (menu.classList.contains('show')) {
+                        menu.classList.remove('show');
+                        menu.style.display = 'none';
+                    } else {
+                        menu.classList.add('show');
+                        menu.style.display = 'block';
+                    }
+                });
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+                        menu.classList.remove('show');
+                        menu.style.display = 'none';
+                    });
+                }
+            });
+        });
+        
+        // Ensure CSRF cookie is set
+        function ensureCSRFCookie() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                // Set CSRF cookie if not already set
+                if (!getCookie('csrftoken')) {
+                    document.cookie = `csrftoken=${csrfToken.getAttribute('content')}; path=/`;
+                }
+            }
+        }
+        
+        // Get cookie helper function
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Run CSRF cookie check on page load
+        document.addEventListener('DOMContentLoaded', ensureCSRFCookie);
     </script>
 </body>
 </html>

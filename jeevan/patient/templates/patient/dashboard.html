@@ -281,6 +281,10 @@
                         <i class="fas fa-user-edit"></i>
                         Edit Profile
                     </a>
+                    <a href="#" class="action-btn" onclick="showEmergencyModal(); return false;">
+                        <i class="fas fa-phone"></i>
+                        Emergency Contact
+                    </a>
                 </div>
             </div>
         </div>
@@ -470,7 +474,70 @@
     </div>
 </div>
 
+<!-- Emergency Contact Modal -->
+<div class="modal fade" id="emergencyContactModal" tabindex="-1" aria-labelledby="emergencyContactLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emergencyContactLabel">Emergency Contact</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if patient.emergency_number %}
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-circle bg-danger text-white"><i class="fas fa-phone"></i></div>
+                    <div>
+                        <div class="fw-semibold">Call Emergency Number</div>
+                        <a href="tel:{{ patient.emergency_number }}" class="text-decoration-none">{{ patient.emergency_number }}</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    No emergency number set. Please add one in your profile.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if patient.emergency_number %}
+                <a href="tel:{{ patient.emergency_number }}" class="btn btn-danger"><i class="fas fa-phone me-1"></i>Call Now</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Open Emergency Contact modal reliably (works even if Bootstrap JS isn't globally available)
+function showEmergencyModal() {
+    var el = document.getElementById('emergencyContactModal');
+    if (!el) {
+        alert('Emergency contact not available right now.');
+        return;
+    }
+    try {
+        if (window.bootstrap && bootstrap.Modal) {
+            var modal = bootstrap.Modal.getOrCreateInstance(el);
+            modal.show();
+        } else {
+            // Lightweight fallback: toggle via CSS class
+            el.classList.add('show');
+            el.style.display = 'block';
+            el.removeAttribute('aria-hidden');
+            // Close on backdrop click
+            el.addEventListener('click', function onBackdrop(e){
+                if (e.target === el) {
+                    el.classList.remove('show');
+                    el.style.display = 'none';
+                    el.setAttribute('aria-hidden','true');
+                    el.removeEventListener('click', onBackdrop);
+                }
+            });
+        }
+    } catch (_) {
+        alert('Please check your emergency contact in Profile.');
+    }
+}
 // Global chart variables
 let healthTrendsChart, vitalSignsChart, wellnessChart, medicationChart;
 

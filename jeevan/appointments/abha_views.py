@@ -121,15 +121,16 @@ def verify_abha_otp(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@login_required
 def create_abha_id(request):
     """
-    Create ABHA ID after OTP verification
+    Create ABHA ID after OTP verification and store in database
     """
     try:
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ['name', 'dob', 'gender', 'mobile', 'aadhaar']
+        required_fields = ['name', 'dob', 'gender', 'mobile', 'aadhaar', 'otp']
         for field in required_fields:
             if not data.get(field):
                 return JsonResponse({
@@ -153,24 +154,96 @@ def create_abha_id(request):
                 'error': 'Invalid Aadhaar number'
             }, status=400)
         
-        # Generate ABHA ID (mock implementation)
-        # In production, this would integrate with ABHA API
-        abha_id = generate_abha_id()
+        # Verify OTP first
+        session_key = f'abha_otp_{mobile}'
+        stored_data = request.session.get(session_key)
         
-        # Store ABHA ID in session for the user
-        request.session['created_abha_id'] = {
-            'abha_id': abha_id,
-            'name': data.get('name'),
-            'mobile': mobile,
-            'created_at': datetime.now().isoformat()
-        }
+        if not stored_data:
+            return JsonResponse({
+                'success': False,
+                'error': 'OTP not found or expired. Please request a new OTP.'
+            }, status=400)
         
-        logger.info(f"ABHA ID created: {abha_id} for {data.get('name')}")
+        # Check if OTP is expired (5 minutes)
+        otp_time = datetime.fromisoformat(stored_data['timestamp'])
+        if datetime.now() - otp_time > timedelta(minutes=5):
+            del request.session[session_key]
+            return JsonResponse({
+                'success': False,
+                'error': 'OTP has expired. Please request a new OTP.'
+            }, status=400)
+        
+        # Verify OTP
+        if stored_data['otp'] != data.get('otp'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid OTP. Please check and try again.'
+            }, status=400)
+        
+        # Check if user already has an ABHA ID
+        from patient.models import Patient
+        try:
+            patient = Patient.objects.get(user=request.user)
+            if patient.abha_id:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'You already have an ABHA ID: {patient.abha_id}'
+                }, status=400)
+        except Patient.DoesNotExist:
+            pass
+        
+        # Check uniqueness of user details (mobile, aadhaar)
+        existing_patient = Patient.objects.filter(
+            models.Q(mobile_number=mobile) | 
+            models.Q(contact_number=mobile) |
+            models.Q(abha_id__isnull=False)
+        ).exclude(user=request.user).first()
+        
+        if existing_patient:
+            return JsonResponse({
+                'success': False,
+                'error': 'A patient with this mobile number or Aadhaar already has an ABHA ID.'
+            }, status=400)
+        
+        # Generate unique ABHA ID
+        abha_id = generate_unique_abha_id()
+        
+        # Create or update patient record
+        patient, created = Patient.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'full_name': data.get('name'),
+                'date_of_birth': data.get('dob'),
+                'dob': data.get('dob'),
+                'gender': data.get('gender'),
+                'mobile_number': mobile,
+                'contact_number': mobile,
+                'email': request.user.email if request.user.email else '',
+                'address': '',
+                'abha_id': abha_id,
+            }
+        )
+        
+        if not created:
+            # Update existing patient with ABHA ID
+            patient.full_name = data.get('name')
+            patient.date_of_birth = data.get('dob')
+            patient.dob = data.get('dob')
+            patient.gender = data.get('gender')
+            patient.mobile_number = mobile
+            patient.contact_number = mobile
+            patient.abha_id = abha_id
+            patient.save()
+        
+        # Clear OTP session
+        del request.session[session_key]
+        
+        logger.info(f"ABHA ID created and stored: {abha_id} for user {request.user.username}")
         
         return JsonResponse({
             'success': True,
             'abha_id': abha_id,
-            'message': 'ABHA ID created successfully'
+            'message': 'ABHA ID created and stored successfully'
         })
         
     except Exception as e:
@@ -180,15 +253,33 @@ def create_abha_id(request):
             'error': 'Failed to create ABHA ID'
         }, status=500)
 
-def generate_abha_id():
+def generate_unique_abha_id():
     """
-    Generate a mock ABHA ID
-    In production, this would be handled by the ABHA API
+    Generate a unique ABHA ID in the format: ABHA-XX-YYYY-ZZZZ
+    Ensures uniqueness by checking against existing IDs in database
     """
-    # Generate a 14-character alphanumeric ABHA ID
-    prefix = 'ABHA'
-    suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-    return f"{prefix}{suffix}"
+    from patient.models import Patient
+    from django.db import models
+    
+    max_attempts = 1000
+    attempts = 0
+    
+    while attempts < max_attempts:
+        prefix = 'ABHA'
+        part1 = random.randint(10, 99)  # 2-digit number
+        part2 = random.randint(1000, 9999)  # 4-digit number
+        part3 = random.randint(1000, 9999)  # 4-digit number
+        
+        abha_id = f"{prefix}-{part1}-{part2}-{part3}"
+        
+        # Check if this ID already exists in the database
+        if not Patient.objects.filter(abha_id=abha_id).exists():
+            return abha_id
+        
+        attempts += 1
+    
+    # If we can't generate a unique ID after max attempts, raise an error
+    raise Exception("Unable to generate unique ABHA ID. Please try again.")
 
 @require_http_methods(["GET"])
 def check_abha_status(request):

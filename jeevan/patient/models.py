@@ -29,10 +29,10 @@ class Patient(models.Model):
     full_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True, blank=True, null=True)
     contact_number = models.CharField(max_length=15, blank=True, null=True)
-    mobile_number = models.CharField(max_length=15, blank=True, null=True)  # Added for ABHA
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)  # Added for ABHA compatibility
+    date_of_birth = models.DateField(blank=True, null=True)
     password = models.CharField(max_length=128, default='')  # Password field added
     profile_photo = models.ImageField(upload_to='patient_photos/', blank=True, null=True, help_text='Upload your profile photo')
 
@@ -42,7 +42,6 @@ class Patient(models.Model):
     pincode = models.CharField(max_length=10, blank=True, null=True)
 
     # Health Information
-    abha_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     emergency_number = models.CharField(max_length=15, blank=True, null=True)
     blood_group = models.CharField(max_length=5, choices=BLOOD_GROUP_CHOICES, blank=True, null=True)
     existing_condition = models.TextField(blank=True, null=True)

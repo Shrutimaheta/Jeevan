@@ -1,0 +1,111 @@
+<!-- This file contains the header and sidebar HTML that should be included in all receptionist templates -->
+<!-- Note: This is a reference file. The header and sidebar HTML needs to be copied to each template. -->
+
+<!-- Modern Header with Integrated Navigation -->
+<header class="modern-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a href="{% url 'receptionist:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                    <div class="logo-container">
+                            <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h1 class="logo-text">Patient Management System</h1>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <nav class="main-nav d-none d-md-flex justify-content-center">
+                    <!-- Navigation menu items removed -->
+                </nav>
+                </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center justify-content-end gap-3">
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            {% if receptionist.profile_picture %}
+                                <img src="{{ receptionist.profile_picture.url }}" alt="Profile" class="user-avatar">
+            {% else %}
+                                <div class="user-avatar-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+            {% endif %}
+                            <span class="user-name">{{ receptionist.full_name|default:"Receptionist" }}</span>
+                    </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'receptionist:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'receptionist:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'receptionist:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                            <li><a class="dropdown-item" href="{% url 'receptionist:doctor_schedule' %}"><i class="fas fa-user-md me-2"></i>Doctor Schedule</a></li>
+                            <li><a class="dropdown-item" href="{% url 'receptionist:patient_list' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'receptionist:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Sidebar Navigation -->
+<div class="healthcare-sidebar">
+    <!-- Receptionist Profile Section -->
+    <div class="healthcare-sidebar-profile">
+        <div class="healthcare-sidebar-avatar-placeholder">
+            {% if receptionist.profile_picture %}
+                <img src="{{ receptionist.profile_picture.url }}" alt="{{ receptionist.full_name|default:'Receptionist' }}">
+            {% else %}
+                <i class="fas fa-user"></i>
+            {% endif %}
+        </div>
+        <div class="healthcare-sidebar-user-info">
+            <div class="healthcare-sidebar-user-name">{{ receptionist.full_name|default:"Receptionist" }}</div>
+            <div class="healthcare-sidebar-user-email">{{ receptionist.hospital.name|default:"Hospital" }}</div>
+        </div>
+    </div>
+    
+    <nav class="healthcare-nav">
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:dashboard' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:appointments' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'appointments' %}active{% endif %}">
+                <i class="fas fa-calendar-check"></i>
+                <span>Appointments</span>
+            </a>
+        </div>
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:doctor_schedule' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'doctor_schedule' %}active{% endif %}">
+                <i class="fas fa-user-md"></i>
+                <span>Doctor Schedules</span>
+            </a>
+        </div>
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:doctor_availability' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'doctor_availability' %}active{% endif %}">
+                <i class="fas fa-clock"></i>
+                <span>Doctor Availability</span>
+            </a>
+        </div>
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:patient_list' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Patient Registration</span>
+            </a>
+        </div>
+        <div class="healthcare-nav-item">
+            <a href="{% url 'receptionist:profile' %}" class="healthcare-nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="fas fa-user-edit"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+</div>
+

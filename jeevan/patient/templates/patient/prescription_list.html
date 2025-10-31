@@ -1,0 +1,243 @@
+{% extends 'patient/base.html' %}
+
+{% block title %}My Prescriptions - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .prescription-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e3f2fd;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .prescription-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: #2196f3;
+    }
+    
+    .prescription-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: linear-gradient(135deg, #4caf50, #388e3c);
+        color: white;
+    }
+    
+    .prescription-meta {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .empty-state {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 16px;
+        padding: 60px 40px;
+        text-align: center;
+    }
+    
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 48px;
+        color: #2196f3;
+    }
+    
+    .status-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .status-prescribed {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+    
+    .status-completed {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-2" style="font-size: 32px; font-weight: 700; color: #2c3e50;">
+                        <i class="fas fa-prescription me-3" style="color: #4caf50;"></i>My Prescriptions
+                    </h1>
+                    <p class="text-muted mb-0" style="font-size: 16px;">View all your prescriptions from completed appointments</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'patient:profile_dashboard' %}" class="btn btn-outline-secondary btn-lg px-4 py-3" style="border-radius: 12px; font-weight: 600;">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prescriptions Grid -->
+    {% if prescriptions %}
+        <div class="row">
+            {% for prescription in prescriptions %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card prescription-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="prescription-icon me-3">
+                                <i class="fas fa-prescription-bottle-alt"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-2" style="font-size: 18px; font-weight: 600; color: #2c3e50; line-height: 1.3;">
+                                    Dr. {{ prescription.doctor.full_name }}
+                                </h5>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="status-badge status-prescribed">Prescribed</span>
+                                    <span class="badge bg-primary" style="font-size: 12px; padding: 6px 10px;">
+                                        {{ prescription.appointment.hospital.name }}
+                                    </span>
+                                </div>
+                                {% if prescription.diagnosis %}
+                                    <p class="text-muted mb-3" style="font-size: 14px; line-height: 1.4;">
+                                        <strong>Diagnosis:</strong> {{ prescription.diagnosis|truncatechars:80 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="prescription-meta">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ prescription.appointment.appointment_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="prescription-meta">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ prescription.appointment.appointment_time|time:"g:i A" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if prescription.medications %}
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1" style="font-size: 12px; font-weight: 600;">MEDICATIONS:</small>
+                            <p class="text-dark small mb-0" style="font-size: 13px; line-height: 1.4;">
+                                {{ prescription.medications|truncatechars:100 }}
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'patient:prescription_detail' prescription.id %}" class="action-btn btn btn-outline-primary" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            <small class="text-muted" style="font-size: 12px;">
+                                {{ prescription.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+            
+        <!-- Pagination -->
+        {% if prescriptions.has_other_pages %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <nav aria-label="Prescription pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if prescriptions.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" style="border-radius: 8px; margin: 0 2px; padding: 12px 16px;">
+                                    <i class="fas fa-angle-double-left me-1"></i>First
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prescriptions.previous_page_number }}" style="border-radius: 8px; margin: 0 2px; padding: 12px 16px;">
+                                    <i class="fas fa-angle-left me-1"></i>Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link" style="border-radius: 8px; margin: 0 2px; padding: 12px 16px; background: #4caf50; border-color: #4caf50;">
+                                Page {{ prescriptions.number }} of {{ prescriptions.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if prescriptions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prescriptions.next_page_number }}" style="border-radius: 8px; margin: 0 2px; padding: 12px 16px;">
+                                    Next<i class="fas fa-angle-right ms-1"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ prescriptions.paginator.num_pages }}" style="border-radius: 8px; margin: 0 2px; padding: 12px 16px;">
+                                    Last<i class="fas fa-angle-double-right ms-1"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-prescription-bottle-alt"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-size: 28px; font-weight: 600; color: #2c3e50;">No Prescriptions Found</h3>
+                    <p class="mb-4" style="font-size: 18px; color: #6c757d; max-width: 500px; margin: 0 auto;">
+                        You don't have any prescriptions yet. Prescriptions will appear here after your appointments are completed and the doctor provides them.
+                    </p>
+                    <a href="{% url 'patient:profile_dashboard' %}" class="btn btn-primary btn-lg px-5 py-3" style="border-radius: 12px; font-weight: 600; font-size: 18px;">
+                        <i class="fas fa-calendar-plus me-2"></i>Book an Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

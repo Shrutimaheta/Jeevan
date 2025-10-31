@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.views import View
 import json
@@ -14,7 +14,7 @@ from .help_views import *
 from .forgot_password_views import *
 from datetime import date, timedelta
 
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 
 def patient_list(request):
@@ -160,11 +160,43 @@ def patient_login(request):
     return render(request, 'patient/login.html', {'form': form})
 
 
+@login_required
 def patient_logout(request):
-    """Patient logout view"""
+    """Secure patient logout view with proper security measures"""
+    # Get user info before logout for logging
+    user_name = request.user.get_full_name() or request.user.username if request.user.is_authenticated else 'Unknown'
+    user_id = request.user.id if request.user.is_authenticated else None
+    
+    # Log the logout action for security audit
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f'Patient logout: User {user_name} (ID: {user_id}) logged out from IP: {request.META.get("REMOTE_ADDR")}')
+    
+    # Clear all session data securely
+    request.session.flush()
+    
+    # Logout user
     logout(request)
-    messages.info(request, 'You have been logged out.')
-    return redirect('patient:patient_login')
+    
+    # Create redirect response with logout parameter to trigger security measures
+    response = redirect('/?logout=true')
+    
+    # Clear any remaining cookies for security
+    response.delete_cookie('sessionid')
+    response.delete_cookie('csrftoken')
+    
+    # Add cache prevention headers to prevent back button issues
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['X-Frame-Options'] = 'DENY'
+    response['X-XSS-Protection'] = '1; mode=block'
+    
+    # Show success message
+    messages.success(request, 'You have been successfully logged out. Please login again to continue.')
+    
+    return response
 
 
 @login_required
@@ -253,7 +285,14 @@ def patient_dashboard(request):
         'medication_adherence': medication_adherence,
         'wellness_stats': wellness_stats,
     }
-    return render(request, 'patient/profile_dashboard.html', context)
+    response = render(request, 'patient/profile_dashboard.html', context)
+    
+    # Add cache prevention headers to prevent back button issues after logout
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 
 @login_required
@@ -457,7 +496,7 @@ def document_delete(request, document_id):
 
 @login_required
 def document_download(request, document_id):
-    """View to download a document"""
+    """View to download or view a document"""
     try:
         patient = Patient.objects.get(user=request.user)
     except Patient.DoesNotExist:
@@ -466,8 +505,30 @@ def document_download(request, document_id):
     
     try:
         document = PatientDocument.objects.get(id=document_id, patient=patient)
-        response = HttpResponse(document.file.read(), content_type='application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{document.title}.{document.file_extension.lower()}"'
+        
+        # Check if viewing in browser is requested (for PDFs and images)
+        view_mode = request.GET.get('view', 'false').lower() == 'true'
+        file_ext = document.file_extension.lower()
+        
+        # Determine content type
+        content_types = {
+            'pdf': 'application/pdf',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+        }
+        content_type = content_types.get(file_ext, 'application/octet-stream')
+        
+        # For PDFs and images, allow viewing in browser if requested
+        if view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif']:
+            response = HttpResponse(document.file.read(), content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{document.title}.{file_ext}"'
+        else:
+            # Force download for other file types or when download is requested
+            response = HttpResponse(document.file.read(), content_type=content_type)
+            response['Content-Disposition'] = f'attachment; filename="{document.title}.{file_ext}"'
+        
         return response
     except PatientDocument.DoesNotExist:
         messages.error(request, 'Document not found.')
@@ -491,11 +552,16 @@ def profile_dashboard(request):
     
     hospitals = Hospital.objects.all().prefetch_related('specialization', 'doctor_set__specialization')
     
-    # Get upcoming appointments (today and future) - exclude cancelled
+    # Get all specializations
+    from care.models import Specialization
+    specializations = Specialization.objects.all()
+    
+    # Get upcoming appointments (today and future) - only accepted status, exclude cancelled
     today = date.today()
     upcoming_appointments = Appointment.objects.filter(
         patient=patient,
-        appointment_date__gte=today
+        appointment_date__gte=today,
+        status='accepted'
     ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:5]
     
     # Get all appointments for stats (exclude cancelled)
@@ -511,9 +577,31 @@ def profile_dashboard(request):
     # Get recent appointments (last 5)
     recent_appointments = all_appointments.order_by('-created_at')[:5]
 
-    return render(request, 'patient/profile_dashboard.html', {
+    # Get prescriptions from completed appointments
+    from doctor.models import AppointmentPrescription
+    prescriptions = AppointmentPrescription.objects.filter(
+        appointment__patient=patient
+    ).select_related('doctor', 'appointment').order_by('-created_at')[:5]
+
+    # Get reports from PatientDocument (report, lab_result, scan types)
+    reports = PatientDocument.objects.filter(
+        patient=patient,
+        document_type__in=['report', 'lab_result', 'scan']
+    ).order_by('-uploaded_at')[:5]
+    
+    # Get pending consent requests from doctors
+    from doctor.models import Consent
+    pending_consents = Consent.objects.filter(
+        patient=patient,
+        status='pending'
+    ).select_related('doctor').order_by('-requested_at')
+    
+    bills_due_total = 0  # Placeholder for bills
+
+    response = render(request, 'patient/profile_dashboard.html', {
         'patient': patient,
         'hospitals': hospitals,
+        'specializations': specializations,
         'upcoming_appointments': upcoming_appointments,
         'recent_appointments': recent_appointments,
         'total_appointments': total_appointments,
@@ -521,7 +609,19 @@ def profile_dashboard(request):
         'pending_appointments': pending_appointments,
         'rejected_appointments': rejected_appointments,
         'completed_appointments': completed_appointments,
+        'prescriptions': prescriptions,
+        'reports': reports,
+        'bills_due_total': bills_due_total,
+        'pending_consents': pending_consents,
+        'pending_consents_count': pending_consents.count(),
     })
+    
+    # Add cache prevention headers to prevent back button issues after logout
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 
 @login_required
@@ -534,6 +634,7 @@ def dashboard_data(request):
         return JsonResponse({'error': 'Patient not found'}, status=404)
 
     from appointments.models import Appointment
+    from datetime import date
     today = date.today()
     upcoming = list(Appointment.objects.filter(patient=patient, appointment_date__gte=today)
                     .exclude(status='cancelled')
@@ -568,6 +669,78 @@ def dashboard_data(request):
         'stats': stats,
         'recentPrescriptions': recent_prescriptions,
     })
+
+
+@login_required
+def consent_requests(request):
+    """View to display and manage consent requests from doctors"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+    
+    # Get pending consent requests from doctors
+    from doctor.models import Consent
+    pending_consents = Consent.objects.filter(
+        patient=patient,
+        status='pending'
+    ).select_related('doctor', 'doctor__hospital').order_by('-requested_at')
+    
+    # Get all consent history (approved, rejected, expired)
+    all_consents = Consent.objects.filter(
+        patient=patient
+    ).select_related('doctor', 'doctor__hospital').order_by('-requested_at')
+    
+    context = {
+        'patient': patient,
+        'pending_consents': pending_consents,
+        'all_consents': all_consents,
+        'pending_count': pending_consents.count(),
+    }
+    
+    return render(request, 'patient/consent_requests.html', context)
+
+
+@login_required
+def upload_report(request):
+    """Handle report upload functionality"""
+    print(f"Upload request method: {request.method}")
+    print(f"CSRF token in request: {request.META.get('HTTP_X_CSRFTOKEN')}")
+    print(f"CSRF token in POST: {request.POST.get('csrfmiddlewaretoken')}")
+    
+    if request.method == 'POST':
+        try:
+            patient = Patient.objects.get(user=request.user)
+            
+            # Get form data
+            title = request.POST.get('title', '')
+            file = request.FILES.get('file')
+            
+            if not title or not file:
+                return JsonResponse({'error': 'Title and file are required'}, status=400)
+            
+            # Create a PatientDocument record
+            document = PatientDocument.objects.create(
+                patient=patient,
+                title=title,
+                document_type='report',
+                file=file,
+                description=f"Report uploaded: {title}"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Report uploaded successfully',
+                'document_id': document.id
+            })
+            
+        except Patient.DoesNotExist:
+            return JsonResponse({'error': 'Patient not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 # Helper functions for health calculations
@@ -764,3 +937,57 @@ def calculate_wellness_stats(patient):
         'total_steps': total_steps,
         'days_logged': days_logged
     }
+
+
+# ABHA integration removed
+
+
+@login_required
+def prescription_list(request):
+    """View to list all prescriptions for the logged-in patient"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+        
+        # Get all prescriptions for this patient through appointments
+        from doctor.models import AppointmentPrescription
+        prescriptions = AppointmentPrescription.objects.filter(
+            appointment__patient=patient
+        ).select_related('appointment', 'doctor', 'appointment__hospital').order_by('-created_at')
+        
+        # Pagination
+        from django.core.paginator import Paginator
+        paginator = Paginator(prescriptions, 10)  # Show 10 prescriptions per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'prescriptions': page_obj,
+            'patient': patient
+        }
+        return render(request, 'patient/prescription_list.html', context)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')
+
+
+@login_required
+def prescription_detail(request, prescription_id):
+    """View to show detailed prescription information"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+        
+        from doctor.models import AppointmentPrescription
+        prescription = get_object_or_404(
+            AppointmentPrescription.objects.select_related('appointment', 'doctor', 'appointment__hospital'),
+            id=prescription_id,
+            appointment__patient=patient
+        )
+        
+        context = {
+            'prescription': prescription,
+            'patient': patient
+        }
+        return render(request, 'patient/prescription_detail.html', context)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient profile not found.')
+        return redirect('patient:patient_login')

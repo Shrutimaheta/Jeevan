@@ -63,31 +63,6 @@ class Doctor(models.Model):
 
 from appointments.models import Appointment
 
-
-class Language(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
-# Extend Doctor with languages spoken
-Doctor.add_to_class('languages', models.ManyToManyField(Language, blank=True))
-
-
-class Review(models.Model):
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='reviews')
-    patient_name = models.CharField(max_length=255)
-    rating = models.PositiveSmallIntegerField(default=5)
-    comment = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Review {self.rating}★ for {self.doctor.full_name}"
-
 class AppointmentPrescription(models.Model):
     appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='prescription')
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescriptions')
@@ -105,3 +80,98 @@ class AppointmentPrescription(models.Model):
 
     def __str__(self):
         return f"Prescription for Appointment {self.appointment_id}"
+
+
+from django.utils import timezone
+from patient.models import Patient
+
+
+class Consent(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('expired', 'Expired'),
+    ]
+    
+    id = models.BigAutoField(primary_key=True)
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pending',
+        help_text='Current status of the consent request'
+    )
+    requested_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='When the consent was requested'
+    )
+    responded_at = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text='When the patient responded to the consent request'
+    )
+    expires_at = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text='When the consent expires (if applicable)'
+    )
+    reason = models.TextField(
+        blank=True, 
+        help_text='Reason for requesting access to medical reports'
+    )
+    notes = models.TextField(
+        blank=True, 
+        help_text='Additional notes from patient'
+    )
+    doctor = models.ForeignKey(
+        Doctor, 
+        on_delete=models.CASCADE, 
+        related_name='consent_requests',
+        help_text='Doctor requesting access'
+    )
+    patient = models.ForeignKey(
+        Patient, 
+        on_delete=models.CASCADE, 
+        related_name='consent_requests',
+        help_text='Patient whose reports are being accessed'
+    )
+
+    class Meta:
+        verbose_name = 'Consent Request'
+        verbose_name_plural = 'Consent Requests'
+        ordering = ['-requested_at']
+        unique_together = ('doctor', 'patient')
+
+    def __str__(self):
+        return f"Consent: {self.doctor.full_name} -> {self.patient.full_name} ({self.status})"
+    
+    def is_approved(self):
+        """Check if consent is approved and not expired"""
+        if self.status != 'approved':
+            return False
+        
+        if self.expires_at and timezone.now() > self.expires_at:
+            self.status = 'expired'
+            self.save()
+            return False
+        
+        return True
+    
+    def approve(self, notes=''):
+        """Approve the consent request"""
+        self.status = 'approved'
+        self.responded_at = timezone.now()
+        self.notes = notes
+        self.save()
+    
+    def reject(self, notes=''):
+        """Reject the consent request"""
+        self.status = 'rejected'
+        self.responded_at = timezone.now()
+        self.notes = notes
+        self.save()
+    
+    def set_expiry(self, days=30):
+        """Set expiry date for the consent"""
+        self.expires_at = timezone.now() + timezone.timedelta(days=days)
+        self.save()
