@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from care.models import Hospital
 from doctor.models import Doctor
 from patient.models import Patient
@@ -11,6 +12,7 @@ class Appointment(models.Model):
         ('rejected', 'Rejected'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
     ]
 
     PAYMENT_MODE_CHOICES = [
@@ -21,7 +23,6 @@ class Appointment(models.Model):
         ('insurance', 'Insurance'),
     ]
 
-    abha_id = models.CharField(max_length=20, unique=True, help_text="ABHA ID for the appointment", default="")
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="appointments")
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name="appointments")
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name="appointments")
@@ -48,6 +49,33 @@ class Appointment(models.Model):
     def can_edit(self):
         """Check if appointment can be edited (only if pending)"""
         return self.status == 'pending'
+    
+    @property
+    def is_expired(self):
+        """Check if appointment date has passed"""
+        today = timezone.now().date()
+        return self.appointment_date < today
+    
+    def check_and_update_expired_status(self):
+        """Check if appointment should be marked as expired and update status"""
+        # Only mark as expired if:
+        # 1. The appointment date has passed
+        # 2. The current status is 'pending' (not manually handled)
+        if self.is_expired and self.status == 'pending':
+            self.status = 'expired'
+            self.save(update_fields=['status'])
+            return True
+        return False
+    
+    @classmethod
+    def mark_expired_appointments(cls):
+        """Class method to mark all expired pending appointments"""
+        today = timezone.now().date()
+        expired_count = cls.objects.filter(
+            appointment_date__lt=today,
+            status='pending'
+        ).update(status='expired')
+        return expired_count
     
     @property
     def can_cancel(self):

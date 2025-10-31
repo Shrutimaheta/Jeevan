@@ -110,7 +110,7 @@ const PatientDashboardApp: React.FC = () => {
                 <p className="text-muted mb-3 mb-md-0">Book your next check-up now and keep your records organized.</p>
               </div>
               <div className="text-end flex-shrink-0">
-                <a href="/appointments/book/" className="btn btn-primary btn-lg">Book Appointment</a>
+                <a href="/appointments/create/" className="btn btn-primary btn-lg">Book Appointment</a>
               </div>
             </div>
           </div>

@@ -11,109 +11,83 @@
 #     filter_horizontal = ['specialization']
 
 from django.contrib import admin
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import reverse
 from .models import Doctor
 from .forms import DoctorAdminForm
-from django.urls import reverse
-from django.utils.html import format_html
+from care.models import CustomUser
 
 @admin.register(Doctor)
 class DoctorAdmin(admin.ModelAdmin):
     form = DoctorAdminForm
     # Columns displayed in the admin list view
-    list_display = ('id', 'full_name', 'hospital', 'get_specializations', 'gender', 'contact_number', 'email', 'registration_number', 'qualification', 'experience', 'is_active')
+    list_display = ('id', 'full_name', 'hospital', 'get_specializations', 'gender', 'registration_number', 'experience', 'user')
     
     # Fields to search
-    search_fields = ('full_name', 'registration_number', 'qualification')
+    search_fields = ('full_name', 'registration_number', 'user__username', 'user__email')
     
     # Sidebar filters
-    list_filter = ('hospital', 'specialization', 'gender', 'qualification', 'is_active', 'created_at')
+    list_filter = ('hospital', 'specialization', 'gender', 'is_active')
     
     # For ManyToMany fields, use horizontal filter widget
     filter_horizontal = ('specialization',)
     
-    # Fieldsets for better organization
+    # Fields to display in the form
     fieldsets = (
-        ('Basic Information', {
-            'fields': ('user', 'hospital', 'full_name', 'gender', 'dob', 'contact_number', 'email')
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Personal Information', {
+            'fields': ('full_name', 'gender', 'dob', 'profile_picture')
         }),
         ('Professional Information', {
-            'fields': ('registration_number', 'qualification', 'experience', 'specialization')
+            'fields': ('hospital', 'specialization', 'registration_number', 'experience', 'qualification')
         }),
-        ('Contact & Profile', {
-            'fields': ('address', 'profile_picture')
-        }),
-        ('Status & Timestamps', {
-            'fields': ('is_active', 'created_at', 'updated_at'),
+        ('Additional Information', {
+            'fields': ('address', 'rating', 'accepts_insurance', 'is_active'),
             'classes': ('collapse',)
         }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
     )
     
-    # Make some fields read-only
     readonly_fields = ('created_at', 'updated_at')
-
-    class Media:
-        js = (
-            'admin/js/vendor/jquery/jquery.min.js',
-            'js/doctor_admin_autofill.js',
-        )
-
-        # Inline script to auto-fill fields based on selected user
-        def render(self):
-            pass
-
-    def get_fieldsets(self, request, obj=None):
-        # On add view, only show essential registration fields
-        if obj is None:
-            return (
-                (None, {
-                    'fields': (
-                        'user',
-                        'hospital',
-                        'full_name',
-                        'gender',
-                        'dob',
-                        'contact_number',
-                        'email',
-                        'specialization',
-                    )
-                }),
-            )
-        # On change view, show full fieldsets
-        return super().get_fieldsets(request, obj)
 
     # Custom method to show ManyToMany field in list_display
     def get_specializations(self, obj):
         return ", ".join([s.sname for s in obj.specialization.all()])
     get_specializations.short_description = 'Specializations'
     
-    # Custom method to display contact number from linked user
-    def contact_number(self, obj):
-        """Display contact number from linked user"""
-        if obj.user:
-            # Force a fresh query from database to get latest data
-            from care.models import CustomUser
-            try:
-                fresh_user = CustomUser.objects.get(id=obj.user.id)
-                contact_num = fresh_user.contact_number
-                print(f"DEBUG: Doctor {obj.full_name} - User: {fresh_user.username}, Contact: '{contact_num}'")
-                return contact_num or '-'
-            except CustomUser.DoesNotExist:
-                print(f"DEBUG: Doctor {obj.full_name} - User not found")
-                return '-'
-        print(f"DEBUG: Doctor {obj.full_name} - No user")
-        return '-'
-    contact_number.short_description = 'Contact Number'
+    def get_readonly_fields(self, request, obj=None):
+        # Make user field readonly when editing existing doctor
+        if obj:  # editing an existing object
+            return self.readonly_fields + ('user',)
+        return self.readonly_fields
     
-    # Custom method to display email from linked user
-    def email(self, obj):
-        """Display email from linked user"""
-        if obj.user:
-            # Force a fresh query from database to get latest data
-            from care.models import CustomUser
-            try:
-                fresh_user = CustomUser.objects.get(id=obj.user.id)
-                return fresh_user.email or '-'
-            except CustomUser.DoesNotExist:
-                return '-'
-        return '-'
-    email.short_description = 'Email'
+    def save_model(self, request, obj, form, change):
+        # If creating a new doctor, ensure the user has role='doctor'
+        if not change:  # creating new object
+            if obj.user.role != 'doctor':
+                messages.error(request, f"Selected user '{obj.user.username}' does not have doctor role. Please select a user with doctor role or create a new doctor user.")
+                return
+        
+        super().save_model(request, obj, form, change)
+        
+        if not change:
+            messages.success(request, f"Doctor '{obj.full_name}' created successfully!")
+    
+    def add_view(self, request, form_url='', extra_context=None):
+        # Check if there are any users with doctor role
+        doctor_users = CustomUser.objects.filter(role='doctor')
+        if not doctor_users.exists():
+            messages.warning(request, 
+                "No users with 'doctor' role found. Please create a user with doctor role first. "
+                "<a href='{}'>Create Doctor User</a>".format(
+                    reverse('admin:care_customuser_add')
+                )
+            )
+        
+        return super().add_view(request, form_url, extra_context)

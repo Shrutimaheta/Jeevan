@@ -16,6 +16,11 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Universal authentication - root login
+    path('login/', views.universal_login, name='universal_login'),
+    path('logout/', views.universal_logout, name='universal_logout'),
+    path('', views.home, name='home'),
 
     path('receptionist/', include('receptionist.urls')),
     path('doctor/', include('doctor.urls')),
@@ -31,7 +36,8 @@ urlpatterns = [
     path('patient-home/', views.patient_home, name='patient_home'),
     path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
     path('hospitals/<int:hospital_id>/doctors/', views.hospital_doctors, name='hospital_doctors'),
-    path('appointments/book/', views.book_appointment, name='book_appointment'),
+    # Backward-compat: redirect old /appointments/book/ to /appointments/create/
+    path('appointments/book/', views.redirect_book_to_create, name='book_appointment_legacy'),
     path('chat/dialogflow/webhook/', views.dialogflow_webhook, name='dialogflow_webhook'),
     path('htmx/hospitals/', views.htmx_filter_hospitals, name='htmx_filter_hospitals'),
     path('htmx/doctors/', views.htmx_filter_doctors, name='htmx_filter_doctors'),
@@ -45,6 +51,11 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns = [
         path('admin/', admin.site.urls),
+        
+        # Universal authentication - root login
+        path('login/', views.universal_login, name='universal_login'),
+        path('logout/', views.universal_logout, name='universal_logout'),
+        path('', views.home, name='home'),
 
         path('receptionist/', include('receptionist.urls')),
         path('doctor/', include('doctor.urls')),
@@ -61,7 +72,8 @@ if settings.DEBUG:
         path('patient-home/', views.patient_home, name='patient_home'),
         path('vaidya-login/', views.vaidya_login, name='vaidya_login'),
         path('hospitals/<int:hospital_id>/doctors/', views.hospital_doctors, name='hospital_doctors'),
-        path('appointments/book/', views.book_appointment, name='book_appointment'),
+        # Backward-compat in DEBUG too
+        path('appointments/book/', views.redirect_book_to_create, name='book_appointment_legacy'),
         path('chat/dialogflow/webhook/', views.dialogflow_webhook, name='dialogflow_webhook'),
         path('htmx/hospitals/', views.htmx_filter_hospitals, name='htmx_filter_hospitals'),
         path('htmx/doctors/', views.htmx_filter_doctors, name='htmx_filter_doctors'),

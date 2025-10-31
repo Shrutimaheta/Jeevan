@@ -14,19 +14,80 @@ import json
 
 @login_required
 def appointment_list(request):
-    """Display list of appointments for the logged-in patient (exclude cancelled)"""
+    """Display list of appointments for the logged-in patient (exclude cancelled by default)"""
     try:
         patient = Patient.objects.get(user=request.user)
-        appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled').order_by('-created_at')
         
+        # Mark expired appointments before processing
+        Appointment.mark_expired_appointments()
+        
+        # Optional status filter via query param (?status=pending|accepted|rejected|completed|expired|cancelled|all)
+        selected_status = request.GET.get('status', '').strip().lower()
+        
+        appointments_qs = Appointment.objects.filter(patient=patient)
+        
+        # By default, exclude cancelled appointments unless explicitly requested
+        if selected_status == 'all':
+            # "All Statuses" includes cancelled appointments
+            # Don't exclude any status
+            pass
+        elif selected_status:
+            valid_statuses = {'pending', 'accepted', 'rejected', 'completed', 'expired', 'cancelled'}
+            if selected_status in valid_statuses:
+                appointments_qs = appointments_qs.filter(status=selected_status)
+            else:
+                # If invalid status, default to excluding cancelled
+                appointments_qs = appointments_qs.exclude(status='cancelled')
+        else:
+            # Default (no filter): show all except cancelled
+            appointments_qs = appointments_qs.exclude(status='cancelled')
+
+        appointments = appointments_qs.order_by('-created_at')
+
+        # Get hospitals and specializations for booking modal
+        from care.models import Specialization
+        hospitals = Hospital.objects.all().prefetch_related('specialization', 'doctor_set__specialization')
+        specializations = Specialization.objects.all()
+
         context = {
             'appointments': appointments,
-            'patient': patient
+            'patient': patient,
+            'selected_status': selected_status or 'all',
+            'hospitals': hospitals,
+            'specializations': specializations,
         }
         return render(request, 'appointments/appointment_list.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')
+
+@login_required
+def appointment_list_accepted(request):
+    """Display only accepted appointments for the logged-in patient"""
+    try:
+        patient = Patient.objects.get(user=request.user)
+        Appointment.mark_expired_appointments()
+        appointments = (
+            Appointment.objects
+            .filter(patient=patient, status='accepted')
+            .order_by('-created_at')
+        )
+        # Get hospitals and specializations for booking modal
+        from care.models import Specialization
+        hospitals = Hospital.objects.all().prefetch_related('specialization', 'doctor_set__specialization')
+        specializations = Specialization.objects.all()
+        
+        context = {
+            'appointments': appointments,
+            'patient': patient,
+            'accepted_only': True,
+            'hospitals': hospitals,
+            'specializations': specializations,
+        }
+        return render(request, 'appointments/appointment_list.html', context)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient profile not found.")
+        return redirect('/login/')
 
 @login_required
 def appointment_create(request):
@@ -34,8 +95,30 @@ def appointment_create(request):
     try:
         patient = Patient.objects.get(user=request.user)
         
+        # Support pre-selection via query params (doctor or hospital)
+        preselect_hospital_id = request.GET.get('hospital')
+        preselect_doctor_id = request.GET.get('doctor')
+        # Ensure initial_data exists for both GET and POST code paths
+        initial_data = {}
+
         if request.method == 'POST':
-            form = AppointmentForm(request.POST, patient=patient)
+            # If doctor is preselected via query param, force hospital/doctor values
+            if preselect_doctor_id:
+                try:
+                    locked_doctor = Doctor.objects.get(id=preselect_doctor_id)
+                    post_data = request.POST.copy()
+                    post_data['hospital'] = str(locked_doctor.hospital_id)
+                    post_data['doctor'] = str(locked_doctor.id)
+                    # Keep for template context
+                    initial_data['hospital'] = locked_doctor.hospital_id
+                    initial_data['doctor'] = locked_doctor.id
+                    form = AppointmentForm(post_data, patient=patient)
+                    # Ensure the doctor choice is valid for the locked hospital
+                    form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=locked_doctor.hospital_id)
+                except Doctor.DoesNotExist:
+                    form = AppointmentForm(request.POST, patient=patient)
+            else:
+                form = AppointmentForm(request.POST, patient=patient)
             
             # If form is invalid, reload doctor choices based on selected hospital
             if not form.is_valid() and 'hospital' in form.data:
@@ -47,42 +130,84 @@ def appointment_create(request):
             if form.is_valid():
                 appointment = form.save(commit=False)
                 appointment.patient = patient
-                
-                # Handle ABHA ID - if not provided, generate internal patient code
-                if not appointment.abha_id:
-                    from datetime import datetime
-                    # Generate internal patient code: P + YYYYMMDD + 3-digit sequence
-                    today = datetime.now()
-                    date_str = today.strftime('%Y%m%d')
-                    
-                    # Get the count of appointments for this patient today
-                    today_appointments = Appointment.objects.filter(
-                        patient=patient,
-                        created_at__date=today.date()
-                    ).count()
-                    
-                    # Generate unique internal code
-                    sequence = str(today_appointments + 1).zfill(3)
-                    appointment.abha_id = f"P{date_str}{sequence}"
-                
                 appointment.save()
                 messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
                 return redirect('appointments:appointment_list')
             else:
-                # Debug: Print form errors
-                print("Form errors:", form.errors)
-                print("Form data:", form.data)
+                # Check for slot busy errors specifically
+                slot_busy_error = None
+                
+                # Check non_field_errors first (from clean() method)
+                if form.non_field_errors():
+                    for error in form.non_field_errors():
+                        error_str = str(error)
+                        # Check if this is a slot busy error
+                        if 'time slot is already booked' in error_str.lower() or 'already booked' in error_str.lower() or 'slot' in error_str.lower():
+                            slot_busy_error = error_str
+                        else:
+                            messages.error(request, str(error))
+                
+                # Check field errors
+                for field, errors in form.errors.items():
+                    if field != '__all__':  # Skip non_field_errors already handled
+                        for error in errors:
+                            error_str = str(error)
+                            # Check if this is a slot busy error
+                            if 'time slot is already booked' in error_str.lower() or 'already booked' in error_str.lower() or 'slot' in error_str.lower():
+                                slot_busy_error = error_str
+                            else:
+                                messages.error(request, f"{field}: {error}")
+                
+                # Store slot busy error separately for modal display
+                context = {
+                    'form': form,
+                    'patient': patient,
+                    'lock_selection': bool(preselect_doctor_id),
+                    'locked_hospital_id': initial_data.get('hospital'),
+                    'locked_doctor_id': initial_data.get('doctor'),
+                    'slot_busy_error': slot_busy_error,
+                }
+                return render(request, 'appointments/appointment_create.html', context)
         else:
-            form = AppointmentForm(patient=patient)
+            # Build initial data for GET based on query params
+            if preselect_doctor_id:
+                try:
+                    selected_doctor = Doctor.objects.get(id=preselect_doctor_id)
+                    initial_data['hospital'] = selected_doctor.hospital_id
+                    initial_data['doctor'] = selected_doctor.id
+                except Doctor.DoesNotExist:
+                    pass
+            elif preselect_hospital_id:
+                try:
+                    initial_data['hospital'] = int(preselect_hospital_id)
+                except (TypeError, ValueError):
+                    pass
+
+            form = AppointmentForm(patient=patient, initial=initial_data)
+
+            # If doctor is preselected, constrain doctor queryset to that hospital so the option exists
+            if 'doctor' in initial_data and 'hospital' in initial_data:
+                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'])
+                # Lock both hospital and doctor if a doctor is preselected (coming from hospital doctors page)
+                form.fields['hospital'].widget.attrs['disabled'] = True
+                form.fields['doctor'].widget.attrs['disabled'] = True
+            # If only hospital is preselected, start with an empty doctor list until AJAX fills it, but allow manual selection
+            elif 'hospital' in initial_data:
+                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'])
         
         context = {
             'form': form,
-            'patient': patient
+            'patient': patient,
+            # Expose locking state to the template so we can include hidden inputs for disabled fields
+            'lock_selection': bool(preselect_doctor_id),
+            'locked_hospital_id': initial_data.get('hospital'),
+            'locked_doctor_id': initial_data.get('doctor'),
+            'slot_busy_error': None,  # No error on GET request
         }
         return render(request, 'appointments/appointment_create.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')
 
 @login_required
 def appointment_update(request, appointment_id):
@@ -116,7 +241,7 @@ def appointment_update(request, appointment_id):
         return render(request, 'appointments/appointment_update.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')
 
 @login_required
 def appointment_cancel(request, appointment_id):
@@ -142,7 +267,7 @@ def appointment_cancel(request, appointment_id):
         return render(request, 'appointments/appointment_cancel.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')
 
 @login_required
 def get_doctors(request):
@@ -180,7 +305,7 @@ def doctor_selection(request, hospital_id):
         return render(request, 'appointments/doctor_selection.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')
 
 @login_required
 def appointment_detail(request, appointment_id):
@@ -196,4 +321,4 @@ def appointment_detail(request, appointment_id):
         return render(request, 'appointments/appointment_detail.html', context)
     except Patient.DoesNotExist:
         messages.error(request, "Patient profile not found.")
-        return redirect('patient:patient_login')
+        return redirect('/login/')

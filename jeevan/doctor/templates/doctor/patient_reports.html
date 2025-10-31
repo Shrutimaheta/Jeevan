@@ -1,0 +1,581 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Medical Reports - Patient Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/healthcare-theme.css' %}" rel="stylesheet">
+    <style>
+        /* Modern Header Styles matching dashboard */
+        .modern-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .user-section {
+            position: relative;
+        }
+        
+        .welcome-text {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            min-height: calc(100vh - 80px);
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 80px;
+            z-index: 999;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .healthcare-profile {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .healthcare-profile-name {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-profile-role {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .healthcare-nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .healthcare-nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-right: 3px solid white;
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content Styles */
+        .healthcare-main {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+            background: #f8f9fa;
+        }
+        
+        /* Report Card Styles */
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        
+        .report-header {
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .report-title {
+            color: #1e3a8a;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .report-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .report-content {
+            margin-bottom: 1rem;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        /* Dark Blue Button Theme */
+        .btn-primary {
+            background-color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-outline-primary {
+            color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        /* Page Title Styles */
+        .page-title {
+            color: #1e3a8a;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <div class="logo-container">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="user-section d-flex align-items-center justify-content-end gap-3">
+                        <span class="welcome-text">Welcome Dr. {{ doctor.full_name|default:"Doctor" }}</span>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Healthcare Sidebar -->
+    <aside class="healthcare-sidebar">
+        <div class="healthcare-profile">
+            <div class="healthcare-profile-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="healthcare-profile-name">Dr. {{ doctor.full_name|default:"Doctor" }}</div>
+            <div class="healthcare-profile-role">Healthcare Professional</div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>Edit Profile
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=accepted" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>Accepted Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-list"></i>All Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=pending" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>Pending Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=completed" class="healthcare-nav-link">
+                    <i class="fas fa-check-circle"></i>Completed Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:patients' %}" class="healthcare-nav-link">
+                    <i class="fas fa-users"></i>View Patients
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:calendar' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-alt"></i>Calendar View
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="healthcare-main">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="page-title">
+                        <i class="fas fa-file-medical me-2"></i>
+                        Medical Reports - {{ patient.full_name }}
+                    </h3>
+                    <p class="page-subtitle">View detailed medical reports and documents for this patient</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Patient
+                    </a>
+                </div>
+            </div>
+
+            <!-- Consent Status Alert -->
+            {% if has_consent %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Consent Approved:</strong> You have permission to view this patient's medical reports.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% elif consent_status == 'pending' %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-clock me-2"></i>
+                <strong>Consent Pending:</strong> Your consent request is waiting for patient approval.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% elif consent_status == 'rejected' %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Consent Rejected:</strong> The patient has rejected your request to view their medical reports.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% else %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Consent Required:</strong> You need patient consent to view their medical reports.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <!-- Medical Documents Section -->
+            {% if has_consent and documents %}
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">
+                        <i class="fas fa-file-medical me-2"></i>
+                        Medical Documents
+                    </h5>
+                    <p class="report-meta">{{ documents|length }} document{{ documents|length|pluralize }} found</p>
+                </div>
+                
+                <div class="row">
+                    {% for document in documents %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        {% if document.is_image %}
+                                            <i class="fas fa-image text-primary" style="font-size: 1.5rem;"></i>
+                                        {% elif document.is_pdf %}
+                                            <i class="fas fa-file-pdf text-danger" style="font-size: 1.5rem;"></i>
+                                        {% else %}
+                                            <i class="fas fa-file text-secondary" style="font-size: 1.5rem;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">{{ document.title }}</h6>
+                                        <p class="card-text text-muted small mb-1">
+                                            <span class="badge bg-primary">{{ document.get_document_type_display }}</span>
+                                            <span class="ms-2">{{ document.file_size }}</span>
+                                        </p>
+                                        <p class="card-text text-muted small mb-2">
+                                            Uploaded: {{ document.uploaded_at|date:"M d, Y g:i A" }}
+                                        </p>
+                                        {% if document.description %}
+                                            <p class="card-text small">{{ document.description }}</p>
+                                        {% endif %}
+                                        <div class="report-actions">
+                                            <a href="{{ document.file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye me-1"></i>View Document
+                                            </a>
+                                            <a href="{{ document.file.url }}" download class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Medical Records Section -->
+            {% if has_consent and medical_records %}
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Medical Records
+                    </h5>
+                    <p class="report-meta">{{ medical_records|length }} record{{ medical_records|length|pluralize }} found</p>
+                </div>
+                
+                {% for record in medical_records %}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                {{ record.created_at|date:"M d, Y" }}
+                            </h6>
+                            <small class="text-muted">{{ record.created_at|time:"g:i A" }}</small>
+                        </div>
+                        
+                        {% if record.summary %}
+                        <div class="mb-2">
+                            <strong>Summary:</strong>
+                            <p class="mb-1">{{ record.summary }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if record.diagnosis %}
+                        <div class="mb-2">
+                            <strong>Diagnosis:</strong>
+                            <p class="mb-1">{{ record.diagnosis }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if record.prescription %}
+                        <div class="mb-2">
+                            <strong>Prescription:</strong>
+                            <p class="mb-1">{{ record.prescription }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if record.next_dose_date %}
+                        <div class="mb-2">
+                            <strong>Next Dose Date:</strong>
+                            <span class="text-muted">{{ record.next_dose_date|date:"M d, Y" }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if record.report_file %}
+                        <div class="report-actions">
+                            <a href="{{ record.report_file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fas fa-file-alt me-1"></i>View Report File
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Empty State -->
+            {% if not has_consent %}
+            <div class="empty-state">
+                {% if consent_status == 'pending' %}
+                <i class="fas fa-clock"></i>
+                <h4>Consent Request Pending</h4>
+                <p>Your consent request is waiting for patient approval. You will be able to view medical reports once the patient grants permission.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'doctor:request_consent' patient.id %}" class="btn btn-primary">
+                        <i class="fas fa-redo me-1"></i>
+                        Request Consent Again
+                    </a>
+                    <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Patient Details
+                    </a>
+                </div>
+                {% elif consent_status == 'rejected' %}
+                <i class="fas fa-times-circle"></i>
+                <h4>Consent Rejected</h4>
+                <p>The patient has rejected your request to view their medical reports. You cannot access their medical information.</p>
+                <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Patient Details
+                </a>
+                {% else %}
+                <i class="fas fa-shield-alt"></i>
+                <h4>Consent Required</h4>
+                <p>You need patient consent to view their medical reports. Please request consent from the patient first.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'doctor:request_consent' patient.id %}" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Request Consent
+                    </a>
+                    <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Patient Details
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% elif not documents and not medical_records %}
+            <div class="empty-state">
+                <i class="fas fa-file-medical"></i>
+                <h4>No Medical Reports Found</h4>
+                <p>This patient doesn't have any medical reports or documents uploaded yet.</p>
+                <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Patient Details
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout/';
+            }
+        }
+    </script>
+</body>
+</html>

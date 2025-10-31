@@ -1,0 +1,803 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Consent - Patient Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/healthcare-theme.css' %}" rel="stylesheet">
+    <style>
+        /* CSS Variables matching profile theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        /* Modern Header Styles matching profile */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: calc(100vh - 72px);
+            position: fixed;
+            left: 0;
+            top: 72px;
+            width: 250px;
+            z-index: 999;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .healthcare-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-user-info,
+        .healthcare-sidebar.collapsed .healthcare-nav-link span {
+            display: none;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link i {
+            margin-right: 0;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-profile {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-avatar-placeholder {
+            margin: 0;
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-height: 100px;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+        
+        .healthcare-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .healthcare-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .healthcare-nav-link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Main Content Styles */
+        .healthcare-main {
+            margin-left: 250px;
+            margin-top: 72px;
+            padding: 2rem;
+            min-height: calc(100vh - 72px);
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .healthcare-main.sidebar-collapsed {
+            margin-left: 70px;
+        }
+        
+        /* Consent Card Styles */
+        .consent-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Dark Blue Button Theme */
+        .btn-primary {
+            background-color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-outline-primary {
+            color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #1e3a8a !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        /* Page Title Styles */
+        .page-title {
+            color: #1e3a8a;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Form Styles */
+        .form-label {
+            color: #1e3a8a;
+            font-weight: 500;
+        }
+        
+        .form-control:focus {
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 0.2rem rgba(30, 58, 138, 0.25);
+        }
+        
+        /* Alert Styles */
+        .alert-info {
+            background-color: #e7f3ff;
+            border-color: #1e3a8a;
+            color: #1e3a8a;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <a href="{% url 'doctor:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                                <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {% if doctor.profile_picture %}
+                                    <img src="{{ doctor.profile_picture.url }}" alt="Profile" class="user-avatar">
+                {% else %}
+                                    <div class="user-avatar-placeholder">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                {% endif %}
+                                <span class="user-name">Dr. {{ doctor.full_name|default:"Doctor" }}</span>
+                        </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'doctor:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:patients' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'doctor:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <div class="healthcare-sidebar">
+        <!-- Doctor Profile Section -->
+        <div class="healthcare-sidebar-profile">
+            <div class="healthcare-sidebar-avatar-placeholder">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">Dr. {{ doctor.full_name|default:"Doctor" }}</div>
+                <div class="healthcare-sidebar-user-email">{{ doctor.hospital.name|default:"Hospital" }}</div>
+            </div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=accepted" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Accepted Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-list"></i>
+                    <span>All Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=pending" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=completed" class="healthcare-nav-link">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Completed Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:patients' %}" class="healthcare-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>View Patients</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:calendar' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendar View</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="healthcare-main">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="page-title">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Request Patient Consent
+                    </h3>
+                    <p class="page-subtitle">Request permission to view {{ patient.full_name }}'s medical reports</p>
+                </div>
+                <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Patient
+                </a>
+            </div>
+
+            <!-- Patient Info -->
+            <div class="consent-card">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="mb-3" style="color: #1e3a8a;">
+                            <i class="fas fa-user me-2"></i>
+                            Patient Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Name:</strong> {{ patient.full_name }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Contact:</strong> {{ patient.contact_number|default:"Not provided" }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Email:</strong> {{ patient.email|default:"Not provided" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        {% if patient.profile_photo %}
+                            <img src="{{ patient.profile_photo.url }}" alt="{{ patient.full_name }}" class="img-fluid rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-user text-white" style="font-size: 2rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consent Status Display -->
+            {% if consent_status == 'pending' %}
+                <div class="consent-card">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock me-2"></i>
+                        <strong>Consent Request Pending:</strong> Your consent request is pending approval from the patient. 
+                        Please wait for the patient to respond to your request.
+                    </div>
+                    {% if existing_consent %}
+                        <div class="mb-3">
+                            <h6 style="color: #1e3a8a;">
+                                <i class="fas fa-comment me-2"></i>
+                                Your Request Reason:
+                            </h6>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0">{{ existing_consent.reason }}</p>
+                            </div>
+                            <small class="text-muted">
+                                Requested: {{ existing_consent.requested_at|date:"F d, Y g:i A" }}
+                            </small>
+                        </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'doctor:patient_reports' patient.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            Check Reports Status
+                        </a>
+                        <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Patient
+                        </a>
+                    </div>
+                </div>
+            {% elif consent_status == 'rejected' %}
+                <div class="consent-card">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Consent Rejected:</strong> The patient <strong>{{ patient.full_name }}</strong> has rejected your consent request to view their medical reports. 
+                        You cannot access their reports until they approve a new consent request.
+                    </div>
+                    {% if existing_consent %}
+                        <div class="mb-3">
+                            <h6 style="color: #1e3a8a;">
+                                <i class="fas fa-comment me-2"></i>
+                                Your Previous Request Reason:
+                            </h6>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0">{{ existing_consent.reason }}</p>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Requested: {{ existing_consent.requested_at|date:"F d, Y g:i A" }}
+                                {% if existing_consent.responded_at %}
+                                    | <i class="fas fa-times-circle me-1"></i>
+                                    Rejected: {{ existing_consent.responded_at|date:"F d, Y g:i A" }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    {% endif %}
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Patient
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Consent Request Form -->
+            <div class="consent-card">
+                {% if consent_status == 'none' or consent_status == 'rejected' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Consent Required:</strong> To view this patient's medical reports, you need their explicit consent. 
+                        A consent request will be sent to the patient for approval.
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Request New Consent:</strong> You can send a new consent request to the patient if needed.
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="reason" class="form-label">
+                            <i class="fas fa-comment me-1"></i>
+                            Reason for Access Request
+                        </label>
+                        <textarea 
+                            class="form-control" 
+                            id="reason" 
+                            name="reason" 
+                            rows="4" 
+                            placeholder="Please explain why you need access to this patient's medical reports..."
+                            required
+                        >Doctor needs access to view patient medical reports for treatment purposes</textarea>
+                        <div class="form-text">
+                            This reason will be shared with the patient to help them make an informed decision.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3" style="color: #1e3a8a;">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            What This Consent Allows
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        View medical reports and lab results
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Access uploaded documents and scans
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Review medical history and records
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Download reports for treatment purposes
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3" style="color: #1e3a8a;">
+                            <i class="fas fa-lock me-2"></i>
+                            Privacy & Security
+                        </h6>
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                                        All information will be kept strictly confidential
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-user-md text-primary me-2"></i>
+                                        Access is limited to authorized medical personnel only
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-clock text-primary me-2"></i>
+                                        Consent can be revoked by the patient at any time
+                                    </li>
+                                    <li class="mb-0">
+                                        <i class="fas fa-file-contract text-primary me-2"></i>
+                                        All access is logged and auditable
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            {% if consent_status == 'rejected' %}
+                                Send New Consent Request
+                            {% else %}
+                                Send Consent Request
+                            {% endif %}
+                        </button>
+                        <a href="{% url 'doctor:patient_reports' patient.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            Check Reports Status
+                        </a>
+                        <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle Functions
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            const mainContent = document.querySelector('.healthcare-main');
+            
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+            }
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = "{% url 'doctor:logout' %}";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -3,7 +3,163 @@
 
 {% block title %}Book Appointment - {{ patient.full_name }}{% endblock %}
 
+{% block head %}
+{{ block.super }}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block header %}
+<header class="modern-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <a href="{% url 'patient:profile_dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                    <div class="logo-container">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h1 class="logo-text">Patient Management System</h1>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <nav class="main-nav d-none d-md-flex justify-content-center">
+                    <!-- Navigation menu items removed -->
+                </nav>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center justify-content-end gap-3">
+                    <div class="notification-bell">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            {% if patient.profile_photo %}
+                                <img src="{{ patient.profile_photo.url }}" alt="Profile" class="user-avatar">
+                            {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <span class="user-name">{{ patient.full_name|default:user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'patient:patient_dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'patient:patient_profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'appointments:appointment_list' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'patient:patient_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </header>
+{% endblock %}
+
 {% block content %}
+<body data-has-abha="{% if patient.abha_id %}true{% else %}false{% endif %}">
+<style>
+/* Header overrides to match profile.html */
+/* Remove ABHA UI globally */
+#abhaCreationModal,
+#abha_input_section,
+input[name="abha_option"],
+label[for="has_abha"],
+label[for="no_abha"],
+#no_abha_message,
+img[src*="abha_logo"],
+.ayushman-logo {
+    display: none !important;
+}
+.modern-header {
+    background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%) !important;
+    min-height: 72px !important;
+    padding: 12px 0 !important;
+    box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3) !important;
+}
+.navbar .nav-link { color: #ffffff !important; }
+.navbar .navbar-brand { color: #ffffff !important; }
+.navbar .dropdown-menu { z-index: 9999 !important; }
+/* Ensure dropdown is above content within custom header */
+.modern-header .dropdown-menu { z-index: 10000 !important; }
+/* Ensure page content is not hidden behind fixed header */
+.page-wrapper { padding-top: 5px; }
+
+/* Enhanced validation styles */
+.form-control.is-valid, .form-select.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 1.44-1.44L4.5 3.5 2.3 5.7l-.94-.94L.5 6.73l1.8 1.8z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4m0-1.4-1.4 1.4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #198754;
+    font-weight: 500;
+}
+
+/* Loading animation */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Form validation summary */
+.validation-summary {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: none;
+}
+
+.validation-summary.show {
+    display: block;
+}
+
+.validation-summary h6 {
+    color: #721c24;
+    margin-bottom: 0.5rem;
+}
+
+.validation-summary ul {
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+}
+
+.validation-summary li {
+    color: #721c24;
+    font-size: 0.875rem;
+}
+</style>
 <style>
 #symptom-dropdown {
     position: absolute;
@@ -199,313 +355,8 @@
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-        }
-
-        /* Ensure ABHA logo containers are visible */
-        .modal .d-flex img[src*="abha_logo"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        /* Force hide any conflicting images in modal */
-        .modal img[src*="ayushman_bharat_logo"] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-        }
-
-        /* Ensure only ABHA logo is visible in ABHA creation modal */
-        #abhaCreationModal img[src*="abha_logo"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            max-width: 100% !important;
-            height: auto !important;
-        }
-
-        #abhaCreationModal img[src*="ayushman_bharat_logo"] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-        }
-
-/* Enhanced Form Styling */
-.form-control, .form-select {
-    border-radius: 8px;
-    border: 2px solid #e5e7eb;
-    transition: all 0.3s ease;
-    padding: 12px 16px;
-    font-size: 14px;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
-    transform: translateY(-1px);
-}
-
-.input-group-text {
-    border-radius: 8px 0 0 8px;
-    border: 2px solid #e5e7eb;
-    border-right: none;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    font-weight: 500;
-}
-
-.input-group .form-control {
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-}
-
-/* Enhanced Card Styling */
-.card {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-}
-
-.card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 16px 16px 0 0;
-    border-bottom: 1px solid #dee2e6;
-    padding: 20px 24px;
-}
-
-.card-body {
-    padding: 24px;
-}
-
-/* Enhanced Button Styling */
-.btn {
-    border-radius: 8px;
-    font-weight: 500;
-    padding: 10px 20px;
-    transition: all 0.3s ease;
-    border: none;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-}
-
-.btn:hover::before {
-    left: 100%;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
-.btn-outline-primary {
-    border: 2px solid #3b82f6;
-    color: #3b82f6;
-    background: transparent;
-}
-
-.btn-outline-primary:hover {
-    background: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-}
-
-/* Enhanced Modal Styling */
-.modal-content {
-    border-radius: 20px;
-    border: none;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    border: none;
-    padding: 24px 32px;
-}
-
-.modal-body {
-    padding: 32px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-}
-
-.modal-footer {
-    background: #f8f9fa;
-    border: none;
-    padding: 20px 32px;
-    border-radius: 0 0 20px 20px;
-}
-
-/* Enhanced Progress Bar */
-.progress {
-    height: 8px;
-    border-radius: 4px;
-    background: #e5e7eb;
-    overflow: hidden;
-}
-
-.progress-bar {
-    background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
-    border-radius: 4px;
-    transition: width 0.6s ease;
-}
-
-/* Enhanced Alert Styling */
-.alert {
-    border-radius: 12px;
-    border: none;
-    padding: 16px 20px;
-    font-weight: 500;
-}
-
-.alert-success {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    color: #065f46;
-}
-
-.alert-info {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e40af;
-}
-
-.alert-warning {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-}
-
-/* Enhanced Form Labels */
-.form-label {
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-/* Enhanced Input Groups */
-.input-group {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* Enhanced Radio Buttons */
-.form-check-input {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #d1d5db;
-    transition: all 0.3s ease;
-}
-
-.form-check-input:checked {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-check-label {
-    font-weight: 500;
-    color: #374151;
-    margin-left: 8px;
-}
-
-/* Enhanced Success Animation */
-@keyframes successPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.success-pulse {
-    animation: successPulse 0.6s ease-in-out;
-}
-
-/* Enhanced Loading Animation */
-@keyframes shimmer {
-    0% { background-position: -200px 0; }
-    100% { background-position: calc(200px + 100%) 0; }
-}
-
-.loading-shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
-}
-
-/* Responsive improvements */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .btn-lg {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-    }
-    
-    .d-flex.justify-content-between {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .d-flex.justify-content-between > div:first-child {
-        order: 2;
-        text-align: center;
-    }
-    
-    .d-flex.justify-content-between > div:last-child {
-        order: 1;
-    }
-    
-    .modal-dialog {
-        margin: 1rem;
-    }
-    
-    .modal-body {
-        padding: 1.5rem;
-    }
-    
-    .form-control, .form-select {
-        padding: 10px 14px;
-        font-size: 13px;
-    }
-    
-    .btn {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
+            gap: 1rem !important;
+            padding: 1rem !important;
 }
 </style>
 <!-- ========================
@@ -514,56 +365,57 @@
 <div class="page-wrapper" id="main-content">
     <!-- Start Content -->
     <div class="content">
-        <!-- Page Header -->
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-            <div class="breadcrumb-arrow">
-                <h4 class="mb-1">Book New Appointment</h4>
-                <p class="mb-0">
-                    Schedule your medical appointment with our healthcare providers
-                </p>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                    <i class="ti ti-arrow-left me-1"></i>Back to Appointments
-                </a>
-            </div>
-        </div>
-        <!-- End Page Header -->
-        
         <!-- Appointment Form -->
         <div class="row">
             <div class="col-xl-8 col-lg-10 mx-auto">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="fw-bold mb-0">
-                            <i class="ti ti-calendar-plus me-2"></i>Appointment Details
-                        </h5>
+                    <div class="card-header text-center" style="background-color: white !important;">
+                        <h2 class="fw-bold text-primary mb-2" style="font-size: 2rem; letter-spacing: -0.02em; line-height: 1.2;">
+                            <i class="ti ti-calendar-plus me-2"></i>Book New Appointment
+                        </h2>
+                        <p class="lead text-muted mb-0" style="font-size: 1rem; font-weight: 400; line-height: 1.5;">
+                            Schedule your medical appointment with our healthcare providers
+                        </p>
                     </div>
                     <div class="card-body">
+                        <!-- Validation Summary -->
+                        <div id="validation-summary" class="validation-summary">
+                            {% if form.errors %}
+                                <div class="alert alert-danger d-flex align-items-start">
+                                    <i class="ti ti-alert-circle me-2 mt-1"></i>
+                                    <div>
+                                        <h6 class="mb-1">Please correct the following errors:</h6>
+                                        <ul class="mb-0">
+                                            {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                            {% for field in form.visible_fields %}
+                                                {% for error in field.errors %}
+                                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% else %}
+                            <h6><i class="ti ti-alert-circle me-2"></i>Please correct the following errors:</h6>
+                            <ul id="validation-errors-list"></ul>
+                            {% endif %}
+                        </div>
+                        
                         <form method="post" id="appointmentForm">
                             {% csrf_token %}
                             <!-- Hidden time field -->
                             {{ form.appointment_time }}
                             
-                            <!-- Patient Info Display -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="alert alert-info d-flex align-items-center">
-                                        <i class="ti ti-user me-2"></i>
-                                        <div>
-                                            <strong>Patient:</strong> {{ patient.full_name }} ({{ patient.email }})
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                             
                             
-                            <!-- ABHA ID Selection -->
-                            <div class="row mb-4">
+                            {% if not lock_selection and not patient.abha_id %}
+                            <div class="row mb-2">
                                 <div class="col-12">
                                     <div class="card border-0 bg-light">
                                         <div class="card-body">
-                                            <h6 class="card-title d-flex align-items-center mb-3">
+                                            <h6 class="card-title d-flex align-items-center mb-2">
                                                 <i class="ti ti-id me-2 text-primary"></i>
                                                 ABHA ID (Optional)
                                             </h6>
@@ -590,7 +442,7 @@
                                                 </div>
                                             </div>
                                             
-                                            <!-- ABHA ID Input Field (Hidden by default) -->
+                                            <!-- ABHA ID Input Field -->
                                             <div id="abha_input_section" class="mb-3" style="display: none;">
                                     <label for="{{ form.abha_id.id_for_label }}" class="form-label fw-semibold">
                                                     <i class="ti ti-id me-1"></i>Enter your ABHA ID
@@ -603,7 +455,7 @@
                                                 </div>
                                                 <div class="form-text">
                                                     <i class="ti ti-info-circle me-1"></i>
-                                                    ABHA ID is a 14-digit number or alphanumeric code (e.g., 1234-5678-9012 or ABHA1234567890)
+                                                    ABHA ID format: ABHA + 10 digits (e.g., ABHA1234567890)
                                                 </div>
                                     {% if form.abha_id.errors %}
                                         <div class="text-danger small fw-bold mt-1">
@@ -641,18 +493,42 @@
                                     </div>
                                 </div>
                             </div>
+                            {% elif not lock_selection and patient.abha_id %}
+                            <!-- Show ABHA ID for users who already have one -->
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <div class="alert alert-success d-flex align-items-center">
+                                        <i class="ti ti-check-circle me-2"></i>
+                                        <div>
+                                            <strong>ABHA ID Verified:</strong> {{ patient.abha_id }}
+                                            <div class="small text-muted mt-1">
+                                                Your digital health ID is automatically linked to this appointment.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hidden ABHA ID field for form submission -->
+                                    <input type="hidden" name="abha_id" value="{{ patient.abha_id }}">
+                                </div>
+                            </div>
+                            {% endif %}
                             
                             <!-- Hospital & Doctor Selection -->
-                            <div class="row mb-4">
+                            <div class="row mb-2">
                                 <div class="col-md-6">
                                     <div class="card border-0 bg-light h-100">
                                         <div class="card-body">
+                                            {% if not lock_selection %}
                                             <label for="{{ form.hospital.id_for_label }}" class="form-label fw-semibold d-flex align-items-center">
                                                 <i class="ti ti-building-hospital me-2 text-primary"></i>
                                         {{ form.hospital.label }} <span class="text-danger">*</span>
                                     </label>
+                                            {% endif %}
                                     {{ form.hospital }}
-                                    {% if form.hospital.help_text %}
+                                    {% if lock_selection and locked_hospital_id %}
+                                        <input type="hidden" name="hospital" value="{{ locked_hospital_id }}">
+                                    {% endif %}
+                                    {% if form.hospital.help_text and not lock_selection %}
                                         <div class="form-text">{{ form.hospital.help_text }}</div>
                                     {% endif %}
                                     {% if form.hospital.errors %}
@@ -677,12 +553,17 @@
                                 <div class="col-md-6">
                                     <div class="card border-0 bg-light h-100">
                                         <div class="card-body">
+                                            {% if not lock_selection %}
                                             <label for="{{ form.doctor.id_for_label }}" class="form-label fw-semibold d-flex align-items-center">
                                                 <i class="ti ti-user-md me-2 text-success"></i>
                                         {{ form.doctor.label }} <span class="text-danger">*</span>
                                     </label>
+                                            {% endif %}
                                     {{ form.doctor }}
-                                    {% if form.doctor.help_text %}
+                                    {% if lock_selection and locked_doctor_id %}
+                                        <input type="hidden" name="doctor" value="{{ locked_doctor_id }}">
+                                    {% endif %}
+                                    {% if form.doctor.help_text and not lock_selection %}
                                         <div class="form-text">{{ form.doctor.help_text }}</div>
                                     {% endif %}
                                     {% if form.doctor.errors %}
@@ -707,7 +588,7 @@
                             </div>
                             
                             <!-- Date and Time -->
-                            <div class="row mb-4">
+                            <div class="row mb-2">
                                 <div class="col-md-6">
                                     <div class="card border-0 bg-light h-100">
                                         <div class="card-body">
@@ -1003,76 +884,63 @@
                     </div>
                     
                     <!-- OTP Verification Section -->
-                    <div id="otp_section" class="mb-4" style="display: none;">
+                    <div id="otp_section" class="mb-3" style="display: none;">
                         <div class="card border-primary bg-light-primary">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="bg-primary text-white rounded-circle p-2 me-3">
-                                        <i class="ti ti-key"></i>
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="bg-primary text-white rounded-circle p-1 me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ti ti-key" style="font-size: 14px;"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0 text-primary">OTP Verification</h6>
-                                        <small class="text-muted">Enter the 6-digit code sent to your mobile</small>
+                                        <h6 class="mb-0 text-primary" style="font-size: 14px;">OTP Verification</h6>
+                                        <small class="text-muted" style="font-size: 12px;">Enter the 4-digit code shown above</small>
                                     </div>
                                 </div>
                                 
-                                <label for="abha_otp" class="form-label fw-semibold text-dark">
-                                    <i class="ti ti-key me-2 text-primary"></i>Verification Code <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="ti ti-key text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control border-start-0 text-center fw-bold" id="abha_otp" name="otp" 
-                                           placeholder="000000" maxlength="6" style="letter-spacing: 0.5em;">
-                                    <button type="button" class="btn btn-outline-primary" id="resend_otp" disabled>
-                                        <i class="ti ti-refresh me-1"></i>Resend
-                                    </button>
-                                </div>
-                                <!-- Enhanced Demo OTP Display -->
-                                <div class="alert alert-success border-0 bg-gradient-success mt-3" id="demo_otp_alert" style="display: none; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(25, 135, 84, 0.15);">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-success text-white rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="ti ti-shield-check"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1 text-success fw-bold">OTP Generated Successfully!</h6>
-                                            <small class="text-muted">Use this OTP to verify your mobile number</small>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <label for="abha_otp" class="form-label fw-semibold text-dark" style="font-size: 13px;">
+                                            <i class="ti ti-key me-1 text-primary"></i>Verification Code <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="ti ti-key text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control border-start-0 text-center fw-bold" id="abha_otp" name="otp" 
+                                                   placeholder="0000" maxlength="4" style="letter-spacing: 0.5em; font-size: 16px;">
                                         </div>
                                     </div>
-                                    
-                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px;">
-                                        <div class="card-body text-center py-4">
-                                            <div class="mb-3">
-                                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                                    <i class="ti ti-key me-2 text-primary"></i>
-                                                    <small class="text-muted fw-semibold">Your Verification Code</small>
-                                                </div>
-                                                <div class="bg-primary text-white rounded-3 p-3 mb-3" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);">
-                                                    <span class="fw-bold fs-1" id="demo_otp_display" style="letter-spacing: 4px; font-family: 'Courier New', monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">123456</span>
-                                                </div>
+                                    <div class="col-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-primary btn-sm w-100" id="resend_otp" disabled>
+                                            <i class="ti ti-refresh me-1"></i>Resend
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Compact OTP Display -->
+                                <div class="alert alert-success border-0 bg-gradient-success mt-2" id="demo_otp_alert" style="display: none; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 8px; padding: 12px;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ti ti-shield-check me-2 text-success"></i>
+                                            <div>
+                                                <strong class="text-success" style="font-size: 13px;">Your OTP:</strong>
+                                                <div class="fw-bold text-primary fs-5" id="demo_otp_display" style="letter-spacing: 2px; font-family: 'Courier New', monospace;">1234</div>
                                             </div>
-                                            
-                                            <div class="d-flex gap-2 justify-content-center mb-3">
-                                                <button type="button" class="btn btn-success btn-sm px-3 py-2" id="copy_otp_btn" style="border-radius: 8px; box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);">
-                                                    <i class="ti ti-copy me-1"></i>Copy OTP
-                                                </button>
-                                                <button type="button" class="btn btn-outline-success btn-sm px-3 py-2" id="speak_otp_btn" style="border-radius: 8px;">
-                                                    <i class="ti ti-volume me-1"></i>Speak OTP
-                                                </button>
-                                            </div>
-                                            
-                                            <div class="d-flex align-items-center justify-content-center text-muted small">
-                                                <i class="ti ti-clock me-1"></i>
-                                                <span>Valid for 5 minutes</span>
-                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-success btn-sm px-2 py-1" id="copy_otp_btn" style="font-size: 11px;">
+                                                <i class="ti ti-copy"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success btn-sm px-2 py-1" id="speak_otp_btn" style="font-size: 11px;">
+                                                <i class="ti ti-volume"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="form-text mt-2">
-                                    <i class="ti ti-clock me-2 text-warning"></i>
-                                    <strong>Valid for 5 minutes</strong> - Check your mobile for the verification code
+                                <div class="form-text mt-1" style="font-size: 11px;">
+                                    <i class="ti ti-clock me-1 text-warning"></i>
+                                    <strong>Valid for 5 minutes</strong> - Enter the 4-digit code shown above
                                 </div>
                             </div>
                         </div>
@@ -1192,20 +1060,67 @@
     </div>
 </div>
 
+<!-- Slot Busy Error Modal -->
+<div class="modal fade" id="slotBusyModal" tabindex="-1" aria-labelledby="slotBusyModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="slotBusyModalLabel">
+                            <i class="fas fa-clock me-2"></i>Time Slot Already Booked
+                        </h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-times fa-3x text-danger"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-2">Slot Unavailable</h6>
+                    <p class="text-muted mb-0" id="slotBusyMessage">
+                        The selected time slot is already booked. Please choose a different date and time.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>OK, I'll Choose Another Time
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ========================
     End Page Content
 ========================= -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const hospitalSelect = document.getElementById('hospital-select');
-    const doctorSelect = document.getElementById('doctor-select');
-    const dateInput = document.getElementById('appointment-date');
-    const hourSelect = document.getElementById('hour-select');
-    const minuteSelect = document.getElementById('minute-select');
-    const amPmSelect = document.getElementById('am-pm-select');
+    // Show slot busy modal if error exists
+    {% if slot_busy_error %}
+    const slotBusyModal = new bootstrap.Modal(document.getElementById('slotBusyModal'));
+    const slotBusyMessage = document.getElementById('slotBusyMessage');
+    if (slotBusyMessage) {
+        slotBusyMessage.textContent = '{{ slot_busy_error|escapejs }}';
+    }
+    slotBusyModal.show();
+    {% endif %}
     
-    // ABHA ID handling
+    const hospitalSelect = document.getElementById('id_hospital');
+    const doctorSelect = document.getElementById('id_doctor');
+    const dateInput = document.getElementById('id_appointment_date') || document.getElementById('appointment-date');
+    const hourSelect = document.getElementById('id_hour') || document.getElementById('hour-select');
+    const minuteSelect = document.getElementById('id_minute') || document.getElementById('minute-select');
+    const amPmSelect = document.getElementById('id_am_pm') || document.getElementById('am-pm-select');
+    
+    // ABHA ID handling (only if elements exist)
     const hasAbhaRadio = document.getElementById('has_abha');
     const noAbhaRadio = document.getElementById('no_abha');
     const abhaInputSection = document.getElementById('abha_input_section');
@@ -1217,18 +1132,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxDate = new Date();
     maxDate.setMonth(maxDate.getMonth() + 6);
     
+    if (dateInput) {
     dateInput.setAttribute('min', today.toISOString().split('T')[0]);
     dateInput.setAttribute('max', maxDate.toISOString().split('T')[0]);
+    }
     
     // Set PM as default for AM/PM dropdown
+    if (amPmSelect) {
     amPmSelect.value = 'PM';
+    }
     
-    // ABHA ID radio button handling
+    // ABHA ID radio button handling (only if elements exist)
+    if (hasAbhaRadio && noAbhaRadio && abhaInputSection && noAbhaMessage) {
     hasAbhaRadio.addEventListener('change', function() {
         if (this.checked) {
             abhaInputSection.style.display = 'block';
             noAbhaMessage.style.display = 'none';
-            abhaInput.required = true;
+                if (abhaInput) abhaInput.required = true;
         }
     });
     
@@ -1236,10 +1156,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.checked) {
             abhaInputSection.style.display = 'none';
             noAbhaMessage.style.display = 'block';
-            abhaInput.required = false;
-            abhaInput.value = ''; // Clear the input
+                if (abhaInput) abhaInput.required = false;
+                if (abhaInput) abhaInput.value = ''; // Clear the input
+            }
+        });
+        
+        // Initialize ABHA section based on existing ABHA ID
+        const hasExistingAbha = document.body.getAttribute('data-has-abha') === 'true';
+        if (hasExistingAbha) {
+            // User already has ABHA ID
+            abhaInputSection.style.display = 'block';
+            noAbhaMessage.style.display = 'none';
+            hasAbhaRadio.checked = true;
+        } else {
+            // User doesn't have ABHA ID
+            abhaInputSection.style.display = 'none';
+            noAbhaMessage.style.display = 'block';
+            noAbhaRadio.checked = true;
         }
-    });
+    }
     
     // ABHA ID validation function
     function validateABHA(abhaId) {
@@ -1248,35 +1183,28 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove any spaces or dashes
         const cleanId = abhaId.replace(/[\s-]/g, '');
         
-        // Check if it's 14 digits
-        if (/^\d{14}$/.test(cleanId)) {
-            return true;
-        }
-        
-        // Check if it's alphanumeric (ABHA format)
-        if (/^[A-Z0-9]{14}$/i.test(cleanId)) {
-            return true;
-        }
-        
-        // Check if it's in format like 1234-5678-9012
-        if (/^\d{4}-\d{4}-\d{4}$/.test(abhaId)) {
+        // Check if it's in ABHA format: ABHA + 10 digits
+        if (/^ABHA\d{10}$/i.test(cleanId)) {
             return true;
         }
         
         return false;
     }
     
-    // ABHA input validation
+    // ABHA input validation (only if input exists)
+    if (abhaInput) {
     abhaInput.addEventListener('input', function() {
         const value = this.value.trim();
         if (value && !validateABHA(value)) {
-            this.setCustomValidity('Please enter a valid ABHA ID (14 digits or alphanumeric)');
+            this.setCustomValidity('Please enter a valid ABHA ID (ABHA + 10 digits, e.g., ABHA1234567890)');
         } else {
             this.setCustomValidity('');
         }
     });
+    }
     
     // Hospital change handler
+    if (hospitalSelect) {
     hospitalSelect.addEventListener('change', function() {
         const hospitalId = this.value;
         const hospitalDetails = document.getElementById('hospital_details');
@@ -1284,8 +1212,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const hospitalLocation = document.getElementById('hospital_location');
         
         // Clear doctor options and details
+            if (doctorSelect) {
         doctorSelect.innerHTML = '<option value="">Select a doctor...</option>';
         doctorSelect.disabled = true;
+            }
         document.getElementById('doctor_details').style.display = 'none';
         
         if (hospitalId) {
@@ -1303,25 +1233,37 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/appointments/get-doctors/?hospital_id=${hospitalId}`)
                 .then(response => response.json())
                 .then(data => {
+                        if (doctorSelect) {
                     doctorSelect.innerHTML = '<option value="">Select a doctor...</option>';
                     data.forEach(doctor => {
                         const option = document.createElement('option');
                         option.value = doctor.id;
                         option.textContent = `${doctor.full_name} - ${doctor.specialization}`;
+                        option.dataset.hospitalId = hospitalId; // Store hospital ID for validation
                         doctorSelect.appendChild(option);
                     });
                     doctorSelect.disabled = false;
+                    
+                    // Clear validation state
+                    doctorSelect.classList.remove('is-valid', 'is-invalid');
+                    clearFieldError(doctorSelect);
+                        }
                 })
                 .catch(error => {
                     console.error('Error fetching doctors:', error);
-                    alert('Error loading doctors. Please try again.');
+                        if (doctorSelect) {
+                    doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+                        }
+                    showErrorMessage('Failed to load doctors. Please try again.');
                 });
         } else {
             hospitalDetails.style.display = 'none';
         }
     });
+    }
     
     // Doctor change handler
+    if (doctorSelect) {
     doctorSelect.addEventListener('change', function() {
         const doctorId = this.value;
         const doctorDetails = document.getElementById('doctor_details');
@@ -1340,8 +1282,10 @@ document.addEventListener('DOMContentLoaded', function() {
             doctorDetails.style.display = 'none';
         }
     });
+    }
     
     // Date change handler
+    if (dateInput) {
     dateInput.addEventListener('change', function() {
         const selectedDate = new Date(this.value);
         const today = new Date();
@@ -1357,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = maxDate.toISOString().split('T')[0];
         }
     });
+    }
     
     // Function to show error message
     function showError(element, message) {
@@ -1394,9 +1339,13 @@ document.addEventListener('DOMContentLoaded', function() {
         clearError(minuteSelect);
         clearError(amPmSelect);
         
-        if (!hour || !minute || !amPm) {
+        // Check if all time fields are selected
+        if (!hourSelect.value || !minuteSelect.value || !amPmSelect.value) {
             console.log('Time validation failed: missing values');
-            showError(hourSelect, 'Please select hour, minute, and AM/PM for appointment time.');
+            // Only show error if user has started selecting time but not completed
+            if (hourSelect.value || minuteSelect.value || amPmSelect.value) {
+                showError(hourSelect, 'Please complete the time selection (hour, minute, and AM/PM).');
+            }
             return false;
         }
         
@@ -1414,168 +1363,446 @@ document.addEventListener('DOMContentLoaded', function() {
         const businessEnd = 18 * 60;  // 6:00 PM
         
         if (timeInMinutes < businessStart || timeInMinutes > businessEnd) {
-            alert('Appointment time must be between 8:00 AM and 6:00 PM.');
-            hourSelect.value = '';
-            minuteSelect.value = '';
-            amPmSelect.value = '';
+            showError(hourSelect, 'Appointment time must be between 8:00 AM and 6:00 PM.');
             return false;
         }
         
         // Check if time is in the past for today's date
-        const selectedDate = new Date(dateInput.value);
-        const today = new Date();
-        
-        if (selectedDate.toDateString() === today.toDateString()) {
-            const now = new Date();
-            const selectedDateTime = new Date(selectedDate);
-            selectedDateTime.setHours(hour24, minute, 0, 0);
+        if (dateInput.value) {
+            const selectedDate = new Date(dateInput.value);
+            const today = new Date();
             
-            if (selectedDateTime <= now) {
-                alert('Please select a future time for today\'s appointment.');
-                hourSelect.value = '';
-                minuteSelect.value = '';
-                amPmSelect.value = '';
-                return false;
+            if (selectedDate.toDateString() === today.toDateString()) {
+                const now = new Date();
+                const selectedDateTime = new Date(selectedDate);
+                selectedDateTime.setHours(hour24, minute, 0, 0);
+                
+                if (selectedDateTime <= now) {
+                    showError(hourSelect, 'Please select a future time for today\'s appointment.');
+                    return false;
+                }
             }
         }
         
         return true;
     }
     
-    // Add event listeners to time fields
-    [hourSelect, minuteSelect, amPmSelect].forEach(select => {
-        select.addEventListener('change', validateTime);
-    });
+    // Note: Time validation event listeners are now handled in addRealTimeValidation()
     
-    // Form submission validation
+    // Comprehensive form validation
     const form = document.querySelector('form');
     const hiddenTimeField = document.getElementById('appointment-time-hidden');
     
-    form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Always prevent default submission
+    // Real-time validation for all fields
+    function validateAllFields() {
+        let isValid = true;
+        const errors = [];
         
-        const selectedDate = new Date(dateInput.value);
-        const today = new Date();
+        // Clear all previous errors
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.invalid-feedback').forEach(feedback => {
+            feedback.remove();
+        });
         
-        // Final validation before showing modal
-        if (selectedDate < today) {
-            showError(dateInput, 'Please select a future date for your appointment.');
-            return;
+        // Hide validation summary
+        const validationSummary = document.getElementById('validation-summary');
+        if (validationSummary) {
+            validationSummary.classList.remove('show');
         }
         
-        if (selectedDate > maxDate) {
-            showError(dateInput, 'Please select a date within the next 6 months.');
-            return;
+        // 1. Hospital validation
+        if (!hospitalSelect || !hospitalSelect.value) {
+            showFieldError(hospitalSelect, 'Please select a hospital.');
+            errors.push('Please select a hospital.');
+            isValid = false;
         }
         
-        // Validate required fields
-        const hospitalSelect = document.getElementById('hospital-select');
-        const doctorSelect = document.getElementById('doctor-select');
-        const abhaField = document.getElementById('id_abha_id');
+        // 2. Doctor validation
+        if (!doctorSelect || !doctorSelect.value) {
+            showFieldError(doctorSelect, 'Please select a doctor.');
+            errors.push('Please select a doctor.');
+            isValid = false;
+        } else {
+            // Note: Hospital-doctor relationship validation is handled by the server-side filtering
+            // When doctors are loaded via AJAX, they are already filtered by the selected hospital
+            // For pre-selected doctors, we trust Django's form validation
+            console.log('Doctor selected:', doctorSelect.value);
+        }
+        
+        // 3. Date validation
+        if (!dateInput.value) {
+            showFieldError(dateInput, 'Please select an appointment date.');
+            errors.push('Please select an appointment date.');
+            isValid = false;
+        } else {
+            const selectedDate = new Date(dateInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time to start of day
+            
+            if (selectedDate < today) {
+                showFieldError(dateInput, 'Please select a future date for your appointment.');
+                errors.push('Please select a future date for your appointment.');
+                isValid = false;
+            } else if (selectedDate > maxDate) {
+                showFieldError(dateInput, 'Please select a date within the next 6 months.');
+                errors.push('Please select a date within the next 6 months.');
+                isValid = false;
+            }
+        }
+        
+        // 4. Time validation
+        if (!hourSelect.value || !minuteSelect.value || !amPmSelect.value) {
+            showFieldError(hourSelect, 'Please complete the time selection (hour, minute, and AM/PM).');
+            errors.push('Please complete the time selection (hour, minute, and AM/PM).');
+            isValid = false;
+        } else {
+            // Validate time is in the future if today is selected
+            const selectedDate = new Date(dateInput.value);
+            const today = new Date();
+            
+            if (selectedDate.toDateString() === today.toDateString()) {
+                const hour = parseInt(hourSelect.value);
+                const minute = parseInt(minuteSelect.value);
+                const amPm = amPmSelect.value;
+                
+                let hour24 = hour;
+                if (amPm === 'PM' && hour !== 12) {
+                    hour24 += 12;
+                } else if (amPm === 'AM' && hour === 12) {
+                    hour24 = 0;
+                }
+                
+                const selectedDateTime = new Date();
+                selectedDateTime.setHours(hour24, minute, 0, 0);
+                
+                if (selectedDateTime <= today) {
+                    showFieldError(hourSelect, 'Please select a future time for today\'s appointment.');
+                    errors.push('Please select a future time for today\'s appointment.');
+                    isValid = false;
+                }
+            }
+        }
+        
+        // 5. Payment mode validation
         const paymentSelect = document.getElementById('id_payment_mode');
-        
-        // Clear previous errors
-        clearError(hospitalSelect);
-        clearError(doctorSelect);
-        clearError(abhaField);
-        clearError(paymentSelect);
-        
-        let hasErrors = false;
-        
-        // Check required fields
-        if (!hospitalSelect.value) {
-            showError(hospitalSelect, 'Please select a hospital.');
-            hasErrors = true;
+        if (!paymentSelect || !paymentSelect.value) {
+            showFieldError(paymentSelect, 'Please select a payment mode.');
+            errors.push('Please select a payment mode.');
+            isValid = false;
         }
         
-        if (!doctorSelect.value) {
-            showError(doctorSelect, 'Please select a doctor.');
-            hasErrors = true;
+        // 6. ABHA ID validation (only if user has selected "I have ABHA ID")
+        if (hasAbhaRadio && hasAbhaRadio.checked) {
+            const abhaField = document.getElementById('id_abha_id');
+            if (!abhaField || !abhaField.value.trim()) {
+                showFieldError(abhaField, 'Please enter your ABHA ID.');
+                errors.push('Please enter your ABHA ID.');
+                isValid = false;
+            } else if (!validateABHA(abhaField.value.trim())) {
+                showFieldError(abhaField, 'Please enter a valid ABHA ID (ABHA + 10 digits, e.g., ABHA1234567890).');
+                errors.push('Please enter a valid ABHA ID (ABHA + 10 digits, e.g., ABHA1234567890).');
+                isValid = false;
+            }
         }
         
-        // ABHA ID validation (only if "I have ABHA ID" is selected)
-        if (hasAbhaRadio.checked && !abhaField.value.trim()) {
-            showError(abhaField, 'Please enter your ABHA ID.');
-            hasErrors = true;
-        } else if (hasAbhaRadio.checked && abhaField.value.trim() && !validateABHA(abhaField.value.trim())) {
-            showError(abhaField, 'Please enter a valid ABHA ID (14 digits or alphanumeric).');
-            hasErrors = true;
+        // 7. Symptoms validation (optional but if provided, should be meaningful)
+        const symptomsField = document.getElementById('id_symptoms');
+        if (symptomsField && symptomsField.value.trim()) {
+            if (symptomsField.value.trim().length < 10) {
+                showFieldError(symptomsField, 'Please provide more detailed symptoms (at least 10 characters).');
+                errors.push('Please provide more detailed symptoms (at least 10 characters).');
+                isValid = false;
+            }
         }
         
-        if (!paymentSelect.value) {
-            showError(paymentSelect, 'Please select a payment mode.');
-            hasErrors = true;
+        // Show validation summary if there are errors
+        if (!isValid && errors.length > 0) {
+            const validationSummary = document.getElementById('validation-summary');
+            const errorsList = document.getElementById('validation-errors-list');
+            if (validationSummary && errorsList) {
+                errorsList.innerHTML = '';
+                errors.forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    errorsList.appendChild(li);
+                });
+                validationSummary.classList.add('show');
+                
+                // Scroll to validation summary
+                validationSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
         
-        if (hasErrors) {
-            return;
-        }
-        
-        // If all validations pass, show the privacy consent modal
-        const privacyModal = new bootstrap.Modal(document.getElementById('privacyConsentModal'));
-        privacyModal.show();
-    });
+        return isValid;
+    }
     
-    // Handle privacy consent agreement
-    document.getElementById('agreeConsent').addEventListener('click', function() {
-        // Show loading state
-        const bookBtn = document.getElementById('book-appointment-btn');
-        const originalText = bookBtn.innerHTML;
-        bookBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Booking Appointment...';
-        bookBtn.disabled = true;
+    // Enhanced field error display
+    function showFieldError(field, message) {
+        if (!field) return;
         
-        // Convert custom time fields to 24-hour format and set hidden field
+        field.classList.add('is-invalid');
+        
+        // Remove existing error message
+        const existingError = field.parentNode.querySelector('.invalid-feedback');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.innerHTML = `<i class="ti ti-alert-circle me-1"></i>${message}`;
+        field.parentNode.appendChild(errorDiv);
+        
+        // Scroll to first error
+        if (!document.querySelector('.scroll-to-error-done')) {
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            field.focus();
+            field.classList.add('scroll-to-error-done');
+            setTimeout(() => field.classList.remove('scroll-to-error-done'), 1000);
+        }
+    }
+    
+    // Clear field error
+    function clearFieldError(field) {
+        if (!field) return;
+        field.classList.remove('is-invalid');
+        const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+    
+    // Real-time validation on field changes
+    function addRealTimeValidation() {
+        // Hospital change validation
+        if (hospitalSelect) {
+            hospitalSelect.addEventListener('change', function() {
+                clearFieldError(this);
+                if (this.value) {
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // Doctor change validation
+        if (doctorSelect) {
+            doctorSelect.addEventListener('change', function() {
+                clearFieldError(this);
+                if (this.value) {
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // Date change validation
+        if (dateInput) {
+            dateInput.addEventListener('change', function() {
+                clearFieldError(this);
+                if (this.value) {
+                    const selectedDate = new Date(this.value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate >= today && selectedDate <= maxDate) {
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                    }
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // Time change validation
+        [hourSelect, minuteSelect, amPmSelect].forEach(select => {
+            if (select) {
+                select.addEventListener('change', function() {
+                    clearFieldError(hourSelect); // Clear error from hour field
+                    
+                    // Only validate if all three fields have values
+                    if (hourSelect.value && minuteSelect.value && amPmSelect.value) {
+                        // Run the validateTime function to check business hours and future time
+                        if (validateTime()) {
+                            hourSelect.classList.add('is-valid');
+                            hourSelect.classList.remove('is-invalid');
+                        } else {
+                            hourSelect.classList.add('is-invalid');
+                            hourSelect.classList.remove('is-valid');
+                        }
+                    } else {
+                        // Clear validation state if not all fields are filled
+                        hourSelect.classList.remove('is-valid', 'is-invalid');
+                    }
+                });
+            }
+        });
+        
+        // Payment mode validation
+        const paymentSelect = document.getElementById('id_payment_mode');
+        if (paymentSelect) {
+            paymentSelect.addEventListener('change', function() {
+                clearFieldError(this);
+                if (this.value) {
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // ABHA ID validation
+        const abhaField = document.getElementById('id_abha_id');
+        if (abhaField) {
+            abhaField.addEventListener('input', function() {
+                clearFieldError(this);
+                if (this.value.trim()) {
+                    if (validateABHA(this.value.trim())) {
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                    }
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // Symptoms validation
+        const symptomsField = document.getElementById('id_symptoms');
+        if (symptomsField) {
+            symptomsField.addEventListener('input', function() {
+                clearFieldError(this);
+                if (this.value.trim().length >= 10) {
+                    this.classList.add('is-valid');
+                } else if (this.value.trim().length > 0) {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+    }
+    
+    // Initialize real-time validation
+    addRealTimeValidation();
+    
+    // Ensure pre-selected doctors have proper dataset.hospitalId
+    function ensurePreSelectedDoctorValidation() {
+        if (hospitalSelect && doctorSelect && hospitalSelect.value && doctorSelect.value) {
+            // If both hospital and doctor are pre-selected, ensure doctor has dataset.hospitalId
+            const doctorOption = doctorSelect.querySelector(`option[value="${doctorSelect.value}"]`);
+            if (doctorOption && !doctorOption.dataset.hospitalId) {
+                doctorOption.dataset.hospitalId = hospitalSelect.value;
+                console.log('Set dataset.hospitalId for pre-selected doctor:', hospitalSelect.value);
+            }
+        }
+    }
+    
+    // Run this after page loads
+    setTimeout(ensurePreSelectedDoctorValidation, 100);
+    
+    // Simple test to check if form submission works
+    console.log('Form element found:', form);
+    console.log('Submit button found:', document.getElementById('book-appointment-btn'));
+    
+    // Add a simple click handler to the submit button
+    const submitBtn = document.getElementById('book-appointment-btn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+            console.log('Submit button clicked!');
+            // Let the form submit naturally
+        });
+            }
+            
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        console.log('Form submission started...');
+        // ABHA: if empty, ensure it doesn't block native validation
+        const abhaField = document.getElementById('id_abha_id');
+        if (abhaField && !abhaField.value.trim()) {
+            abhaField.removeAttribute('required');
+            abhaField.required = false;
+        }
+        
+        // Convert time fields to 24-hour format before submission
+        if (hourSelect && minuteSelect && amPmSelect) {
         const hour = parseInt(hourSelect.value);
         const minute = parseInt(minuteSelect.value);
         const amPm = amPmSelect.value;
-        
-        console.log('Time values:', { hour, minute, amPm });
-        
-        // Set a default time if no time is selected
-        if (!hour || !minute || !amPm) {
-            console.log('No time selected, using default 9:00 AM');
-            hiddenTimeField.value = '09:00';
-        } else {
-            let hour24 = hour;
-            if (amPm === 'PM' && hour !== 12) {
-                hour24 += 12;
-            } else if (amPm === 'AM' && hour === 12) {
-                hour24 = 0;
+            const hasHour = !Number.isNaN(hour);
+            const hasMinute = !Number.isNaN(minute);
+            if (hasHour && hasMinute && amPm) {
+        let hour24 = hour;
+        if (amPm === 'PM' && hour !== 12) {
+            hour24 += 12;
+        } else if (amPm === 'AM' && hour === 12) {
+            hour24 = 0;
+        }
+        const timeString = `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        hiddenTimeField.value = timeString;
+        console.log('Set hidden time field to:', timeString);
             }
-            
-            // Format as HH:MM for the hidden field
-            const timeString = `${hour24.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            hiddenTimeField.value = timeString;
-            console.log('Set hidden time field to:', timeString);
+        }
+        // If still empty, set a safe default so defaults submit fine
+        if (!hiddenTimeField.value) {
+            hiddenTimeField.value = '09:00';
+            console.log('Hidden time defaulted to 09:00');
         }
         
-        // Close the modal
-        const privacyModal = bootstrap.Modal.getInstance(document.getElementById('privacyConsentModal'));
-        privacyModal.hide();
-        
-        // Add success animation
-        setTimeout(() => {
-            bookBtn.innerHTML = '<i class="ti ti-check me-1"></i>Appointment Booked!';
-            bookBtn.classList.remove('btn-primary');
-            bookBtn.classList.add('btn-success');
-            
-            // Show success message
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
-            successAlert.innerHTML = `
-                <i class="ti ti-check-circle me-2"></i>
-                <strong>Success!</strong> Your appointment has been booked successfully. You will receive a confirmation shortly.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            form.parentNode.insertBefore(successAlert, form);
-            
-            // Scroll to success message
-            successAlert.scrollIntoView({ behavior: 'smooth' });
-        }, 1000);
-        
-        // Now submit the form
-        form.submit();
+        // Allow form to submit directly
+        console.log('Form submitting directly...');
+        // No preventDefault - let the form submit normally
     });
+            
+    // Handle privacy consent agreement - DISABLED FOR TESTING
+    // document.getElementById('agreeConsent').addEventListener('click', function() {
+    //     console.log('Privacy consent agreed, processing appointment...');
+    //     
+    //     // Show loading state
+    //     const bookBtn = document.getElementById('book-appointment-btn');
+    //     const originalText = bookBtn.innerHTML;
+    //     bookBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Booking Appointment...';
+    //     bookBtn.disabled = true;
+    //     
+    //     // Close the modal
+    //     const privacyModal = bootstrap.Modal.getInstance(document.getElementById('privacyConsentModal'));
+    //     privacyModal.hide();
+    //     
+    //     // Submit the form immediately
+    //     console.log('Submitting form...');
+    //     form.submit();
+    // });
+    
+    // Error message display function
+    function showErrorMessage(message) {
+        // Remove existing error alerts
+        document.querySelectorAll('.alert-danger').forEach(alert => alert.remove());
+        
+        const errorAlert = document.createElement('div');
+        errorAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorAlert.innerHTML = `
+            <i class="ti ti-alert-circle me-2"></i>
+            <strong>Error!</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        form.parentNode.insertBefore(errorAlert, form);
+        
+        // Scroll to error message
+        errorAlert.scrollIntoView({ behavior: 'smooth' });
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            if (errorAlert.parentNode) {
+                errorAlert.remove();
+            }
+        }, 5000);
+    }
     
     // Symptom autocomplete functionality
     const symptomsTextarea = document.getElementById('id_symptoms');
@@ -1712,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let otpVerified = false;
     let createdAbhaId = '';
     let otpTimer = null;
+    let otpData = null;
 
     // Function to ensure ABHA logo visibility
     function ensureLogoVisibility() {
@@ -1781,7 +2009,207 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call when ABHA modal is shown
     abhaCreationModal.addEventListener('shown.bs.modal', ensureABHAModalLogos);
     
+    // Prevent ABHA creation if user already has ABHA ID
+    abhaCreationModal.addEventListener('show.bs.modal', function(e) {
+        const hasExistingAbha = document.body.getAttribute('data-has-abha') === 'true';
+        if (hasExistingAbha) {
+            e.preventDefault();
+            alert('You already have an ABHA ID. Each patient can only have one ABHA ID.');
+            return false;
+        }
+    });
+    
     // Form validation
+    // Generate OTP for ABHA creation
+    function generateAbhaOTP() {
+        if (!validateAbhaForm()) return;
+        
+        const formData = {
+            name: document.getElementById('abha_name').value.trim(),
+            dob: document.getElementById('abha_dob').value,
+            gender: document.getElementById('abha_gender').value,
+            mobile: document.getElementById('abha_mobile').value.trim(),
+            aadhaar: document.getElementById('abha_aadhaar').value.trim()
+        };
+
+        // Show loading state
+        sendOtpBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Generating OTP...';
+        sendOtpBtn.disabled = true;
+
+        fetch('/abha/generate-otp/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                otpData = formData;
+                otpSent = true;
+                otpSection.classList.remove('d-none');
+                updateProgress(2, 'Step 2 of 3 - Verify OTP');
+                showNotification('OTP sent successfully to your mobile number!', 'success');
+            } else {
+                showNotification(data.error || 'Failed to generate OTP', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error generating OTP:', error);
+            showNotification('Failed to generate OTP. Please try again.', 'error');
+        })
+        .finally(() => {
+            sendOtpBtn.innerHTML = '<i class="ti ti-send me-1"></i>Send OTP';
+            sendOtpBtn.disabled = false;
+        });
+    }
+
+    // Verify OTP for ABHA creation
+    function verifyAbhaOTP() {
+        const enteredOTP = document.getElementById('abha_otp').value.trim();
+        
+        if (!enteredOTP || enteredOTP.length !== 4) {
+            showNotification('Please enter a valid 4-digit OTP.', 'error');
+            return;
+        }
+        
+        if (!otpData) {
+            showNotification('OTP data not found. Please generate OTP again.', 'error');
+            return;
+        }
+        
+        const verifyData = {
+            mobile: otpData.mobile,
+            aadhaar: otpData.aadhaar,
+            otp: enteredOTP
+        };
+        
+        fetch('/abha/verify-otp/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(verifyData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                otpVerified = true;
+                otpSection.classList.add('bg-success', 'border-success');
+                createAbhaBtn.classList.remove('d-none');
+                updateProgress(3, 'Step 3 of 3 - Ready to Create');
+                showNotification('OTP verified successfully!', 'success');
+            } else {
+                showNotification(data.error || 'Invalid OTP. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error verifying OTP:', error);
+            showNotification('Failed to verify OTP. Please try again.', 'error');
+        });
+    }
+
+    // Create ABHA ID
+    function createAbhaID() {
+        if (!otpVerified) {
+            showNotification('Please verify your mobile number with OTP first.', 'error');
+            return;
+        }
+        
+        if (!validateAbhaForm()) return;
+        
+        createAbhaBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Creating ABHA ID...';
+        createAbhaBtn.disabled = true;
+        
+        const formData = {
+            name: document.getElementById('abha_name').value.trim(),
+            dob: document.getElementById('abha_dob').value,
+            gender: document.getElementById('abha_gender').value,
+            mobile: document.getElementById('abha_mobile').value.trim(),
+            aadhaar: document.getElementById('abha_aadhaar').value.trim()
+        };
+        
+        fetch('/abha/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                createdAbhaId = data.abha_id;
+                abhaForm.classList.add('d-none');
+                abhaSuccess.classList.remove('d-none');
+                generatedAbhaId.textContent = data.abha_id;
+                updateProgress(3, 'Step 3 of 3 - Complete');
+                showNotification('ABHA ID created successfully!', 'success');
+            } else {
+                showNotification(data.error || 'Failed to create ABHA ID', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error creating ABHA ID:', error);
+            showNotification('Failed to create ABHA ID. Please try again.', 'error');
+        })
+        .finally(() => {
+            createAbhaBtn.innerHTML = '<i class="ti ti-shield me-1"></i>Create ABHA ID';
+            createAbhaBtn.disabled = false;
+        });
+    }
+
+    // Use created ABHA ID
+    function useAbhaID() {
+        if (createdAbhaId) {
+            // Auto-fill ABHA ID in appointment form
+            const abhaInput = document.getElementById('id_abha_id');
+            if (abhaInput) {
+                abhaInput.value = createdAbhaId;
+                abhaInput.readOnly = true;
+                abhaInput.classList.add('bg-light');
+            }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(abhaModal);
+            modal.hide();
+            
+            showNotification('ABHA ID has been added to your appointment!', 'success');
+        }
+    }
+
+    // Event listeners for ABHA modal
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', generateAbhaOTP);
+    }
+    
+    if (createAbhaBtn) {
+        createAbhaBtn.addEventListener('click', createAbhaID);
+    }
+    
+    if (useAbhaBtn) {
+        useAbhaBtn.addEventListener('click', useAbhaID);
+    }
+    
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', function() {
+            if (otpVerified) return;
+            otpSection.classList.add('d-none');
+            generateAbhaOTP();
+        });
+    }
+
+    // Verify OTP button
+    const verifyOtpBtn = document.getElementById('verify_otp_btn');
+    if (verifyOtpBtn) {
+        verifyOtpBtn.addEventListener('click', verifyAbhaOTP);
+    }
+
+    // Validate ABHA form
     function validateAbhaForm() {
         const name = document.getElementById('abha_name').value.trim();
         const dob = document.getElementById('abha_dob').value;
@@ -1790,18 +2218,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const aadhaar = document.getElementById('abha_aadhaar').value.trim();
         
         if (!name || !dob || !gender || !mobile || !aadhaar) {
-            alert('Please fill in all required fields.');
+            showNotification('Please fill in all required fields.', 'error');
             return false;
         }
         
         if (mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-            alert('Please enter a valid 10-digit mobile number.');
+            showNotification('Please enter a valid 10-digit mobile number.', 'error');
             return false;
         }
         
         if (aadhaar.length !== 12 || !/^\d{12}$/.test(aadhaar)) {
-            alert('Please enter a valid 12-digit Aadhaar number.');
+            showNotification('Please enter a valid 12-digit Aadhaar number.', 'error');
             return false;
+        }
+        
+        // Check if OTP is entered and valid (4 digits)
+        const otpField = document.getElementById('abha_otp');
+        if (otpField && otpField.value.trim()) {
+            const otp = otpField.value.trim();
+            if (otp.length !== 4 || !/^\d{4}$/.test(otp)) {
+                showNotification('Please enter a valid 4-digit OTP.', 'error');
+                return false;
+            }
         }
         
         return true;
@@ -1810,8 +2248,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update progress bar
     function updateProgress(step, text) {
         const percentage = (step / 3) * 100;
-        abhaProgress.style.width = percentage + '%';
-        progressText.textContent = text;
+        if (abhaProgress) {
+            abhaProgress.style.width = percentage + '%';
+        }
+        if (progressText) {
+            progressText.textContent = text;
+        }
     }
     
     // Send OTP
@@ -1819,146 +2261,126 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!validateAbhaForm()) return;
         
         // Show loading state
-        sendOtpBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Sending OTP...';
+        sendOtpBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Generating OTP...';
         sendOtpBtn.disabled = true;
         
-        // Get form data
-        const formData = {
-            mobile: document.getElementById('abha_mobile').value.trim()
-        };
+        // Generate 4-digit random OTP
+        const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
         
-        // Send OTP request to backend
-        fetch('/appointments/abha/send-otp/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                otpSent = true;
-                otpSection.style.display = 'block';
-                sendOtpBtn.classList.add('d-none');
-                createAbhaBtn.classList.remove('d-none');
-                updateProgress(2, 'Step 2 of 3 - Verify OTP');
-                
-                // Show demo OTP display
-                const demoOtp = data.otp || Math.floor(100000 + Math.random() * 900000).toString();
-                document.getElementById('demo_otp_display').textContent = demoOtp;
-                document.getElementById('demo_otp_alert').style.display = 'block';
-                
-                // Auto-fill OTP for demo
-                document.getElementById('abha_otp').value = demoOtp;
-                
-                // Enable resend OTP after 30 seconds
-                resendOtpBtn.disabled = true;
-                let countdown = 30;
-                const countdownInterval = setInterval(() => {
-                    resendOtpBtn.innerHTML = `<i class="ti ti-clock me-1"></i>Resend in ${countdown}s`;
-                    countdown--;
-                    if (countdown < 0) {
-                        clearInterval(countdownInterval);
-                        resendOtpBtn.disabled = false;
-                        resendOtpBtn.innerHTML = '<i class="ti ti-refresh me-1"></i>Resend OTP';
-                    }
-                }, 1000);
-                
-                // Show success message
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-                alert.innerHTML = `
-                    <i class="ti ti-check-circle me-2"></i>
-                    <strong>OTP Sent!</strong> Please check your mobile number for the verification code.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                abhaForm.appendChild(alert);
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    if (alert.parentNode) {
-                        alert.remove();
-                    }
-                }, 5000);
-            } else {
-                alert('Error: ' + data.error);
-                sendOtpBtn.innerHTML = '<i class="ti ti-send me-1"></i>Send OTP';
-                sendOtpBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error sending OTP:', error);
-            alert('Failed to send OTP. Please try again.');
+        // Simulate OTP generation delay
+        setTimeout(() => {
+            otpSent = true;
+            otpSection.style.display = 'block';
+            sendOtpBtn.classList.add('d-none');
+            createAbhaBtn.classList.remove('d-none');
+            updateProgress(2, 'Step 2 of 3 - Verify OTP');
+            
+            // Show generated OTP display
+            document.getElementById('demo_otp_display').textContent = generatedOtp;
+            document.getElementById('demo_otp_alert').style.display = 'block';
+            
+            // Store OTP for verification
+            window.generatedOtp = generatedOtp;
+            
+            // Clear OTP input field - user must type it manually
+            document.getElementById('abha_otp').value = '';
+            document.getElementById('abha_otp').focus();
+            
+            // Enable resend OTP after 30 seconds
+            resendOtpBtn.disabled = true;
+            let countdown = 30;
+            const countdownInterval = setInterval(() => {
+                resendOtpBtn.innerHTML = `<i class="ti ti-clock me-1"></i>Resend in ${countdown}s`;
+                countdown--;
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    resendOtpBtn.disabled = false;
+                    resendOtpBtn.innerHTML = '<i class="ti ti-refresh me-1"></i>Resend OTP';
+                }
+            }, 1000);
+            
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+            alert.innerHTML = `
+                <i class="ti ti-check-circle me-2"></i>
+                <strong>OTP Generated!</strong> Please enter the 4-digit verification code shown above.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            abhaForm.appendChild(alert);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+            
+            // Reset button state
             sendOtpBtn.innerHTML = '<i class="ti ti-send me-1"></i>Send OTP';
             sendOtpBtn.disabled = false;
-        });
+        }, 1500);
     });
     
     // Resend OTP
     resendOtpBtn.addEventListener('click', function() {
         if (!validateAbhaForm()) return;
         
-        resendOtpBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Sending...';
+        resendOtpBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Generating...';
         resendOtpBtn.disabled = true;
         
-        // Get form data
-        const formData = {
-            mobile: document.getElementById('abha_mobile').value.trim()
-        };
+        // Generate new 4-digit random OTP
+        const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
         
-        // Send OTP request to backend
-        fetch('/appointments/abha/send-otp/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                resendOtpBtn.innerHTML = '<i class="ti ti-refresh me-1"></i>Resend OTP';
-                resendOtpBtn.disabled = false;
-                
-                // Show success message
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-info alert-dismissible fade show mt-3';
-                alert.innerHTML = `
-                    <i class="ti ti-info-circle me-2"></i>
-                    <strong>OTP Resent!</strong> Please check your mobile number for the new verification code.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                abhaForm.appendChild(alert);
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    if (alert.parentNode) {
-                        alert.remove();
-                    }
-                }, 5000);
-            } else {
-                alert('Error: ' + data.error);
-                resendOtpBtn.innerHTML = '<i class="ti ti-refresh me-1"></i>Resend OTP';
-                resendOtpBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error resending OTP:', error);
-            alert('Failed to resend OTP. Please try again.');
+        // Simulate OTP generation delay
+        setTimeout(() => {
+            // Update display with new OTP
+            document.getElementById('demo_otp_display').textContent = newOtp;
+            
+            // Store new OTP for verification
+            window.generatedOtp = newOtp;
+            
+            // Clear the OTP input field - user must type the new OTP
+            document.getElementById('abha_otp').value = '';
+            document.getElementById('abha_otp').focus();
+            
             resendOtpBtn.innerHTML = '<i class="ti ti-refresh me-1"></i>Resend OTP';
             resendOtpBtn.disabled = false;
-        });
+            
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-info alert-dismissible fade show mt-3';
+            alert.innerHTML = `
+                <i class="ti ti-info-circle me-2"></i>
+                <strong>New OTP Generated!</strong> Please enter the new 4-digit verification code shown above.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            abhaForm.appendChild(alert);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }, 1000);
     });
     
     // Create ABHA ID
     createAbhaBtn.addEventListener('click', function() {
         const otp = document.getElementById('abha_otp').value.trim();
         
-        if (!otp || otp.length !== 6) {
-            alert('Please enter a valid 6-digit OTP.');
+        if (!otp || otp.length !== 4) {
+            alert('Please enter a valid 4-digit OTP.');
+            return;
+        }
+        
+        // Verify OTP first
+        const generatedOtp = window.generatedOtp || document.getElementById('demo_otp_display').textContent;
+        if (otp !== generatedOtp) {
+            alert('Invalid OTP. Please check and try again.');
+            document.getElementById('abha_otp').value = '';
+            document.getElementById('abha_otp').focus();
             return;
         }
         
@@ -1966,108 +2388,130 @@ document.addEventListener('DOMContentLoaded', function() {
         createAbhaBtn.innerHTML = '<i class="ti ti-loader-2 me-1 spin"></i>Creating ABHA ID...';
         createAbhaBtn.disabled = true;
         
-        // Get form data
-        const formData = {
-            name: document.getElementById('abha_name').value.trim(),
-            dob: document.getElementById('abha_dob').value,
-            gender: document.getElementById('abha_gender').value,
-            mobile: document.getElementById('abha_mobile').value.trim(),
-            aadhaar: document.getElementById('abha_aadhaar').value.trim(),
-            otp: otp
-        };
+        // Generate ABHA ID following government pattern
+        function generateABHAId() {
+            // ABHA ID pattern: ABHA + 10 digits
+            // Format: ABHA1234567890
+            let abhaId = 'ABHA';
+            
+            // Generate 10 random digits
+            for (let i = 0; i < 10; i++) {
+                abhaId += Math.floor(Math.random() * 10);
+            }
+            
+            return abhaId;
+        }
         
-        // First verify OTP
-        fetch('/appointments/abha/verify-otp/', {
+        // Simulate ABHA ID creation process
+        setTimeout(() => {
+            try {
+                // Generate ABHA ID
+                const newAbhaId = generateABHAId();
+                createdAbhaId = newAbhaId;
+                
+                // Show success
+                abhaForm.style.display = 'none';
+                abhaSuccess.classList.remove('d-none');
+                generatedAbhaId.textContent = newAbhaId;
+                updateProgress(3, 'Step 3 of 3 - Complete');
+                
+                createAbhaBtn.classList.add('d-none');
+                useAbhaBtn.classList.remove('d-none');
+                
+                // Show success animation
+                abhaSuccess.classList.add('bounce-in');
+                
+                // Show success message
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+                successAlert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="ti ti-check-circle me-2 fs-4"></i>
+                        <div>
+                            <strong>ABHA ID Created Successfully!</strong><br>
+                            <small>Your digital health ID: <strong>${newAbhaId}</strong></small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                abhaSuccess.appendChild(successAlert);
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (successAlert.parentNode) {
+                        successAlert.remove();
+                    }
+                }, 8000);
+                
+            } catch (error) {
+                console.error('Error creating ABHA ID:', error);
+                alert('Error creating ABHA ID. Please try again.');
+                createAbhaBtn.innerHTML = '<i class="ti ti-shield me-1"></i>Create ABHA ID';
+                createAbhaBtn.disabled = false;
+            }
+        }, 2000);
+    });
+    
+    // Use ABHA ID
+    useAbhaBtn.addEventListener('click', function() {
+        // Save ABHA ID to user profile via AJAX
+        fetch('/patient/save-abha-id/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                'X-CSRFToken': getCSRFToken()
             },
             body: JSON.stringify({
-                mobile: formData.mobile,
-                otp: otp
+                abha_id: createdAbhaId
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // OTP verified, now create ABHA ID
-                return fetch('/appointments/abha/create/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: JSON.stringify(formData)
-                });
-            } else {
-                throw new Error(data.error || 'OTP verification failed');
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                createdAbhaId = data.abha_id;
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(abhaModal);
+                modal.hide();
                 
-            // Show success
-            abhaForm.style.display = 'none';
-            abhaSuccess.classList.remove('d-none');
-            generatedAbhaId.textContent = data.abha_id;
-            updateProgress(3, 'Step 3 of 3 - Complete');
-            
-            createAbhaBtn.classList.add('d-none');
-            useAbhaBtn.classList.remove('d-none');
-            
-            // Show success animation
-            abhaSuccess.classList.add('bounce-in');
+                // Hide the entire ABHA creation section
+                const abhaSection = document.querySelector('.row.mb-2 .col-12 .card.border-0.bg-light');
+                if (abhaSection) {
+                    abhaSection.style.display = 'none';
+                }
+                
+                // Show success message with ABHA ID
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+                successAlert.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="ti ti-check-circle me-2 fs-4"></i>
+                        <div>
+                            <strong>ABHA ID Created & Saved!</strong><br>
+                            <small>Your ABHA ID: <strong>${createdAbhaId}</strong> is now automatically linked to all your forms.</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.card-body').insertBefore(successAlert, document.querySelector('form'));
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (successAlert.parentNode) {
+                        successAlert.remove();
+                    }
+                }, 8000);
+                
+                // Refresh the page to show the updated ABHA ID and hide creation section
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
-                throw new Error(data.error || 'Failed to create ABHA ID');
+                alert('Error saving ABHA ID: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
-            console.error('Error creating ABHA ID:', error);
-            alert('Error: ' + error.message);
-            createAbhaBtn.innerHTML = '<i class="ti ti-shield me-1"></i>Create ABHA ID';
-            createAbhaBtn.disabled = false;
+            console.error('Error saving ABHA ID:', error);
+            alert('Error saving ABHA ID. Please try again.');
         });
-    });
-    
-    // Use ABHA ID
-    useAbhaBtn.addEventListener('click', function() {
-        // Set the ABHA ID in the main form
-        const abhaInput = document.getElementById('id_abha_id');
-        abhaInput.value = createdAbhaId;
-        
-        // Select "I have an ABHA ID" radio button
-        const hasAbhaRadio = document.getElementById('has_abha');
-        hasAbhaRadio.checked = true;
-        
-        // Show ABHA input section
-        const abhaInputSection = document.getElementById('abha_input_section');
-        const noAbhaMessage = document.getElementById('no_abha_message');
-        abhaInputSection.style.display = 'block';
-        noAbhaMessage.style.display = 'none';
-        
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(abhaModal);
-        modal.hide();
-        
-        // Show success message in main form
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
-        successAlert.innerHTML = `
-            <i class="ti ti-check-circle me-2"></i>
-            <strong>ABHA ID Linked!</strong> Your ABHA ID ${createdAbhaId} has been successfully linked to your appointment.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.querySelector('.card-body').insertBefore(successAlert, document.querySelector('form'));
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            if (successAlert.parentNode) {
-                successAlert.remove();
-            }
-        }, 5000);
     });
     
     // Reset modal when closed
@@ -2123,13 +2567,24 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = value;
     });
     
-    // OTP formatting
+    // OTP formatting (4 digits only)
     document.getElementById('abha_otp').addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 6) {
-            value = value.substring(0, 6);
+        if (value.length > 4) {
+            value = value.substring(0, 4);
         }
         e.target.value = value;
+        
+        // Auto-submit when 4 digits are entered
+        if (value.length === 4) {
+            // Small delay to let user see the complete OTP
+            setTimeout(() => {
+                const createBtn = document.getElementById('create_abha_btn');
+                if (createBtn && !createBtn.disabled) {
+                    createBtn.click();
+                }
+            }, 500);
+        }
     });
     
     // Copy OTP functionality
@@ -2173,4 +2628,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<script>
+(function() {
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+  
+  // Enhanced CSRF token helper function
+  function getCSRFToken() {
+    let token = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (token) return token.value;
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) return metaToken.getAttribute('content');
+    const cookieValue = getCookie('csrftoken');
+    return cookieValue;
+  }
+  
+  const csrftoken = getCSRFToken();
+  document.addEventListener('DOMContentLoaded', function() {
+    // Ensure every POST form has a csrf token input
+    document.querySelectorAll('form[method="post" i]').forEach(function(form) {
+      if (!form.querySelector('input[name="csrfmiddlewaretoken"]')) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrfmiddlewaretoken';
+        input.value = getCSRFToken() || '';
+        form.prepend(input);
+      }
+    });
+    // Patch window.fetch to include CSRF for same-origin unsafe methods
+    const _fetch = window.fetch;
+    window.fetch = function(input, init) {
+      init = init || {};
+      init.headers = new Headers(init.headers || {});
+      const method = (init.method || 'GET').toUpperCase();
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const isSameOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+      if (['POST','PUT','PATCH','DELETE'].includes(method) && isSameOrigin) {
+        const token = getCSRFToken();
+        if (token) init.headers.set('X-CSRFToken', token);
+      }
+      return _fetch(input, init);
+    }
+  });
+})();
+</script>
+<style>
+</style>
+</body>
 {% endblock %}

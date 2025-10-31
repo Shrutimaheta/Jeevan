@@ -148,6 +148,42 @@
 </head>
 <body>
     <!-- Navigation -->
+    {% if is_authenticated %}
+    <!-- Authenticated User Header -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/patient/welcomePatient/" style="color: var(--primary-color);">
+                <i class="fas fa-hospital me-2"></i>Jeevan
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/patient/welcomePatient/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/patient/profile/">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/appointments/">Appointments</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                            {% if patient %}{{ patient.full_name|default:"Patient" }}{% else %}User{% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/patient/profile/"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="/patient/logout/"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- Guest User Header -->
     <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold fs-3" href="/" style="color: var(--primary-color);">
@@ -171,12 +207,13 @@
                         <a class="nav-link fw-semibold" href="/#contact">Contact</a>
                     </li>
                     <li class="nav-item ms-3">
-                        <a class="btn btn-outline-primary btn-sm" href="/patient/login/">Login</a>
+                        <a class="btn btn-outline-primary btn-sm" href="/login/">Login</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
+    {% endif %}
 
     <!-- Hospital Header -->
     <section class="hospital-header" style="margin-top: 40px;">
@@ -283,9 +320,15 @@
                         </div>
                         
                         <div class="d-flex gap-2">
-                            <a href="/appointments/book/?doctor={{ doctor.id }}" class="btn btn-primary-custom btn-sm flex-fill">
+                            {% if is_authenticated %}
+                            <a href="{% url 'appointments:appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-primary-custom btn-sm flex-fill" onclick="if (window.twOpenBooking) { event.preventDefault(); window.twOpenBooking(); }">
                                 <i class="fas fa-calendar-plus me-1"></i>Book Appointment
                             </a>
+                            {% else %}
+                            <a href="/login/" class="btn btn-primary-custom btn-sm flex-fill">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login to Book
+                            </a>
+                            {% endif %}
                             <a href="/doctor/{{ doctor.id }}/" class="btn btn-outline-primary btn-sm flex-fill">
                                 <i class="fas fa-info-circle me-1"></i>View Profile
                             </a>
@@ -360,9 +403,15 @@
                         </p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="/appointments/book/?hospital={{ hospital.id }}" class="btn btn-light btn-sm">
+                        {% if is_authenticated %}
+                        <a href="{% url 'appointments:appointment_create' %}?hospital={{ hospital.id }}" class="btn btn-light btn-sm" onclick="if (window.twOpenBooking) { event.preventDefault(); window.twOpenBooking(); }">
                             <i class="fas fa-calendar-plus me-1"></i>Book Appointment
                         </a>
+                        {% else %}
+                        <a href="/login/" class="btn btn-light btn-sm">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login to Book
+                        </a>
+                        {% endif %}
                         <a href="tel:{{ hospital.contact_no }}" class="btn btn-outline-light btn-sm">
                             <i class="fas fa-phone me-1"></i>Call Now
                         </a>
@@ -447,6 +496,15 @@
             card.style.transform = 'translateY(20px)';
             card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(card);
+        });
+
+        // Safety rewrite: ensure any legacy /appointments/book links point to /appointments/create
+        document.querySelectorAll('a[href*="/appointments/book/"]').forEach(a => {
+            try {
+                const url = new URL(a.href, window.location.origin);
+                url.pathname = '/appointments/create/';
+                a.href = url.toString();
+            } catch (_) { /* ignore */ }
         });
     </script>
 </body>

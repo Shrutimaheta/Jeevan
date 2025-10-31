@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Availability - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables matching profile theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        
+        /* Global font styling */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Modern Header Styles matching profile */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        .healthcare-main {
+            margin-left: 250px;
+            background: #F8FAFC;
+            min-height: calc(100vh - 72px);
+            padding: 2rem;
+            margin-top: 72px;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .healthcare-main.sidebar-collapsed {
+            margin-left: 70px;
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: calc(100vh - 72px);
+            position: fixed;
+            left: 0;
+            top: 72px;
+            width: 250px;
+            z-index: 999;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .healthcare-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-user-info,
+        .healthcare-sidebar.collapsed .healthcare-nav-link span {
+            display: none;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link i {
+            margin-right: 0;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-profile {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-avatar-placeholder {
+            margin: 0;
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-height: 100px;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .healthcare-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .healthcare-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .healthcare-nav-link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .content-area {
+            padding: 0;
+        }
+        
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .page-header h3 {
+            margin: 0;
+            color: var(--dark-color);
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-header p {
+            margin: 8px 0 0 0;
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        
+        .filter-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+        }
+        
+        .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        .doctors-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .doctor-summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+        
+        .doctor-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .doctor-summary-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .doctor-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+        }
+        
+        .doctor-info h6 {
+            margin: 0;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .doctor-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .availability-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .working-hours {
+            margin-bottom: 12px;
+            padding: 4px 0;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .appointments-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .availability-timeline {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-top: 24px;
+        }
+        
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .timeline-header h5 {
+            margin: 0;
+            color: var(--dark-color);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .time-slot {
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .time-slot.available {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        
+        .time-slot.busy {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        
+        .time-slot.break {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+        
+        .time-slot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .slot-time {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .slot-time-range {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            opacity: 0.8;
+        }
+        
+        .slot-status {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .busy-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .break-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .break-details {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .slot-details {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            text-align: left;
+        }
+        
+        .detail-item {
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .detail-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-item strong {
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #dee2e6;
+        }
+        
+        .empty-state h6 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+        }
+        
+        .empty-state p {
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .doctors-summary-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .timeline-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <a href="{% url 'receptionist:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                                <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {% if receptionist.profile_picture %}
+                                    <img src="{{ receptionist.profile_picture.url }}" alt="Profile" class="user-avatar">
+                {% else %}
+                                    <div class="user-avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                                <span class="user-name">{{ receptionist.full_name|default:"Receptionist" }}</span>
+                        </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'receptionist:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:doctor_schedule' %}"><i class="fas fa-user-md me-2"></i>Doctor Schedule</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:patient_list' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'receptionist:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Sidebar Navigation -->
+    <div class="healthcare-sidebar">
+        <!-- Receptionist Profile Section -->
+        <div class="healthcare-sidebar-profile">
+            <div class="healthcare-sidebar-avatar-placeholder">
+                {% if receptionist.profile_picture %}
+                    <img src="{{ receptionist.profile_picture.url }}" alt="{{ receptionist.full_name|default:'Receptionist' }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">{{ receptionist.full_name|default:"Receptionist" }}</div>
+                <div class="healthcare-sidebar-user-email">{{ receptionist.hospital.name|default:"Hospital" }}</div>
+            </div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-md"></i>
+                    <span>Doctor Schedules</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_availability' %}" class="healthcare-nav-link active">
+                    <i class="fas fa-clock"></i>
+                    <span>Doctor Availability</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:patient_list' %}" class="healthcare-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Patient Registration</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <main class="healthcare-main">
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h3>
+                    <i class="fas fa-clock"></i>
+                    Doctor Availability
+                </h3>
+                <p>View and manage doctor availability schedules</p>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-card">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="doctor_id" class="form-label">Select Doctor</label>
+                        <select name="doctor_id" id="doctor_id" class="form-select">
+                            <option value="">Choose a doctor to view availability</option>
+                            {% for doctor in doctors %}
+                                <option value="{{ doctor.id }}" {% if selected_doctor and selected_doctor.id == doctor.id %}selected{% endif %}>
+                                    {{ doctor.full_name }} - 
+                                    {% for spec in doctor.specialization.all %}
+                                        {{ spec.sname }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" name="date" id="date" class="form-control" value="{{ date_filter }}" min="{% now 'Y-m-d' %}">
+                    </div>
+                    {% if selected_doctor %}
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status Filter</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Slots</option>
+                            <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available Only</option>
+                            <option value="busy" {% if status_filter == 'busy' %}selected{% endif %}>Busy Only</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>View
+                            </button>
+                            <a href="{% url 'receptionist:doctor_availability' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Doctors Summary -->
+            {% if doctors_summary %}
+                <div class="doctors-summary-grid">
+                    {% for doctor_summary in doctors_summary %}
+                        <div class="doctor-summary-card">
+                            <div class="doctor-summary-header">
+                                <div class="doctor-avatar">
+                                    {{ doctor_summary.doctor.full_name|first|upper }}
+                                </div>
+                                <div class="doctor-info">
+                                    <h6>{{ doctor_summary.doctor.full_name }}</h6>
+                                    <p>
+                                        {% for spec in doctor_summary.doctor.specialization.all %}
+                                            {{ spec.sname }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="availability-status">
+                                <span class="status-badge bg-{{ doctor_summary.status_class }}">
+                                    {{ doctor_summary.status_text }}
+                                </span>
+                                <small class="text-muted">{{ selected_date|date:"M d, Y" }}</small>
+                            </div>
+                            
+                            <div class="working-hours">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Working Hours: 9:00 AM - 6:00 PM
+                                </small>
+                            </div>
+                            
+                            <div class="appointments-stats">
+                                <div class="stat-item">
+                                    <div class="stat-number">{{ doctor_summary.total_appointments }}</div>
+                                    <div class="stat-label">Total</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">{{ doctor_summary.pending_appointments }}</div>
+                                    <div class="stat-label">Pending</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">{{ doctor_summary.accepted_appointments }}</div>
+                                    <div class="stat-label">Accepted</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">{{ doctor_summary.completed_appointments }}</div>
+                                    <div class="stat-label">Completed</div>
+                                </div>
+                            </div>
+                            
+                            <a href="?doctor_id={{ doctor_summary.doctor.id }}&date={{ date_filter }}" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-eye me-2"></i>View Detailed Schedule
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Detailed Availability Timeline -->
+            {% if selected_doctor and availability_data %}
+                <div class="availability-timeline">
+                    <div class="timeline-header">
+                        <h5>
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            {{ selected_doctor.full_name }} - {{ selected_date|date:"F d, Y" }}
+                        </h5>
+                    </div>
+                    
+                    <div class="timeline-grid">
+                        {% for slot in availability_data %}
+                            <div class="time-slot {{ slot.status }}">
+                                <div class="slot-time">{{ slot.time_display }}</div>
+                                <div class="slot-time-range">{{ slot.time_range }}</div>
+                                {% if slot.status == 'busy' %}
+                                    <div class="slot-status busy-status">
+                                        <i class="fas fa-user-injured me-1"></i>
+                                        {{ slot.details.patient_name }}
+                                    </div>
+                                    <div class="appointment-time">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ slot.details.appointment_time }}
+                                    </div>
+                                {% else %}
+                                    <div class="slot-status">{{ slot.text }}</div>
+                                {% endif %}
+                                {% if slot.details %}
+                                    <div class="slot-details">
+                                        <div class="detail-item">
+                                            <strong>Status:</strong> {{ slot.details.status|title }}
+                                        </div>
+                                        {% if slot.details.symptoms %}
+                                        <div class="detail-item">
+                                            <strong>Symptoms:</strong> {{ slot.details.symptoms|truncatechars:30 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% elif selected_doctor and not availability_data %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h6>No availability data found</h6>
+                    <p>No appointments or availability data found for {{ selected_doctor.full_name }} on {{ selected_date|date:"F d, Y" }}.</p>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-md"></i>
+                    <h6>Select a Doctor</h6>
+                    <p>Choose a doctor from the dropdown above to view their availability schedule.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle Functions
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            const mainContent = document.querySelector('.healthcare-main');
+            
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+            }
+        }
+    </script>
+    <script>
+        // Ensure date picker doesn't allow past dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                // Set minimum date to today
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.setAttribute('min', today);
+                
+                // If current value is in the past, reset to today
+                if (dateInput.value && dateInput.value < today) {
+                    dateInput.value = today;
+                }
+            }
+            
+            // Add form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const selectedDate = dateInput.value;
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (selectedDate && selectedDate < today) {
+                        e.preventDefault();
+                        alert('Please select today\'s date or a future date.');
+                        dateInput.focus();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

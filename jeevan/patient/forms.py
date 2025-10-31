@@ -150,7 +150,7 @@ class PatientLoginForm(forms.Form):
 class PatientProfileForm(forms.ModelForm):
     class Meta:
         model = Patient
-        fields = ['full_name', 'email', 'contact_number', 'gender', 'dob', 'address', 'city', 'pincode', 'abha_id', 'blood_group', 'emergency_number', 'existing_condition', 'allergies', 'profile_photo']
+        fields = ['full_name', 'email', 'contact_number', 'gender', 'dob', 'address', 'city', 'pincode', 'blood_group', 'emergency_number', 'existing_condition', 'allergies', 'profile_photo']
         labels = {
             'full_name': 'Full Name',
             'email': 'Email Address',
@@ -160,7 +160,6 @@ class PatientProfileForm(forms.ModelForm):
             'address': 'Address',
             'city': 'City',
             'pincode': 'Pincode',
-            'abha_id': 'ABHA ID',
             'blood_group': 'Blood Group',
             'emergency_number': 'Emergency Contact Number',
             'existing_condition': 'Existing Medical Conditions',
@@ -199,10 +198,6 @@ class PatientProfileForm(forms.ModelForm):
             'pincode': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Pincode'
-            }),
-            'abha_id': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'ABHA ID (Optional)'
             }),
             'blood_group': forms.Select(attrs={
                 'class': 'form-control'
@@ -251,18 +246,7 @@ class PatientProfileForm(forms.ModelForm):
                 raise ValidationError("A patient with this contact number already exists.")
         return contact_number
     
-    def clean_abha_id(self):
-        abha_id = self.cleaned_data.get('abha_id')
-        if abha_id:  # Only validate if ABHA ID is provided
-            if self.instance and self.instance.pk:
-                # If updating existing patient, exclude current patient from uniqueness check
-                if Patient.objects.filter(abha_id=abha_id).exclude(pk=self.instance.pk).exists():
-                    raise ValidationError("A patient with this ABHA ID already exists.")
-            else:
-                # If creating new patient
-                if Patient.objects.filter(abha_id=abha_id).exists():
-                    raise ValidationError("A patient with this ABHA ID already exists.")
-        return abha_id
+    # Removed ABHA field and validation
     
     def clean_profile_photo(self):
         profile_photo = self.cleaned_data.get('profile_photo')
@@ -345,19 +329,23 @@ class PatientDocumentForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter document title'
+                'placeholder': 'Enter document title',
+                'style': 'font-size: 15px; padding: 0.5rem 0.75rem; height: calc(1.5em + 1rem + 2px);'
             }),
             'document_type': forms.Select(attrs={
-                'class': 'form-control'
+                'class': 'form-control',
+                'style': 'font-size: 15px; padding: 0.5rem 0.75rem; height: calc(1.5em + 1rem + 2px);'
             }),
             'file': forms.FileInput(attrs={
                 'class': 'form-control',
-                'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp'
+                'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp',
+                'style': 'font-size: 15px; padding: 0.5rem 0.75rem;'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Add any additional notes about this document',
-                'rows': 3
+                'rows': 4,
+                'style': 'font-size: 15px; padding: 0.5rem 0.75rem; min-height: 80px; resize: vertical;'
             }),
         }
 

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables matching profile theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        
+        /* Global font styling */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Modern Header Styles matching profile */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        .healthcare-main {
+            margin-left: 250px;
+            background: #F8FAFC;
+            min-height: calc(100vh - 72px);
+            padding: 2rem;
+            margin-top: 72px;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .healthcare-main.sidebar-collapsed {
+            margin-left: 70px;
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: calc(100vh - 72px);
+            position: fixed;
+            left: 0;
+            top: 72px;
+            width: 250px;
+            z-index: 999;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .healthcare-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-user-info,
+        .healthcare-sidebar.collapsed .healthcare-nav-link span {
+            display: none;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link i {
+            margin-right: 0;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-profile {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-avatar-placeholder {
+            margin: 0;
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-height: 100px;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .healthcare-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .healthcare-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .healthcare-nav-link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .content-area {
+            padding: 0;
+        }
+        
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: #2c5aa0;
+            border-color: #2c5aa0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+        }
+        
+        .patient-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .patient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .patient-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .patient-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .patient-id {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .info-item i {
+            color: var(--primary-color);
+            width: 20px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+        
+        .info-value {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .patient-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            color: #6c757d;
+            margin-bottom: 2rem;
+        }
+        
+        /* Ensure equal height cards */
+        .row.g-4 > [class*="col-"] {
+            display: flex;
+        }
+        
+        /* Card content alignment */
+        .patient-card .patient-header {
+            flex-shrink: 0;
+        }
+        
+        .patient-card .patient-info {
+            flex-grow: 1;
+        }
+        
+        .patient-card .patient-actions {
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .patient-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .patient-actions {
+                flex-direction: column;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <a href="{% url 'receptionist:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                                <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {% if receptionist.profile_picture %}
+                                    <img src="{{ receptionist.profile_picture.url }}" alt="Profile" class="user-avatar">
+                {% else %}
+                                    <div class="user-avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                                <span class="user-name">{{ receptionist.full_name|default:"Receptionist" }}</span>
+                        </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'receptionist:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:doctor_schedule' %}"><i class="fas fa-user-md me-2"></i>Doctor Schedule</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:patient_list' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'receptionist:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Sidebar Navigation -->
+    <div class="healthcare-sidebar">
+        <!-- Receptionist Profile Section -->
+        <div class="healthcare-sidebar-profile">
+            <div class="healthcare-sidebar-avatar-placeholder">
+                {% if receptionist.profile_picture %}
+                    <img src="{{ receptionist.profile_picture.url }}" alt="{{ receptionist.full_name|default:'Receptionist' }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">{{ receptionist.full_name|default:"Receptionist" }}</div>
+                <div class="healthcare-sidebar-user-email">{{ receptionist.hospital.name|default:"Hospital" }}</div>
+            </div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-md"></i>
+                    <span>Doctor Schedules</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_availability' %}" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Doctor Availability</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:patient_list' %}" class="healthcare-nav-link active">
+                    <i class="fas fa-users"></i>
+                    <span>Patient Registration</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <main class="healthcare-main">
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-users"></i>
+                    Patient Registration
+                </h1>
+                <p class="page-subtitle">Manage registered patients and their appointments</p>
+                <div class="mt-3">
+                    <a href="{% url 'receptionist:register_patient' %}" class="btn btn-success">
+                        <i class="fas fa-user-plus"></i> Register New Patient
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Patients List -->
+            {% if patients %}
+                <div class="row g-4">
+                    {% for patient in patients %}
+                    <div class="col-md-6 col-lg-4 d-flex">
+                        <div class="patient-card">
+                            <div class="patient-header">
+                                <div>
+                                    <h3 class="patient-name">{{ patient.full_name }}</h3>
+                                    <p class="patient-id">Patient ID: {{ patient.id }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="patient-info">
+                                {% if patient.email %}
+                                <div class="info-item">
+                                    <i class="fas fa-envelope"></i>
+                                    <span class="info-label">Email:</span>
+                                    <span class="info-value">{{ patient.email }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if patient.contact_number %}
+                                <div class="info-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span class="info-label">Contact:</span>
+                                    <span class="info-value">{{ patient.contact_number }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if patient.gender %}
+                                <div class="info-item">
+                                    <i class="fas fa-venus-mars"></i>
+                                    <span class="info-label">Gender:</span>
+                                    <span class="info-value">{{ patient.gender }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if patient.abha_id %}
+                                <div class="info-item">
+                                    <i class="fas fa-id-card"></i>
+                                    <span class="info-label">ABHA ID:</span>
+                                    <span class="info-value">{{ patient.abha_id|slice:":2" }}-{{ patient.abha_id|slice:"2:6" }}-{{ patient.abha_id|slice:"6:10" }}-{{ patient.abha_id|slice:"10:14" }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="patient-actions">
+                                <a href="{% url 'receptionist:book_appointment_for_patient' patient.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                                </a>
+                                <a href="{% url 'receptionist:appointments' %}?patient={{ patient.id }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-calendar-check"></i> View Appointments
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No Patients Registered</h3>
+                    <p>You haven't registered any patients yet. Register a new patient to start managing appointments.</p>
+                    <a href="{% url 'receptionist:register_patient' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-user-plus"></i> Register First Patient
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle Functions
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            const mainContent = document.querySelector('.healthcare-main');
+            
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+            }
+        }
+    </script>
+</body>
+</html>
