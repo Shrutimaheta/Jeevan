@@ -12,18 +12,32 @@
         <!-- Page Header -->
         <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
             <div class="breadcrumb-arrow">
-                <h4 class="mb-1">My Appointments</h4>
+                <h4 class="mb-1">{% if accepted_only %}Accepted Appointments{% else %}My Appointments{% endif %}</h4>
                 <p class="mb-0">
-                    Manage your medical appointments and bookings
+                    {% if accepted_only %}Showing only accepted bookings{% else %}Manage your medical appointments and bookings{% endif %}
                 </p>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-secondary">
                     <i class="ti ti-arrow-left me-1"></i>Back to Dashboard
                 </a>
-                <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                <a href="javascript:void(0)" class="btn btn-primary" onclick="if (window.bookAppointment) { window.bookAppointment(); } else if (window.twOpenBooking) { window.twOpenBooking(); } else { window.location.href='/patient/welcomePatient/?openBooking=1'; }">
                     <i class="ti ti-plus me-1"></i>Book New Appointment
                 </a>
+                <form method="get" class="d-flex align-items-center gap-2">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="accepted" {% if selected_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                        <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="expired" {% if selected_status == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    {% if selected_status and selected_status != 'all' %}
+                    <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">Reset</a>
+                    {% endif %}
+                </form>
             </div>
         </div>
         <!-- End Page Header -->
@@ -101,12 +115,26 @@
                                                 <span class="badge bg-danger text-white">Rejected</span>
                                             {% elif appointment.status == 'completed' %}
                                                 <span class="badge bg-info text-white">Completed</span>
+                                            {% elif appointment.status == 'expired' %}
+                                                <span class="badge bg-secondary text-white">Expired</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-dark text-white">Cancelled</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <span class="badge bg-primary text-white">{{ appointment.get_payment_mode_display }}</span>
                                         </td>
                                         <td>
+                                            {% if appointment.status == 'completed' %}
+                                            <div class="d-flex align-items-center gap-1">
+                                                <a href="{% url 'patient:prescription_list' %}" class="btn btn-sm btn-success" title="View Prescription Details">
+                                                    <i class="ti ti-file-text me-1"></i>Prescriptions
+                                                </a>
+                                                <a href="{% url 'appointments:appointment_detail' appointment.id %}" class="btn btn-sm btn-primary" title="View Appointment Details">
+                                                    <i class="ti ti-eye me-1"></i>Appointment
+                                                </a>
+                                            </div>
+                                            {% else %}
                                             <div class="d-flex align-items-center gap-1">
                                                 <a href="{% url 'appointments:appointment_detail' appointment.id %}" class="btn btn-sm btn-primary" title="View Details">
                                                     <i class="ti ti-eye me-1"></i>View
@@ -122,6 +150,7 @@
                                                 </a>
                                                 {% endif %}
                                             </div>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -135,7 +164,7 @@
                             </div>
                             <h5 class="fw-semibold mb-2">No Appointments Found</h5>
                             <p class="text-muted mb-4">You haven't booked any appointments yet.</p>
-                            <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                            <a href="javascript:void(0)" class="btn btn-primary" onclick="if (window.bookAppointment) { window.bookAppointment(); } else if (window.twOpenBooking) { window.twOpenBooking(); } else { window.location.href='/patient/welcomePatient/?openBooking=1'; }">
                                 <i class="ti ti-plus me-1"></i>Book Your First Appointment
                             </a>
                         </div>
@@ -150,4 +179,386 @@
 <!-- ========================
     End Page Content
 ========================= -->
+
+<!-- Hospital Selection Modal -->
+<div class="modal fade" id="hospitalSelectionModal" tabindex="-1" aria-labelledby="hospitalSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content rounded-3xl border-0 shadow-elevated">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-xl font-bold text-secondary-800" id="hospitalSelectionModalLabel">Book Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding-top: 0.75rem;">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-tabs border-0 mb-4" id="hospitalTabs" role="tablist" style="display: flex; gap: 1rem; padding-bottom: 1rem;">
+                    <li class="nav-item" role="presentation" style="margin-right: 1rem;">
+                        <button class="nav-link active rounded-2xl px-4 py-2 font-medium" id="hospitals-tab" data-bs-toggle="tab" data-bs-target="#hospitals" type="button" role="tab" aria-controls="hospitals" aria-selected="true" style="background-color: #2563eb; color: #fff; border: none; font-weight: 600;">
+                            Hospitals
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation" style="margin-right: 1rem;">
+                        <button class="nav-link rounded-2xl px-4 py-2 font-medium" id="specializations-tab" data-bs-toggle="tab" data-bs-target="#specializations" type="button" role="tab" aria-controls="specializations" aria-selected="false" style="background-color: #3b82f6; color: #fff; border: none; font-weight: 600;">
+                            Specializations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-2xl px-4 py-2 font-medium" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false" style="background-color: #3b82f6; color: #fff; border: none; font-weight: 600;">
+                            Location
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="hospitalTabContent">
+                    <!-- Hospitals Tab -->
+                    <div class="tab-pane fade show active" id="hospitals" role="tabpanel" aria-labelledby="hospitals-tab">
+                        <div id="hospitalsContent" class="row g-4">
+                            <!-- Hospitals will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Specializations Tab -->
+                    <div class="tab-pane fade" id="specializations" role="tabpanel" aria-labelledby="specializations-tab">
+                        <div id="specializationsContent" class="row g-4">
+                            <!-- Specializations will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Location Tab -->
+                    <div class="tab-pane fade" id="location" role="tabpanel" aria-labelledby="location-tab">
+                        <div id="locationContent" class="row g-4">
+                            <!-- Location content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* eslint-disable */
+// Hospital data - Django template variables will be replaced at render time
+const hospitals = [
+    {% for hospital in hospitals %}
+    {
+        id: {{ hospital.id }},
+        name: "{{ hospital.name|escapejs }}",
+        location: "{{ hospital.location|escapejs }}",
+        email: "{{ hospital.email|escapejs }}",
+        contact_no: "{{ hospital.contact_no|escapejs }}",
+        registration_number: "{{ hospital.registration_number|escapejs }}",
+        logo: "{% if hospital.logo %}{{ hospital.logo.url }}{% else %}{% endif %}",
+        specializations: [
+            {% for spec in hospital.specialization.all %}
+            "{{ spec.sname|escapejs }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        doctors: [
+            {% for doctor in hospital.doctor_set.all %}
+            {
+                id: {{ doctor.id }},
+                name: "{{ doctor.full_name|escapejs }}",
+                contact: "{{ doctor.contact_number|escapejs }}",
+                gender: "{{ doctor.gender|escapejs }}",
+                specializations: [
+                    {% for spec in doctor.specialization.all %}
+                    "{{ spec.sname|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Specializations data
+const specializations = [
+    {% for spec in specializations %}
+    {"id": {{ spec.id }}, "name": "{{ spec.sname|escapejs }}", "icon": "{% if spec.icon %}{{ spec.icon.url }}{% endif %}", "description": "{{ spec.description|default:''|escapejs }}"}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+/* eslint-enable */
+
+// Current filter for hospitals grid
+let currentHospitalFilter = null;
+
+function getFilteredHospitals() {
+    if (!currentHospitalFilter) return hospitals;
+    if (currentHospitalFilter.type === 'specialization') {
+        return hospitals.filter(h => (h.specializations || []).includes(currentHospitalFilter.value));
+    }
+    if (currentHospitalFilter.type === 'location') {
+        return hospitals.filter(h => h.location === currentHospitalFilter.value);
+    }
+    return hospitals;
+}
+
+// Load hospitals content
+function loadHospitalsContent() {
+    const content = document.getElementById('hospitalsContent');
+    if (!content) {
+        console.error('hospitalsContent element not found');
+        return;
+    }
+    
+    let html = '';
+    
+    if (!hospitals || hospitals.length === 0) {
+        html = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
+                <h5 class="text-muted">No hospitals available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+        content.innerHTML = html;
+        return;
+    }
+    
+    const filteredHospitals = getFilteredHospitals();
+    html = filteredHospitals.map(hospital => `
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 hospital-card" style="border: 3px solid #1f2937; border-radius: 8px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
+                <div class="card-body p-3">
+                    <div class="text-center mb-2">
+                        <div class="hospital-icon mx-auto mb-1" style="width: 45px; height: 45px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                            ${hospital.logo ? `<img src="${hospital.logo}" alt="${hospital.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">` : '🏥'}
+                        </div>
+                        <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937; font-size: 1.05rem; line-height: 1.3;">${hospital.name}</h6>
+                        <p class="card-text text-muted mb-0" style="font-size: 0.9rem; line-height: 1.3;">
+                            <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
+                        </p>
+                    </div>
+                    <div class="hospital-specializations mb-2">
+                        ${hospital.specializations.slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">${spec}</span>`).join('')}
+                        ${hospital.specializations.length > 2 ? `<span class="badge bg-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">+${hospital.specializations.length - 2}</span>` : ''}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" style="font-size: 0.85rem;">${hospital.doctors ? hospital.doctors.length : 0} doctors</small>
+                        <button class="btn btn-primary btn-sm" style="font-size: 0.85rem; padding: 0.25rem 0.5rem; background-color: #2563eb; color: #fff; border: none;" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+                            Book
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    content.innerHTML = html;
+}
+
+// Load specializations content
+function loadSpecializationsContent() {
+    const content = document.getElementById('specializationsContent');
+    if (!content) {
+        console.error('specializationsContent element not found');
+        return;
+    }
+    
+    let html = '';
+    const specializationsArray = specializations || [];
+    
+    if (!specializationsArray || specializationsArray.length === 0) {
+        html = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🩺</div>
+                <h5 class="text-muted">No specializations available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+        content.innerHTML = html;
+        return;
+    }
+    
+    html = specializationsArray.map(spec => {
+        const specName = spec.name || spec;
+        const iconUrl = spec.icon || '';
+        const description = spec.description || 'Find specialists in this field';
+        
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 specialization-card" style="border: 3px solid #1f2937; border-radius: 8px; transition: all 0.3s ease; cursor: pointer;" onclick="selectSpecialization('${specName}')">
+                    <div class="card-body p-3 text-center">
+                        <div class="specialization-icon mb-2" style="width: 45px; height: 45px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.2rem;">
+                            ${iconUrl ? `<img src="${iconUrl}" alt="${specName}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">` : '🩺'}
+                        </div>
+                        <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937; font-size: 1.05rem; line-height: 1.3;">${specName}</h6>
+                        <p class="card-text text-muted mb-2" style="font-size: 0.9rem; line-height: 1.3;">${description}</p>
+                        <button class="btn btn-primary btn-sm" style="font-size: 0.85rem; padding: 0.25rem 0.5rem; background-color: #2563eb; color: #fff; border: none;" onclick="event.stopPropagation(); selectSpecialization('${specName}')">
+                            Find Specialists
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    content.innerHTML = html;
+}
+
+// Load location content
+function loadLocationContent() {
+    const content = document.getElementById('locationContent');
+    if (!content) {
+        console.error('locationContent element not found');
+        return;
+    }
+    
+    let html = '';
+    const uniqueLocations = [...new Set(hospitals.map(hospital => hospital.location))].filter(location => location);
+    
+    if (!uniqueLocations || uniqueLocations.length === 0) {
+        html = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📍</div>
+                <h5 class="text-muted">No locations available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+        content.innerHTML = html;
+        return;
+    }
+    
+    html = uniqueLocations.map(location => {
+        const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
+        
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 location-card" style="border: 3px solid #1f2937; border-radius: 8px; transition: all 0.3s ease; cursor: pointer;" onclick="selectLocation('${location}')">
+                    <div class="card-body p-3 text-center">
+                        <div class="location-icon mb-2" style="width: 45px; height: 45px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.2rem;">
+                            📍
+                        </div>
+                        <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937; font-size: 1.05rem; line-height: 1.3;">${location}</h6>
+                        <p class="card-text text-muted mb-2" style="font-size: 0.9rem; line-height: 1.3;">${hospitalsInLocation.length} hospital${hospitalsInLocation.length !== 1 ? 's' : ''} available</p>
+                        <button class="btn btn-primary btn-sm" style="font-size: 0.85rem; padding: 0.25rem 0.5rem; background-color: #2563eb; color: #fff; border: none;" onclick="event.stopPropagation(); selectLocation('${location}')">
+                            View Hospitals
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    content.innerHTML = html;
+}
+
+// Select hospital
+function selectHospital(hospitalId) {
+    const hospital = hospitals.find(h => h.id === hospitalId);
+    if (!hospital) return;
+    
+    const selectionModal = bootstrap.Modal.getInstance(document.getElementById('hospitalSelectionModal'));
+    if (selectionModal) {
+        selectionModal.hide();
+    }
+    
+    window.location.href = `/hospitals/${hospitalId}/doctors/`;
+}
+
+// Select specialization
+function selectSpecialization(specialization) {
+    currentHospitalFilter = { type: 'specialization', value: specialization };
+    loadHospitalsContent();
+    document.getElementById('hospitals-tab').click();
+}
+
+// Select location
+function selectLocation(location) {
+    currentHospitalFilter = { type: 'location', value: (location || '').trim() };
+    loadHospitalsContent();
+    document.getElementById('hospitals-tab').click();
+}
+
+// Function to update tab styles when switching
+function updateTabStyles(activeTab) {
+    const tabs = {
+        hospitals: document.getElementById('hospitals-tab'),
+        specializations: document.getElementById('specializations-tab'),
+        location: document.getElementById('location-tab')
+    };
+    
+    Object.keys(tabs).forEach(tabName => {
+        const tab = tabs[tabName];
+        if (tab) {
+            if (tabName === activeTab) {
+                // Active tab style - darker blue
+                tab.style.backgroundColor = '#2563eb';
+                tab.style.color = '#fff';
+                tab.style.fontWeight = '600';
+            } else {
+                // Inactive tab style - lighter blue
+                tab.style.backgroundColor = '#3b82f6';
+                tab.style.color = '#fff';
+                tab.style.fontWeight = '600';
+            }
+        }
+    });
+}
+
+// Open booking modal
+window.twOpenBooking = function() {
+    console.log('Opening booking modal...');
+    
+    loadHospitalsContent();
+    loadSpecializationsContent();
+    loadLocationContent();
+    
+    const modal = new bootstrap.Modal(document.getElementById('hospitalSelectionModal'));
+    modal.show();
+    
+    setTimeout(function() {
+        updateTabStyles('hospitals');
+        loadHospitalsContent();
+        loadSpecializationsContent();
+        loadLocationContent();
+    }, 100);
+};
+
+// Alias for compatibility
+window.bookAppointment = window.twOpenBooking;
+
+// Update tab styles when tabs are clicked
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const hospitalsTab = document.getElementById('hospitals-tab');
+        const specializationsTab = document.getElementById('specializations-tab');
+        const locationTab = document.getElementById('location-tab');
+        
+        if (hospitalsTab) {
+            hospitalsTab.addEventListener('click', function() {
+                updateTabStyles('hospitals');
+            });
+        }
+        
+        if (specializationsTab) {
+            specializationsTab.addEventListener('click', function() {
+                updateTabStyles('specializations');
+            });
+        }
+        
+        if (locationTab) {
+            locationTab.addEventListener('click', function() {
+                updateTabStyles('location');
+            });
+        }
+        
+        // Also update styles when Bootstrap activates tabs
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                const target = e.target.getAttribute('data-bs-target');
+                if (target === '#hospitals') {
+                    updateTabStyles('hospitals');
+                } else if (target === '#specializations') {
+                    updateTabStyles('specializations');
+                } else if (target === '#location') {
+                    updateTabStyles('location');
+                }
+            });
+        });
+    }, 500);
+});
+</script>
 {% endblock %}

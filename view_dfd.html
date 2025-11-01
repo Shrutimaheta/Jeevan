@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Management System - DFD Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        .diagram-container {
+            margin: 20px 0;
+            padding: 30px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .mermaid {
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .mermaid .node rect {
+            stroke-width: 2px;
+            rx: 4px;
+            ry: 4px;
+        }
+        .mermaid .edgePath .path {
+            stroke-width: 2px;
+        }
+        .mermaid .edgeLabel {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+        .description {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Healthcare Management System - Data Flow Diagrams</h1>
+        
+        <div class="description">
+            <strong>System Overview:</strong> This DFD represents the comprehensive healthcare management system "Jeevan" that handles patient registration, appointment booking, medical records management, and multi-role user interactions.
+        </div>
+
+        <h2>Level 0 DFD - Context Diagram</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    A[Patient] ---|Registration Data<br/>Appointment Requests<br/>Health Data| B[Healthcare Management System]
+    C[Doctor] ---|Medical Records<br/>Prescriptions<br/>Diagnosis| B
+    D[Receptionist] ---|Appointment Management<br/>Patient Registration| B
+    E[Nurse] ---|Patient Care Data<br/>Vital Signs| B
+    F[Admin] ---|System Management<br/>User Management| B
+    G[ABHA System] ---|ABHA ID Verification| B
+    H[Payment Gateway] ---|Payment Processing| B
+    
+    B ---|Appointment Confirmations<br/>Notifications| A
+    B ---|Patient Data<br/>Appointment Schedules| C
+    B ---|Appointment Status<br/>Patient Information| D
+    B ---|Patient Health Data<br/>Care Instructions| E
+    B ---|System Reports<br/>Analytics| F
+    B ---|ABHA ID Requests| G
+    B ---|Payment Status| H
+            </div>
+        </div>
+
+        <h2>Level 1 DFD - Main Processes</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    %% External Entities
+    A[Patient]
+    C[Doctor]
+    D[Receptionist]
+    E[Nurse]
+    F[Admin]
+    G[ABHA System]
+    H[Payment Gateway]
+    
+    %% Main Processes
+    P1["1.0<br/>User Authentication<br/>& Registration"]
+    P2["2.0<br/>Appointment<br/>Management"]
+    P3["3.0<br/>Medical Records<br/>Management"]
+    P4["4.0<br/>Patient Health<br/>Tracking"]
+    P5["5.0<br/>ABHA ID<br/>Management"]
+    P6["6.0<br/>Payment<br/>Processing"]
+    P7["7.0<br/>Notification<br/>System"]
+    P8["8.0<br/>System<br/>Administration"]
+    
+    %% Data Stores
+    D1[("D1: User Database")]
+    D2[("D2: Patient Profiles")]
+    D3[("D3: Appointment Database")]
+    D4[("D4: Medical Records")]
+    D5[("D5: Health Tracking Data")]
+    D6[("D6: ABHA Database")]
+    D7[("D7: Payment Records")]
+    D8[("D8: Notification Queue")]
+    D9[("D9: Hospital Database")]
+    D10[("D10: Doctor Database")]
+    
+    %% Patient Flows
+    A ---|Login Credentials| P1
+    A ---|Registration Data| P1
+    A ---|Appointment Request| P2
+    A ---|Health Data Input| P4
+    A ---|ABHA Application| P5
+    A ---|Payment Information| P6
+    
+    %% Doctor Flows
+    C ---|Login Credentials| P1
+    C ---|Medical Records| P3
+    C ---|Prescriptions| P3
+    C ---|Diagnosis| P3
+    
+    %% Receptionist Flows
+    D ---|Login Credentials| P1
+    D ---|Appointment Management| P2
+    D ---|Patient Registration| P1
+    
+    %% Nurse Flows
+    E ---|Login Credentials| P1
+    E ---|Vital Signs| P4
+    E ---|Care Notes| P4
+    
+    %% Admin Flows
+    F ---|Login Credentials| P1
+    F ---|System Management| P8
+    F ---|User Management| P8
+    
+    %% External System Flows
+    G ---|ABHA Verification| P5
+    H ---|Payment Confirmation| P6
+    
+    %% Process to Data Store Flows
+    P1 ---|User Data| D1
+    P1 ---|Patient Profile| D2
+    P2 ---|Appointment Data| D3
+    P3 ---|Medical Records| D4
+    P4 ---|Health Data| D5
+    P5 ---|ABHA Records| D6
+    P6 ---|Payment Data| D7
+    P7 ---|Notifications| D8
+    P8 ---|Hospital Data| D9
+    P8 ---|Doctor Data| D10
+    
+    %% Data Store to Process Flows
+    D1 ---|User Info| P1
+    D2 ---|Patient Info| P2
+    D2 ---|Patient Info| P3
+    D2 ---|Patient Info| P4
+    D3 ---|Appointment Data| P2
+    D3 ---|Appointment Data| P3
+    D4 ---|Medical History| P3
+    D5 ---|Health Trends| P4
+    D6 ---|ABHA Status| P5
+    D7 ---|Payment Status| P6
+    D8 ---|Notifications| P7
+    D9 ---|Hospital Info| P2
+    D10 ---|Doctor Info| P2
+    
+    %% Output Flows
+    P1 ---|Authentication Status| A
+    P1 ---|Authentication Status| C
+    P1 ---|Authentication Status| D
+    P1 ---|Authentication Status| E
+    P1 ---|Authentication Status| F
+    P2 ---|Appointment Confirmation| A
+    P2 ---|Appointment Schedule| C
+    P2 ---|Appointment Status| D
+    P3 ---|Medical Records| C
+    P3 ---|Prescription| A
+    P4 ---|Health Reports| A
+    P4 ---|Vital Signs| C
+    P5 ---|ABHA ID| A
+    P6 ---|Payment Receipt| A
+    P7 ---|Notifications| A
+    P7 ---|Notifications| C
+    P7 ---|Notifications| D
+    P8 ---|System Reports| F
+            </div>
+        </div>
+
+        <h2>Level 2 DFD - Appointment Management (Detailed)</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    %% External Entities
+    A[Patient]
+    C[Doctor]
+    D[Receptionist]
+    
+    %% Sub-processes
+    P2_1["2.1<br/>Appointment<br/>Booking"]
+    P2_2["2.2<br/>Appointment<br/>Scheduling"]
+    P2_3["2.3<br/>Appointment<br/>Confirmation"]
+    P2_4["2.4<br/>Appointment<br/>Status Update"]
+    
+    %% Data Stores
+    D2[("D2: Patient Profiles")]
+    D3[("D3: Appointment Database")]
+    D9[("D9: Hospital Database")]
+    D10[("D10: Doctor Database")]
+    D8[("D8: Notification Queue")]
+    
+    %% Patient to Booking
+    A ---|Appointment Request| P2_1
+    A ---|Preferred Date/Time| P2_1
+    A ---|Symptoms Description| P2_1
+    
+    %% Booking Process
+    P2_1 ---|Patient Selection| P2_2
+    P2_1 ---|Hospital Selection| P2_2
+    P2_1 ---|Doctor Selection| P2_2
+    
+    %% Scheduling Process
+    P2_2 ---|Schedule Check| P2_3
+    P2_3 ---|Confirmation| P2_4
+    
+    %% Receptionist Management
+    D ---|Appointment Review| P2_3
+    D ---|Accept/Reject| P2_4
+    
+    %% Doctor Management
+    C ---|Appointment View| P2_4
+    C ---|Status Update| P2_4
+    
+    %% Data Store Interactions
+    D2 ---|Patient Info| P2_1
+    D9 ---|Hospital Info| P2_2
+    D10 ---|Doctor Info| P2_2
+    D3 ---|Appointment Data| P2_3
+    P2_1 ---|New Appointment| D3
+    P2_4 ---|Updated Status| D3
+    P2_4 ---|Notification| D8
+    
+    %% Outputs
+    P2_3 ---|Booking Confirmation| A
+    P2_4 ---|Status Update| A
+    P2_4 ---|Schedule Update| C
+    P2_4 ---|Management Update| D
+            </div>
+        </div>
+
+        <h2>Level 2 DFD - Medical Records Management (Detailed)</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    %% External Entities
+    C[Doctor]
+    A[Patient]
+    
+    %% Sub-processes
+    P3_1["3.1<br/>Record<br/>Creation"]
+    P3_2["3.2<br/>Prescription<br/>Management"]
+    P3_3["3.3<br/>Diagnosis<br/>Entry"]
+    P3_4["3.4<br/>Report<br/>Generation"]
+    
+    %% Data Stores
+    D3[("D3: Appointment Database")]
+    D4[("D4: Medical Records")]
+    D2[("D2: Patient Profiles")]
+    
+    %% Doctor Inputs
+    C ---|Visit Summary| P3_1
+    C ---|Diagnosis| P3_3
+    C ---|Prescription| P3_2
+    C ---|Treatment Notes| P3_1
+    
+    %% Process Flow
+    P3_1 ---|Medical Record| P3_4
+    P3_2 ---|Prescription Data| P3_4
+    P3_3 ---|Diagnosis Data| P3_4
+    
+    %% Data Store Interactions
+    D3 ---|Appointment Info| P3_1
+    D2 ---|Patient History| P3_1
+    P3_1 ---|New Record| D4
+    P3_2 ---|Prescription| D4
+    P3_3 ---|Diagnosis| D4
+    D4 ---|Medical History| P3_4
+    
+    %% Outputs
+    P3_4 ---|Medical Report| A
+    P3_4 ---|Prescription| A
+    P3_4 ---|Treatment Summary| C
+            </div>
+        </div>
+
+        <div class="description">
+            <strong>How to Use:</strong> This HTML file contains all the DFD diagrams from your healthcare management system. Simply open this file in any web browser to view the interactive diagrams. You can zoom in/out and interact with the diagrams as needed.
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'linear',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 50
+            },
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#2c3e50',
+                primaryBorderColor: '#2980b9',
+                lineColor: '#34495e',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#ffffff'
+            }
+        });
+    </script>
+</body>
+</html>

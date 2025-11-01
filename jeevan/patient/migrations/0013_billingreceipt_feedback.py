@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('appointments', '0003_appointment_abha_id'),
-        ('doctor', '0005_doctor_address_doctor_created_at_doctor_dob_and_more'),
+        ('doctor', '0005_consent'),
         ('patient', '0012_alter_patient_contact_number'),
     ]
 

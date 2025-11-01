@@ -31,7 +31,7 @@ class AppointmentForm(forms.ModelForm):
     
     class Meta:
         model = Appointment
-        fields = ['abha_id', 'hospital', 'doctor', 'appointment_date', 'appointment_time', 'symptoms', 'payment_mode']
+        fields = ['hospital', 'doctor', 'appointment_date', 'appointment_time', 'symptoms', 'payment_mode']
         widgets = {
             'appointment_date': forms.DateInput(attrs={
                 'type': 'date',
@@ -58,15 +58,9 @@ class AppointmentForm(forms.ModelForm):
             }),
             'payment_mode': forms.Select(attrs={
                 'class': 'form-select'
-            }),
-            'abha_id': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter your ABHA ID (optional)',
-                'required': False
             })
         }
         labels = {
-            'abha_id': 'ABHA ID',
             'hospital': 'Select Hospital',
             'doctor': 'Select Doctor',
             'appointment_date': 'Appointment Date',
@@ -82,11 +76,15 @@ class AppointmentForm(forms.ModelForm):
         self.fields['hospital'].queryset = Hospital.objects.all()
         self.fields['doctor'].queryset = Doctor.objects.none()
         
+        # No ABHA field in this form
+        
         # Set date restrictions (today to 6 months)
         today = timezone.now().date()
         max_date = today + timedelta(days=180)  # 6 months
         self.fields['appointment_date'].widget.attrs['min'] = today.strftime('%Y-%m-%d')
         self.fields['appointment_date'].widget.attrs['max'] = max_date.strftime('%Y-%m-%d')
+        # Make default selections acceptable without user interaction
+        self.fields['payment_mode'].initial = self.fields['payment_mode'].initial or 'cash'
         
         # Set initial time values
         if self.instance and self.instance.appointment_time:
@@ -120,12 +118,12 @@ class AppointmentForm(forms.ModelForm):
         hospital = cleaned_data.get('hospital')
         doctor = cleaned_data.get('doctor')
         
-        # Validate required time fields (temporarily disabled for debugging)
-        # if not hour or not minute or not am_pm:
-        #     raise forms.ValidationError("Please select hour, minute, and AM/PM for appointment time.")
-        
+        # Handle time fields - prioritize hidden field, then custom fields
+        if appointment_time:
+            # Use the hidden field value if it's provided
+            cleaned_data['appointment_time'] = appointment_time
+        elif hour and minute and am_pm:
         # Convert custom time fields to 24-hour format
-        if hour and minute and am_pm:
             try:
                 hour_24 = int(hour)
                 minute_int = int(minute)
@@ -139,13 +137,14 @@ class AppointmentForm(forms.ModelForm):
                 cleaned_data['appointment_time'] = appointment_time
             except (ValueError, TypeError):
                 raise forms.ValidationError("Invalid time format selected.")
-        elif appointment_time:
-            # Use the hidden field value if custom fields are not provided
-            cleaned_data['appointment_time'] = appointment_time
         else:
-            # Fallback to a default time
+            # Set a default time if nothing is provided
             cleaned_data['appointment_time'] = time(9, 0)  # 9:00 AM
         
+        # If no date provided, default to today so the form can submit with defaults
+        if not appointment_date:
+            appointment_date = timezone.now().date()
+            cleaned_data['appointment_date'] = appointment_date
         # Check if appointment date is in the past
         if appointment_date and appointment_date < timezone.now().date():
             raise forms.ValidationError("Appointment date cannot be in the past.")
@@ -177,17 +176,35 @@ class AppointmentForm(forms.ModelForm):
             if not Doctor.objects.filter(id=doctor.id, hospital=hospital).exists():
                 raise forms.ValidationError("Selected doctor does not belong to the selected hospital.")
         
-        # ABHA ID validation (optional)
-        abha_id = cleaned_data.get('abha_id')
-        if abha_id:
-            # Remove spaces and dashes for validation
-            clean_abha = abha_id.replace(' ', '').replace('-', '')
-            
-            # Check if it's 14 digits
-            if not (clean_abha.isdigit() and len(clean_abha) == 14):
-                # Check if it's alphanumeric (ABHA format)
-                if not (clean_abha.isalnum() and len(clean_abha) == 14):
-                    raise forms.ValidationError("ABHA ID must be 14 digits or alphanumeric characters.")
+        # Check slot availability - ensure date and time are valid before checking
+        if doctor and appointment_date and 'appointment_time' in cleaned_data:
+            appointment_time = cleaned_data.get('appointment_time')
+            if appointment_time:
+                # Check if there's already an appointment (accepted or pending) for this doctor at this date and time
+                from .models import Appointment
+                existing_appointments = Appointment.objects.filter(
+                    doctor=doctor,
+                    appointment_date=appointment_date,
+                    appointment_time=appointment_time
+                ).exclude(status__in=['cancelled', 'rejected', 'expired'])
+                
+                # Exclude current appointment if updating (get instance from form)
+                if self.instance and self.instance.pk:
+                    existing_appointments = existing_appointments.exclude(id=self.instance.pk)
+                
+                if existing_appointments.exists():
+                    # Get the existing appointment details
+                    existing_appt = existing_appointments.first()
+                    slot_status = existing_appt.status
+                    error_message = (
+                        f"This time slot is already booked. The doctor has a {slot_status} appointment at "
+                        f"{appointment_time.strftime('%I:%M %p')} on {appointment_date.strftime('%B %d, %Y')}. "
+                        f"Please choose a different time slot."
+                    )
+                    # Raise as non-field error so it appears at form level
+                    raise forms.ValidationError(error_message)
+        
+        # ABHA validation removed
         
         return cleaned_data
 

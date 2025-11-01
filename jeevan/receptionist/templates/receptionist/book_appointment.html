@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #333;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            height: calc(100vh - 80px);
+            width: var(--sidebar-width);
+            background: var(--primary-color);
+            color: white;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        
+        .topbar {
+            background: var(--primary-color);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        
+        .topbar h2 {
+            margin: 0;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .topbar h2 i {
+            font-size: 1.8rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            color: white;
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .user-info i:hover {
+            opacity: 0.8;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .user-dropdown {
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .user-dropdown:hover {
+            opacity: 0.8;
+        }
+        
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .content-area {
+            margin-top: 80px;
+            padding: 2rem;
+        }
+        
+        .appointment-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+        
+        .btn {
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #2c5aa0;
+            border-color: #2c5aa0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .text-danger small {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .is-invalid:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        
+        .pincode-suggestions {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .suggestions-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .suggestions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .pincode-suggestion {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pincode-suggestion:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointments
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="nav-link">
+                    <i class="fas fa-user-md"></i>
+                    Doctor Schedules
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:patient_list' %}" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Patient Registration
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    Profile
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <h2>
+                <i class="fas fa-heartbeat"></i>
+                Patient Management System (Receptionist Portal)
+            </h2>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span class="user-name">{{ receptionist.full_name }}</span>
+                <a href="{% url 'receptionist:logout' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="appointment-card">
+                        <!-- Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Appointment Form -->
+                        <form method="post" id="appointmentForm">
+                            {% csrf_token %}
+                            
+                            <!-- Patient Information Section -->
+                            <div class="section-header">
+                                <i class="fas fa-user me-2"></i>Patient Information
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_name.id_for_label }}" class="form-label required-field">{{ form.patient_name.label }}</label>
+                                        {{ form.patient_name }}
+                                        {% if form.patient_name.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.patient_name.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.patient_name.help_text %}
+                                            <div class="form-text">{{ form.patient_name.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.email.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.email.help_text %}
+                                            <div class="form-text">{{ form.email.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.contact_number.id_for_label }}" class="form-label">{{ form.contact_number.label }}</label>
+                                        {{ form.contact_number }}
+                                        {% if form.contact_number.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.contact_number.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.contact_number.help_text %}
+                                            <div class="form-text">{{ form.contact_number.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.gender.id_for_label }}" class="form-label required-field">{{ form.gender.label }}</label>
+                                        {{ form.gender }}
+                                        {% if form.gender.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.gender.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.gender.help_text %}
+                                            <div class="form-text">{{ form.gender.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label required-field">{{ form.date_of_birth.label }}</label>
+                                        {{ form.date_of_birth }}
+                                        {% if form.date_of_birth.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.date_of_birth.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.date_of_birth.help_text %}
+                                            <div class="form-text">{{ form.date_of_birth.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.blood_group.id_for_label }}" class="form-label">{{ form.blood_group.label }}</label>
+                                        {{ form.blood_group }}
+                                        {% if form.blood_group.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.blood_group.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.blood_group.help_text %}
+                                            <div class="form-text">{{ form.blood_group.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Address Information Section -->
+                            <div class="section-header">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label required-field">{{ form.address.label }}</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.address.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                {% if form.address.help_text %}
+                                    <div class="form-text">{{ form.address.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.city.id_for_label }}" class="form-label required-field">{{ form.city.label }}</label>
+                                        {{ form.city }}
+                                        {% if form.city.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.city.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.city.help_text %}
+                                            <div class="form-text">{{ form.city.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.pincode.id_for_label }}" class="form-label required-field">{{ form.pincode.label }}</label>
+                                        {{ form.pincode }}
+                                        {% if form.pincode.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.pincode.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.pincode.help_text %}
+                                            <div class="form-text">{{ form.pincode.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Medical Information Section -->
+                            <div class="section-header">
+                                <i class="fas fa-stethoscope me-2"></i>Medical Information
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.abha_id.id_for_label }}" class="form-label required-field">{{ form.abha_id.label }}</label>
+                                        {{ form.abha_id }}
+                                        {% if form.abha_id.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.abha_id.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.abha_id.help_text %}
+                                            <div class="form-text">{{ form.abha_id.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.emergency_number.id_for_label }}" class="form-label required-field">{{ form.emergency_number.label }}</label>
+                                        {{ form.emergency_number }}
+                                        {% if form.emergency_number.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.emergency_number.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.emergency_number.help_text %}
+                                            <div class="form-text">{{ form.emergency_number.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.existing_condition.id_for_label }}" class="form-label">{{ form.existing_condition.label }}</label>
+                                        {{ form.existing_condition }}
+                                        {% if form.existing_condition.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.existing_condition.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.existing_condition.help_text %}
+                                            <div class="form-text">{{ form.existing_condition.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.allergies.id_for_label }}" class="form-label">{{ form.allergies.label }}</label>
+                                        {{ form.allergies }}
+                                        {% if form.allergies.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.allergies.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.allergies.help_text %}
+                                            <div class="form-text">{{ form.allergies.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Appointment Details Section -->
+                            <div class="section-header">
+                                <i class="fas fa-calendar-alt me-2"></i>Appointment Details
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.doctor.id_for_label }}" class="form-label required-field">{{ form.doctor.label }}</label>
+                                        {{ form.doctor }}
+                                        {% if form.doctor.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.doctor.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.doctor.help_text %}
+                                            <div class="form-text">{{ form.doctor.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.appointment_date.id_for_label }}" class="form-label required-field">{{ form.appointment_date.label }}</label>
+                                        {{ form.appointment_date }}
+                                        {% if form.appointment_date.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.appointment_date.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.appointment_date.help_text %}
+                                            <div class="form-text">{{ form.appointment_date.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.appointment_time.id_for_label }}" class="form-label required-field">{{ form.appointment_time.label }}</label>
+                                        {{ form.appointment_time }}
+                                        {% if form.appointment_time.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.appointment_time.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.appointment_time.help_text %}
+                                            <div class="form-text">{{ form.appointment_time.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.symptoms.id_for_label }}" class="form-label">{{ form.symptoms.label }}</label>
+                                        {{ form.symptoms }}
+                                        {% if form.symptoms.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.symptoms.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.symptoms.help_text %}
+                                            <div class="form-text">{{ form.symptoms.help_text }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'receptionist:dashboard' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-warning me-2">
+                                        <i class="fas fa-undo me-2"></i>Reset Form
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Form validation
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            const requiredFields = document.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(function(field) {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointment_date').setAttribute('min', today);
+        document.getElementById('date_of_birth').setAttribute('max', today);
+
+        // Contact number validation
+        document.getElementById('contact_number').addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                e.target.value = value.slice(0, 10);
+            }
+        });
+
+        // Emergency number validation
+        document.getElementById('emergency_number').addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                e.target.value = value.slice(0, 10);
+            }
+        });
+
+        // Pincode validation
+        document.getElementById('pincode').addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+                e.target.value = value.slice(0, 6);
+            }
+        });
+
+        // ABHA ID validation
+        document.getElementById('abha_id').addEventListener('input', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length > 14) {
+                e.target.value = value.slice(0, 14);
+            }
+        });
+
+        // City-based pincode suggestions
+        const cityPincodeMap = {
+            'mumbai': ['400001', '400002', '400003', '400004', '400005', '400006', '400007', '400008', '400009', '400010'],
+            'delhi': ['110001', '110002', '110003', '110004', '110005', '110006', '110007', '110008', '110009', '110010'],
+            'bangalore': ['560001', '560002', '560003', '560004', '560005', '560006', '560007', '560008', '560009', '560010'],
+            'chennai': ['600001', '600002', '600003', '600004', '600005', '600006', '600007', '600008', '600009', '600010'],
+            'kolkata': ['700001', '700002', '700003', '700004', '700005', '700006', '700007', '700008', '700009', '700010'],
+            'hyderabad': ['500001', '500002', '500003', '500004', '500005', '500006', '500007', '500008', '500009', '500010'],
+            'pune': ['411001', '411002', '411003', '411004', '411005', '411006', '411007', '411008', '411009', '411010'],
+            'ahmedabad': ['380001', '380002', '380003', '380004', '380005', '380006', '380007', '380008', '380009', '380010'],
+            'jaipur': ['302001', '302002', '302003', '302004', '302005', '302006', '302007', '302008', '302009', '302010'],
+            'lucknow': ['226001', '226002', '226003', '226004', '226005', '226006', '226007', '226008', '226009', '226010']
+        };
+
+        // City change handler for pincode suggestions
+        document.getElementById('city').addEventListener('input', function(e) {
+            const city = e.target.value.toLowerCase().trim();
+            const pincodeField = document.getElementById('pincode');
+            
+            if (cityPincodeMap[city]) {
+                // Show pincode suggestions
+                showPincodeSuggestions(cityPincodeMap[city], pincodeField);
+            } else {
+                // Hide suggestions if city not found
+                hidePincodeSuggestions();
+            }
+        });
+
+        function showPincodeSuggestions(pincodes, pincodeField) {
+            // Remove existing suggestions
+            hidePincodeSuggestions();
+            
+            // Create suggestions container
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.id = 'pincode-suggestions';
+            suggestionsDiv.className = 'pincode-suggestions';
+            suggestionsDiv.innerHTML = `
+                <div class="suggestions-header">Common pincodes for this city:</div>
+                <div class="suggestions-list">
+                    ${pincodes.map(pincode => 
+                        `<span class="pincode-suggestion" data-pincode="${pincode}">${pincode}</span>`
+                    ).join('')}
+                </div>
+            `;
+            
+            // Insert after pincode field
+            pincodeField.parentNode.appendChild(suggestionsDiv);
+            
+            // Add click handlers to suggestions
+            suggestionsDiv.querySelectorAll('.pincode-suggestion').forEach(suggestion => {
+                suggestion.addEventListener('click', function() {
+                    pincodeField.value = this.dataset.pincode;
+                    hidePincodeSuggestions();
+                });
+            });
+        }
+
+        function hidePincodeSuggestions() {
+            const existingSuggestions = document.getElementById('pincode-suggestions');
+            if (existingSuggestions) {
+                existingSuggestions.remove();
+            }
+        }
+
+        // Enhanced form validation
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const errorMessages = [];
+
+            // Check ABHA ID
+            const abhaId = document.getElementById('abha_id').value.replace(/\D/g, '');
+            if (!abhaId) {
+                errorMessages.push('ABHA ID is required.');
+                isValid = false;
+            } else if (abhaId.length !== 14) {
+                errorMessages.push('ABHA ID must be exactly 14 digits.');
+                isValid = false;
+            }
+
+            // Check required fields
+            const requiredFields = document.querySelectorAll('[required]');
+            requiredFields.forEach(function(field) {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                if (errorMessages.length > 0) {
+                    alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+                } else {
+                    alert('Please fill in all required fields.');
+                }
+            }
+        });
+
+        // Real-time ABHA ID validation
+        document.getElementById('abha_id').addEventListener('blur', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value && value.length !== 14) {
+                e.target.classList.add('is-invalid');
+                // Show error message
+                let errorDiv = e.target.parentNode.querySelector('.abha-error');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'abha-error text-danger';
+                    errorDiv.style.fontSize = '0.875rem';
+                    e.target.parentNode.appendChild(errorDiv);
+                }
+                errorDiv.textContent = 'ABHA ID must be exactly 14 digits.';
+            } else {
+                e.target.classList.remove('is-invalid');
+                const errorDiv = e.target.parentNode.querySelector('.abha-error');
+                if (errorDiv) {
+                    errorDiv.remove();
+                }
+            }
+        });
+
+        // Clear error on input
+        document.getElementById('abha_id').addEventListener('input', function(e) {
+            e.target.classList.remove('is-invalid');
+            const errorDiv = e.target.parentNode.querySelector('.abha-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        });
+    </script>
+</body>
+</html>

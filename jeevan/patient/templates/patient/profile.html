@@ -1,900 +1,876 @@
-{% extends 'patient/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Profile - {{ patient.full_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#3b82f6',
+                        'primary-dark-blue': '#1e3a8a',
+                        'light-blue': '#f0f9ff',
+                        'healthcare-green': '#10b981',
+                        'healthcare-teal': '#14b8a6',
+                        'hrm-orange': '#f97316',
+                        'hrm-teal': '#14b8a6',
+                        'hrm-bg': '#f8fafc'
+                    },
+                    spacing: {
+                        '18': '4.5rem',
+                        '88': '22rem'
+                    },
+                    maxHeight: {
+                        'screen-90': '90vh'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Modern Header Styles */
+        /* Book Appointment Button Styles (exact copy from profile_dashboard.html) */
+        .group {
+            transition: all 0.3s ease;
+        }
+        
+        .shadow-soft {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .shadow-elev {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .bg-brand-100 {
+            background-color: #dbeafe;
+        }
+        
+        .text-brand-700 {
+            color: #1d4ed8;
+        }
+        
+        .text-slate-800 {
+            color: #1e293b;
+        }
+        
+        .text-slate-500 {
+            color: #64748b;
+        }
+        
+        .rounded-2xl {
+            border-radius: 1rem;
+        }
+        
+        .rounded-xl {
+            border-radius: 0.75rem;
+        }
+        
+        .w-10 {
+            width: 2.5rem;
+        }
+        
+        .h-10 {
+            height: 2.5rem;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .gap-3 {
+            gap: 0.75rem;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .text-left {
+            text-align: left;
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+        
+        .text-xs {
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+        
+        .group:hover .shadow-soft {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
 
-{% load static %}
-
-{% block title %}Profile - {{ patient.full_name }}{% endblock %}
-
-{% block content %}
-
-<style>
-    :root {
-        --primary-dark-blue: #1e3a8a;
-        --primary-blue: #3b82f6;
-        --light-blue-bg: #f0f9ff;
-        --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        --border-radius: 16px;
-        --transition: all 0.3s ease;
-    }
-
-    body {
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 50%, #60a5fa 100%);
-        min-height: 100vh;
-    }
-
-    .profile-header {
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 50%, #60a5fa 100%);
-        color: white;
-        padding: 1.5rem 0;
-        margin-bottom: 1.5rem;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .profile-header::before {
-        content: '';
-        position: absolute;
+        .modern-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
+            position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="healthcare-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23healthcare-pattern)"/></svg>');
-        opacity: 0.3;
-    }
-
-    .profile-header .container {
-        position: relative;
-        z-index: 2;
-    }
-
-    .welcome-section h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        margin-bottom: 0.25rem;
-    }
-
-    .welcome-section p {
-        font-size: 1rem;
-        opacity: 0.9;
-        font-weight: 400;
-    }
-
-    .quick-stats {
-        margin-top: 1.5rem;
-    }
-
-    .stat-item {
-        text-align: center;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .stat-item:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: translateY(-2px);
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: 700;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
         color: white;
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        opacity: 0.9;
-        font-weight: 500;
-    }
-
-    .profile-status-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        text-align: center;
-    }
-
-    .profile-status-card .status-badge {
-        background: rgba(16, 185, 129, 0.9);
-        margin-bottom: 0.75rem;
-    }
-
-    .profile-status-card .patient-id,
-    .profile-status-card .last-updated {
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0.25rem;
-    }
-
-    .profile-card {
-        background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
-        transition: var(--transition);
-        border: none;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .profile-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-hover-shadow);
-    }
-
-    .profile-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-dark-blue), var(--primary-blue));
-    }
-
-    .card-header-custom {
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-        color: white;
-        border: none;
-        padding: 1.5rem;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    .form-section {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        border-left: 4px solid var(--primary-blue);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .form-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 58, 138, 0.05));
-        border-radius: 50%;
-        transform: translate(30px, -30px);
-    }
-
-    .form-section:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .section-header {
-        margin-bottom: 1.5rem;
-        position: relative;
-        z-index: 2;
-    }
-
-    .section-header h6 {
-        color: var(--primary-dark-blue);
-        font-weight: 700;
-        margin-bottom: 0.5rem;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        font-size: 1.1rem;
-    }
-
-    .section-description {
-        color: #64748b;
-        font-size: 0.9rem;
-        margin: 0;
-        font-weight: 400;
-    }
-
-    /* Form Navigation */
-    .form-navigation {
-        background: white;
-        border-radius: 12px;
-        padding: 0.5rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        margin-bottom: 2rem;
-    }
-
-    .nav-tabs {
-        display: flex;
         gap: 0.5rem;
-        justify-content: space-between;
-    }
-
-    .nav-tab {
-        flex: 1;
-        background: transparent;
-        border: none;
-        padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .notification-bell {
+            position: relative;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            padding: 0.6rem;
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         font-weight: 600;
-        color: #64748b;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        font-size: 0.9rem;
     }
 
-    .nav-tab:hover {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--primary-blue);
-    }
-
-    .nav-tab.active {
-        background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark-blue));
-        color: white;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    }
-
-    .nav-tab i {
-        font-size: 1rem;
-    }
-
-    /* Form Progress */
-    .form-progress {
-        display: flex;
-        align-items: center;
-    }
-
-    .progress-indicator {
-        text-align: right;
-    }
-
-    .progress-text {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0.25rem;
-        display: block;
-    }
-
-    .progress-bar-custom {
-        width: 120px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #10b981, #059669);
-        border-radius: 2px;
-        transition: width 0.3s ease;
-    }
-
-    /* Premium Form Styling */
-    .premium-form {
-        position: relative;
-    }
-
-    .form-control {
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        transition: all 0.3s ease;
-        background: white;
-        font-size: 0.95rem;
-        font-weight: 500;
-        position: relative;
-    }
-
-    .form-control:focus {
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        background: white;
-        transform: translateY(-1px);
-    }
-
-    .form-control:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-
-    .form-label {
-        font-weight: 700;
-        color: var(--primary-dark-blue);
-        margin-bottom: 0.75rem;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .form-label::before {
-        content: '';
-        width: 4px;
-        height: 4px;
-        background: var(--primary-blue);
-        border-radius: 50%;
-    }
-
-    .btn-primary-custom {
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
+        .user-profile-btn {
+            background: none;
         border: none;
-        border-radius: 12px;
-        padding: 1rem 2.5rem;
-        font-weight: 700;
-        transition: all 0.3s ease;
-        box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-size: 0.9rem;
-    }
-
-    .btn-primary-custom::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .btn-primary-custom:hover::before {
-        left: 100%;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 30px rgba(30, 58, 138, 0.4);
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-    }
-
-    .btn-outline-custom {
-        border: 2px solid var(--primary-blue);
-        color: var(--primary-blue);
-        border-radius: 12px;
-        padding: 1rem 2.5rem;
-        font-weight: 700;
-        transition: all 0.3s ease;
-        background: white;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-size: 0.9rem;
-    }
-
-    .btn-outline-custom:hover {
-        background: var(--primary-blue);
         color: white;
-        transform: translateY(-3px);
-        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
-    }
-
-    .profile-summary-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: var(--border-radius);
-        box-shadow: var(--card-shadow);
-        transition: var(--transition);
-        border: none;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .profile-summary-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-hover-shadow);
-    }
-
-    .profile-photo-container {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 1rem;
-    }
-
-    .profile-photo {
-        width: 120px;
-        height: 120px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+        border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        border: 4px solid white;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        transition: var(--transition);
-    }
-
-    .profile-photo:hover {
-        transform: scale(1.05);
-    }
-
-    .profile-photo-placeholder {
-        width: 120px;
-        height: 120px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
+            background: rgba(255, 255, 255, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 3rem;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        transition: var(--transition);
-    }
-
-    .profile-photo-placeholder:hover {
-        transform: scale(1.05);
-    }
-
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .info-item:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        color: #64748b;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .info-value {
-        color: var(--primary-dark-blue);
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    .status-badge {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .health-indicator {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: 1px solid #f59e0b;
-        border-radius: 12px;
-        padding: 1rem;
-        margin-top: 1rem;
-    }
-
-    .floating-action-btn {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        background: linear-gradient(135deg, var(--primary-dark-blue) 0%, var(--primary-blue) 100%);
-        color: white;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
         border: none;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
-        transition: var(--transition);
-        z-index: 1000;
-    }
-
-    .floating-action-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 12px 35px rgba(30, 58, 138, 0.5);
-        color: white;
-    }
-
-    @media (max-width: 768px) {
-        .profile-header {
-            padding: 1.5rem 0;
+            font-size: 0.9rem;
         }
         
-        .profile-photo, .profile-photo-placeholder {
-            width: 100px;
-            height: 100px;
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
         }
         
-        .floating-action-btn {
-            bottom: 1rem;
-            right: 1rem;
-            width: 50px;
-            height: 50px;
-            font-size: 1.2rem;
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
         }
+        
+        .main-content {
+            min-height: calc(100vh - 72px);
+            background: #f8fafc;
+            margin-top: 72px;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Smooth animations */
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Focus ring customization */
+        .focus-ring:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #3b82f6;
+            ring-opacity: 0.2;
+        }
+        
+        /* HRM Style Cards */
+        .hrm-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+        
+        .hrm-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .edit-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .hrm-card:hover .edit-icon {
+            opacity: 1;
+        }
+
+        /* Form field states */
+        .form-field-disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .form-field-enabled {
+            background-color: white;
+            color: #212529;
+            cursor: text;
+        }
+
+        /* Button loading states */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
     }
 </style>
+</head>
+<body class="min-h-screen bg-hrm-bg overflow-x-hidden">
 
-<!-- Enhanced Profile Header -->
-<div class="profile-header">
-    <div class="container">
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
         <div class="row align-items-center">
-            <div class="col-md-8">
-                <!-- Welcome Message -->
-                <div class="welcome-section mb-2">
-                    <h1 class="mb-1 fw-bold">
-                        <i class="fas fa-user-edit me-2"></i>Edit Profile
-                </h1>
-                    <p class="mb-0 opacity-90">Update your personal information and health details</p>
-                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'patient:profile_dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                            <i class="fas fa-heartbeat"></i>
             </div>
-            <div class="col-md-4 text-md-end">
-                <div class="profile-status-card">
-                    <div class="status-badge">
-                        <i class="fas fa-user me-1"></i>{{ patient.full_name }}
+                        <h1 class="logo-text">Patient Management System</h1>
+                    </a>
                     </div>
-                    <div class="patient-id">
-                        <small>ID: #{{ patient.id }}</small>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                </div>
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                {% if patient.profile_photo %}
+                                    <img src="{{ patient.profile_photo.url }}" alt="Profile" class="user-avatar">
+                                {% else %}
+                                    <div class="user-avatar-placeholder">
+                                        <i class="fas fa-user"></i>
+            </div>
+                                    {% endif %}
+                                <span class="user-name">{{ patient.full_name|default:user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'patient:patient_dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>Help & Support</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'patient:patient_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                            </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Main Profile Card -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                
+                <!-- Horizontal Navigation Tabs -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-8">
+                        <button class="tab-btn py-4 px-2 border-b-2 border-primary-blue text-primary-blue font-medium" data-tab="profile">
+                            Patient Profile
+                        </button>
+                        <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 font-medium" data-tab="medical-history">
+                            Medical History
+                        </button>
+                        <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 font-medium" data-tab="appointments">
+                            Appointments
+                        </button>
+                        <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 font-medium" data-tab="prescriptions">
+                            Prescriptions
+                        </button>
+                        <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900 font-medium" data-tab="reports">
+                            Reports & Documents
+                        </button>
+                    </nav>
+                        </div>
+
+                <!-- Profile Summary Section -->
+                <div class="px-8 py-2 border-b border-gray-200">
+                    <div class="flex items-center space-x-6">
+                        <!-- Profile Photo -->
+                        <div class="flex-shrink-0 relative">
+                            {% if patient.profile_photo %}
+                                <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" 
+                                     class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" id="profile-photo-preview">
+                            {% else %}
+                                <div class="w-24 h-24 rounded-full bg-gradient-to-r from-primary-blue to-primary-dark-blue flex items-center justify-center shadow-lg" id="profile-photo-placeholder">
+                                    <i class="fas fa-user text-white text-2xl"></i>
+                                </div>
+                                    {% endif %}
+                            <button type="button" class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-full flex items-center justify-center shadow-lg transition-colors duration-200" id="photo-upload-btn">
+                                <i class="fas fa-camera text-sm"></i>
+                            </button>
+                                </div>
+
+                        <!-- Patient Info -->
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ patient.full_name }}</h1>
+                            <p class="text-gray-600">
+                                <span class="text-primary-blue font-medium">Patient</span>
+                            </p>
+                        </div>
+
+                        <!-- Patient Details -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="grid grid-cols-2 gap-6 text-sm">
+                                <div>
+                                    <p class="text-gray-600 text-sm">Patient ID</p>
+                                    <p class="font-semibold text-gray-900 text-base">#{{ patient.id }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">Contact Number</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ patient.contact_number|default:"Not provided" }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">Email Address</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ patient.email|default:"Not provided" }}</p>
+                                </div>
+                                
+                        </div>
+                                </div>
+                            </div>
+                        </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Patient Profile Tab -->
+                    <div id="profile-tab" class="tab-panel p-8">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                            
+                            <!-- Information Blocks Grid -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- Personal Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                            </button>
+                        </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Full Name</p>
+                                    <input type="text" name="{{ form.full_name.name }}" value="{{ form.full_name.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your full name" required>
+                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Gender</p>
+                                        <select name="{{ form.gender.name }}" 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male" {% if form.gender.value == 'Male' %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if form.gender.value == 'Female' %}selected{% endif %}>Female</option>
+                                            <option value="Other" {% if form.gender.value == 'Other' %}selected{% endif %}>Other</option>
+                                        </select>
+            </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Date of Birth</p>
+                                        <input type="date" name="{{ form.dob.name }}" value="{{ form.dob.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+        </div>
+                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Contact Number</p>
+                                    <input type="tel" name="{{ form.contact_number.name }}" value="{{ form.contact_number.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your phone number" required>
+                                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Email Address</p>
+                                    <input type="email" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your email address" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                        <!-- Address Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
+                                    </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Address</p>
+                                    <textarea name="{{ form.address.name }}" rows="3" 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring resize-none" 
+                                              placeholder="Enter your complete address">{{ form.address.value|default:'' }}</textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">City</p>
+                                        <input type="text" name="{{ form.city.name }}" value="{{ form.city.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                               placeholder="Enter your city">
+                            </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Pincode</p>
+                                        <input type="text" name="{{ form.pincode.name }}" value="{{ form.pincode.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                               placeholder="Enter your pincode">
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="container">
-    <div class="row g-4">
-        <!-- Profile Information Form -->
-        <div class="col-lg-8">
-            <div class="profile-card">
-                <div class="card-header-custom">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                    <i class="fas fa-user-edit me-2"></i>Personal Information
-                        </div>
-                        <div class="form-progress">
-                            <div class="progress-indicator">
-                                <span class="progress-text">Complete your profile</span>
-                                <div class="progress-bar-custom">
-                                    <div class="progress-fill" style="width: 75%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <!-- Health Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
                 </div>
-                <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data" class="premium-form">
-                        {% csrf_token %}
-                        
-                        <!-- Form Navigation -->
-                        <div class="form-navigation mb-4">
-                            <div class="nav-tabs">
-                                <button type="button" class="nav-tab active" data-section="basic">
-                                    <i class="fas fa-id-card"></i>
-                                    <span>Basic Info</span>
-                                </button>
-                                <button type="button" class="nav-tab" data-section="personal">
-                                    <i class="fas fa-user"></i>
-                                    <span>Personal</span>
-                                </button>
-                                <button type="button" class="nav-tab" data-section="address">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>Address</span>
-                                </button>
-                                <button type="button" class="nav-tab" data-section="health">
-                                    <i class="fas fa-heartbeat"></i>
-                                    <span>Health</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Basic Information Section -->
-                        <div class="form-section" id="basic-section">
-                            <div class="section-header">
-                            <h6>
-                                <i class="fas fa-id-card text-primary"></i>
-                                Basic Information
-                            </h6>
-                                <p class="section-description">Your primary contact and identification details</p>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name *</label>
-                                    {{ form.full_name }}
-                                    {% if form.full_name.errors %}
-                                        <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
-                                    {% endif %}
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Health Information</h3>
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Blood Group</p>
+                                        <select name="{{ form.blood_group.name }}" 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+                                            <option value="">Select Blood Group</option>
+                                            <option value="A+" {% if form.blood_group.value == 'A+' %}selected{% endif %}>A+</option>
+                                            <option value="A-" {% if form.blood_group.value == 'A-' %}selected{% endif %}>A-</option>
+                                            <option value="B+" {% if form.blood_group.value == 'B+' %}selected{% endif %}>B+</option>
+                                            <option value="B-" {% if form.blood_group.value == 'B-' %}selected{% endif %}>B-</option>
+                                            <option value="AB+" {% if form.blood_group.value == 'AB+' %}selected{% endif %}>AB+</option>
+                                            <option value="AB-" {% if form.blood_group.value == 'AB-' %}selected{% endif %}>AB-</option>
+                                            <option value="O+" {% if form.blood_group.value == 'O+' %}selected{% endif %}>O+</option>
+                                            <option value="O-" {% if form.blood_group.value == 'O-' %}selected{% endif %}>O-</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Emergency Contact</p>
+                                        <input type="tel" name="{{ form.emergency_number.name }}" value="{{ form.emergency_number.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                               placeholder="Enter emergency contact number">
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.contact_number.id_for_label }}" class="form-label">Contact Number *</label>
-                                    {{ form.contact_number }}
-                                    {% if form.contact_number.errors %}
-                                        <div class="text-danger small mt-1">{{ form.contact_number.errors.0 }}</div>
-                                    {% endif %}
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
-                                    {{ form.email }}
-                                    {% if form.email.errors %}
-                                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.abha_id.id_for_label }}" class="form-label">ABHA ID</label>
-                                    {{ form.abha_id }}
-                                    {% if form.abha_id.errors %}
-                                        <div class="text-danger small mt-1">{{ form.abha_id.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
+                                
+            </div>
+        </div>
 
-                        <!-- Personal Details Section -->
-                        <div class="form-section" id="personal-section">
-                            <div class="section-header">
-                            <h6>
-                                <i class="fas fa-user text-primary"></i>
-                                Personal Details
-                            </h6>
-                                <p class="section-description">Your personal information and demographics</p>
+                        <!-- Medical Conditions Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
+                </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Medical Conditions</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Existing Medical Conditions</p>
+                                    <textarea name="{{ form.existing_condition.name }}" rows="3" 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring resize-none" 
+                                              placeholder="Enter any existing medical conditions">{{ form.existing_condition.value|default:'' }}</textarea>
                             </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
-                                    {{ form.gender }}
-                                    {% if form.gender.errors %}
-                                        <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.dob.id_for_label }}" class="form-label">Date of Birth</label>
-                                    {{ form.dob }}
-                                    {% if form.dob.errors %}
-                                        <div class="text-danger small mt-1">{{ form.dob.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Allergies</p>
+                                    <textarea name="{{ form.allergies.name }}" rows="3" 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring resize-none" 
+                                              placeholder="Enter any allergies">{{ form.allergies.value|default:'' }}</textarea>
+                        </div>
                             </div>
                         </div>
-
-                        <!-- Address Information Section -->
-                        <div class="form-section" id="address-section">
-                            <div class="section-header">
-                            <h6>
-                                <i class="fas fa-map-marker-alt text-primary"></i>
-                                Address Information
-                            </h6>
-                                <p class="section-description">Your residential address details</p>
                             </div>
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
-                                    {{ form.address }}
-                                    {% if form.address.errors %}
-                                        <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
-                                    {{ form.city }}
-                                    {% if form.city.errors %}
-                                        <div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode</label>
-                                    {{ form.pincode }}
-                                    {% if form.pincode.errors %}
-                                        <div class="text-danger small mt-1">{{ form.pincode.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Health Information Section -->
-                        <div class="form-section" id="health-section">
-                            <div class="section-header">
-                            <h6>
-                                <i class="fas fa-heartbeat text-primary"></i>
-                                Health Information
-                            </h6>
-                                <p class="section-description">Your medical and health details</p>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
-                                    {{ form.blood_group }}
-                                    {% if form.blood_group.errors %}
-                                        <div class="text-danger small mt-1">{{ form.blood_group.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.emergency_number.id_for_label }}" class="form-label">Emergency Contact</label>
-                                    {{ form.emergency_number }}
-                                    {% if form.emergency_number.errors %}
-                                        <div class="text-danger small mt-1">{{ form.emergency_number.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-12">
-                                    <label for="{{ form.existing_condition.id_for_label }}" class="form-label">Existing Medical Conditions</label>
-                                    {{ form.existing_condition }}
-                                    {% if form.existing_condition.errors %}
-                                        <div class="text-danger small mt-1">{{ form.existing_condition.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-12">
-                                    <label for="{{ form.allergies.id_for_label }}" class="form-label">Allergies</label>
-                                    {{ form.allergies }}
-                                    {% if form.allergies.errors %}
-                                        <div class="text-danger small mt-1">{{ form.allergies.errors.0 }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Hidden Photo Upload Field -->
                         <div style="display: none;">
                             {{ form.profile_photo }}
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="d-flex gap-3 mt-4">
-                            <button type="submit" class="btn btn-primary-custom">
-                                <i class="fas fa-save me-2"></i>Update Profile
-                            </button>
-                            <a href="{% url 'patient:patient_dashboard' %}" class="btn btn-outline-custom">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
 
-        <!-- Profile Photo Sidebar -->
-        <div class="col-lg-4">
-            <!-- Profile Photo Card -->
-            <div class="profile-summary-card mb-4">
-                <div class="card-header-custom">
-                    <i class="fas fa-user-circle me-2"></i>Profile Photo
+                        <!-- Action Buttons -->
+                            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                                <a href="{% url 'patient:patient_dashboard' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                                    Save Changes
+                            </button>
                 </div>
-                <div class="card-body p-4 text-center">
-                    <div class="profile-photo-container">
-                        {% if patient.profile_photo %}
-                            <img src="{{ patient.profile_photo.url }}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">
-                        {% else %}
-                            <div class="profile-photo-placeholder" id="profile-photo-placeholder">
-                                <i class="fas fa-user"></i>
+                    </form>
                             </div>
-                        {% endif %}
-                    </div>
-                    <h5 class="mb-1 fw-bold text-dark">{{ patient.full_name }}</h5>
-                    <p class="text-muted mb-3">{{ patient.email }}</p>
-                    
-                    <!-- Photo Upload Section -->
-                    <button type="button" class="btn btn-outline-custom btn-sm" id="photo-upload-btn">
-                        <i class="fas fa-camera me-1"></i>Change Photo
+                                    
+                    <!-- Medical History Tab -->
+                    <div id="medical-history-tab" class="tab-panel p-8 hidden">
+                        <div class="text-center py-12">
+                            <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Medical History</h3>
+                            <p class="text-gray-600 mb-6">View your complete medical history and records</p>
+                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                                View Medical Records
                     </button>
-                    {% if form.profile_photo.errors %}
-                        <div class="text-danger small mt-2">
-                            <i class="fas fa-exclamation-circle me-1"></i>{{ form.profile_photo.errors.0 }}
+                </div>
+            </div>
+
+                    <!-- Appointments Tab -->
+                    <div id="appointments-tab" class="tab-panel p-8 hidden">
+                        <div class="text-center py-12">
+                            <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Appointments</h3>
+                            <p class="text-gray-600 mb-6">Manage your upcoming and past appointments</p>
+                            <button class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="bookAppointment()">
+                                <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">📅</div>
+                                <div class="text-left">
+                                    <div class="font-semibold text-slate-800">Book Appointment</div>
+                                    <div class="text-xs text-slate-500">Find specialist & slot</div>
+                                </div>
+                            </button>
+                </div>
+            </div>
+
+                    <!-- Prescriptions Tab -->
+                    <div id="prescriptions-tab" class="tab-panel p-8 hidden">
+                        <div class="text-center py-12">
+                            <i class="fas fa-prescription-bottle-alt text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Prescriptions</h3>
+                            <p class="text-gray-600 mb-6">View and manage your prescriptions</p>
+                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                                View Prescriptions
+                            </button>
+                </div>
+                    </div>
+                    
+                    <!-- Reports & Documents Tab -->
+                    <div id="reports-tab" class="tab-panel p-8 hidden">
+                        <div class="text-center py-12">
+                            <i class="fas fa-file-medical text-6xl text-gray-300 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Reports & Documents</h3>
+                            <p class="text-gray-600 mb-6">Access your medical reports and documents</p>
+                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                                Upload Documents
+                            </button>
                         </div>
-                    {% endif %}
-                    <div class="form-text small text-muted mt-2">
-                        <i class="fas fa-info-circle me-1"></i>
-                        JPG, PNG, GIF • Max 5MB
+                        </div>
                     </div>
                 </div>
             </div>
-                </div>
-    </div>
-</div>
+    </main>
 
-<!-- Floating Action Button -->
-<button class="floating-action-btn" onclick="scrollToTop()" title="Back to Top">
-    <i class="fas fa-arrow-up"></i>
-</button>
-
-<!-- Success/Error Messages -->
+    <!-- Enhanced Success/Error Messages -->
 {% if messages %}
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+        <div class="fixed top-4 right-4 z-50 space-y-3">
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="bg-white border-l-4 border-healthcare-green p-6 rounded-xl shadow-xl max-w-sm animate-slide-up">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-healthcare-green text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">{{ message }}</p>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button type="button" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
             </div>
         {% endfor %}
     </div>
 {% endif %}
 
+    <!-- Hospital Selection Modal -->
+    <div class="modal fade" id="hospitalSelectionModal" tabindex="-1" aria-labelledby="hospitalSelectionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hospitalSelectionModalLabel">📅 Book Your Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Selection Method Tabs -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="btn-group w-100" role="group" aria-label="Selection method">
+                                <button type="button" class="btn btn-outline-primary active" id="hospitalTab" onclick="switchSelectionMethod('hospital')">
+                                    🏥 Browse by Hospital
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" id="specializationTab" onclick="switchSelectionMethod('specialization')">
+                                    🩺 Browse by Specialization
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" id="locationTab" onclick="switchSelectionMethod('location')">
+                                    📍 Browse by Location
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hospital Selection Content -->
+                    <div id="hospitalSelectionContent" class="selection-content">
+                        <div class="row g-4">
+                            <!-- Hospitals will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Specialization Selection Content -->
+                    <div id="specializationSelectionContent" class="selection-content" style="display: none;">
+                        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+                            <!-- Specializations will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Location Selection Content -->
+                    <div id="locationSelectionContent" class="selection-content" style="display: none;">
+                        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+                            <!-- Locations will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hospital Details Modal -->
+    <div class="modal fade" id="hospitalDetailsModal" tabindex="-1" aria-labelledby="hospitalDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hospitalDetailsModalLabel">Hospital Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="hospitalDetailsContent">
+                    <!-- Hospital details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="bookAppointmentBtn">Book Appointment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 // Enhanced Profile Page Functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Form Navigation Functionality
-    const navTabs = document.querySelectorAll('.nav-tab');
-    const formSections = document.querySelectorAll('.form-section');
-    
-    navTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetSection = this.getAttribute('data-section');
-            
-            // Update active tab
-            navTabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show/hide sections
-            formSections.forEach(section => {
-                if (section.id === targetSection + '-section') {
-                    section.style.display = 'block';
-                    section.style.animation = 'fadeInUp 0.5s ease-out';
-                } else {
-                    section.style.display = 'none';
-                }
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-primary-blue', 'text-primary-blue');
+                        btn.classList.add('border-transparent', 'text-gray-600');
+                    });
+                    
+                    // Add active class to clicked tab
+                    this.classList.remove('border-transparent', 'text-gray-600');
+                    this.classList.add('border-primary-blue', 'text-primary-blue');
+                    
+                    // Hide all tab panels
+                    tabPanels.forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                    
+                    // Show target tab panel
+                    const targetPanel = document.getElementById(targetTab + '-tab');
+                    if (targetPanel) {
+                        targetPanel.classList.remove('hidden');
+                    }
+                });
             });
-            
-            // Smooth scroll to section
-            const targetElement = document.getElementById(targetSection + '-section');
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
 
-    // Initialize first section as active
-    if (formSections.length > 0) {
-        formSections.forEach((section, index) => {
-            if (index === 0) {
-                section.style.display = 'block';
-            } else {
-                section.style.display = 'none';
-            }
-        });
-    }
-
-    // Enhanced form validation and submission
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating Profile...';
-                submitBtn.disabled = true;
-                
-                // Add loading animation to form sections
-                const formSections = document.querySelectorAll('.form-section');
-                formSections.forEach(section => {
-                    section.style.opacity = '0.7';
-                    section.style.pointerEvents = 'none';
+            // Notification functionality
+            const notificationBell = document.querySelector('.notification-bell');
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function() {
+                    showNotification('You have 3 new notifications', 'info');
                 });
             }
-        });
 
-        // Real-time form validation with enhanced feedback
-        const inputs = form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                validateField(this);
-                updateFormProgress();
-            });
-            
-            input.addEventListener('input', function() {
-                clearFieldError(this);
-                updateFormProgress();
-            });
-        });
-    }
-
-    // Enhanced photo upload functionality
+            // Photo upload functionality
     const photoInput = document.getElementById('{{ form.profile_photo.id_for_label }}');
     const photoUploadBtn = document.getElementById('photo-upload-btn');
-    const photoPreview = document.getElementById('profile-photo-preview');
-    const photoPlaceholder = document.getElementById('profile-photo-placeholder');
 
     if (photoInput && photoUploadBtn) {
         photoUploadBtn.addEventListener('click', function() {
@@ -913,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Validate file size (5MB max)
-                const maxSize = 5 * 1024 * 1024;
+                        const maxSize = 5 * 1024 * 1024;
                 if (file.size > maxSize) {
                     showNotification('File size must be less than 5MB', 'error');
                     this.value = '';
@@ -921,52 +897,262 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 // Show loading state
-                photoUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                        photoUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
                 photoUploadBtn.disabled = true;
 
                 // Preview the selected image
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    if (photoPreview) {
-                        photoPreview.src = e.target.result;
-                    } else if (photoPlaceholder) {
-                        photoPlaceholder.outerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="profile-photo" id="profile-photo-preview">`;
-                    }
-
-                    photoUploadBtn.innerHTML = '<i class="fas fa-camera me-1"></i>Change Photo';
+                            const img = document.getElementById('profile-photo-preview');
+                            const placeholder = document.getElementById('profile-photo-placeholder');
+                            
+                            if (img) {
+                                img.src = e.target.result;
+                            } else if (placeholder) {
+                                placeholder.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="w-full h-full rounded-full object-cover">`;
+                            }
+                            
+                            photoUploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
                     photoUploadBtn.disabled = false;
                     
-                    showNotification('Photo updated successfully!', 'success');
+                            // Auto-save the photo by submitting the form
+                            savePhotoToDatabase();
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
-    // Add smooth scrolling to form sections
-    const formSections = document.querySelectorAll('.form-section');
-    formSections.forEach((section, index) => {
-        section.style.animationDelay = `${index * 0.1}s`;
-        section.classList.add('animate-fade-in');
-    });
+            // CSRF token helper function
+            function getCSRFToken() {
+                let token = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (token) return token.value;
+                const metaToken = document.querySelector('meta[name="csrf-token"]');
+                if (metaToken) return metaToken.getAttribute('content');
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
 
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+            // Function to save photo to database
+            function savePhotoToDatabase() {
+                const form = document.querySelector('form');
+                const formData = new FormData(form);
+                
+                // Get CSRF token
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    showNotification('CSRF token not found. Please refresh the page.', 'error');
+                    return;
+                }
+                
+                // Show saving notification
+                showNotification('Saving photo...', 'info');
+                
+                // Dispatch custom event to indicate this is a photo upload
+                const photoUploadEvent = new CustomEvent('submit', {
+                    detail: { isPhotoUpload: true }
+                });
+                form.dispatchEvent(photoUploadEvent);
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showNotification('Photo saved successfully!', 'success');
+                        // Reload the page to show the updated photo
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Failed to save photo. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving photo:', error);
+                    showNotification('Error saving photo. Please try again.', 'error');
+                });
+            }
 
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(function(alert) {
-        setTimeout(function() {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
-});
+            // Enhanced form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Check if this is a photo-only upload (triggered by savePhotoToDatabase)
+                    const isPhotoUpload = e.detail && e.detail.isPhotoUpload;
+                    
+                    if (!isPhotoUpload) {
+                        // Ensure CSRF token is present
+                        const csrfToken = getCSRFToken();
+                        if (!csrfToken) {
+                            e.preventDefault();
+                            showNotification('CSRF token not found. Please refresh the page.', 'error');
+                            return;
+                        }
+                        
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Updating Profile...';
+                            submitBtn.disabled = true;
+                        }
+                    }
+                });
 
-// Enhanced Utility Functions
+                // Real-time validation
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        validateField(this);
+                    });
+                    
+                    input.addEventListener('input', function() {
+                        clearFieldError(this);
+                    });
+                });
+            }
+
+            // Functional buttons for all tabs
+            setupFunctionalButtons();
+
+            // Auto-hide messages after 5 seconds
+            const messages = document.querySelectorAll('.fixed .bg-white');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => message.remove(), 300);
+                }, 5000);
+            });
+
+            // Smooth scroll to sections
+            const sections = document.querySelectorAll('.hrm-card');
+            sections.forEach(section => {
+                section.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                section.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+        });
+
+        // Setup functional buttons for all tabs
+        function setupFunctionalButtons() {
+            // Medical History Tab Button
+            const medicalHistoryBtn = document.querySelector('#medical-history-tab button');
+            if (medicalHistoryBtn) {
+                medicalHistoryBtn.addEventListener('click', function() {
+                    showNotification('Redirecting to Medical Records...', 'info');
+                    setTimeout(() => {
+                        // Redirect to medical records page or show modal
+                        window.location.href = '/patient/medical-records/';
+                    }, 1000);
+                });
+            }
+
+            // Appointments Tab Button - Now opens modal instead of redirecting
+            const appointmentsBtn = document.querySelector('#appointments-tab button');
+            if (appointmentsBtn) {
+                appointmentsBtn.addEventListener('click', function() {
+                    // The modal will be opened by Bootstrap's data-bs-toggle attribute
+                    showNotification('Opening Appointment Booking...', 'info');
+                });
+            }
+
+            // Prescriptions Tab Button
+            const prescriptionsBtn = document.querySelector('#prescriptions-tab button');
+            if (prescriptionsBtn) {
+                prescriptionsBtn.addEventListener('click', function() {
+                    showNotification('Loading Prescriptions...', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/patient/prescriptions/';
+                    }, 1000);
+                });
+            }
+
+            // Reports & Documents Tab Button
+            const reportsBtn = document.querySelector('#reports-tab button');
+            if (reportsBtn) {
+                reportsBtn.addEventListener('click', function() {
+                    showNotification('Opening Document Upload...', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/patient/documents/';
+                    }, 1000);
+                });
+            }
+
+            // Cancel Button
+            const cancelBtn = document.querySelector('a[href*="patient_dashboard"]');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showNotification('Returning to Dashboard...', 'info');
+                    setTimeout(() => {
+                        window.location.href = this.href;
+                    }, 1000);
+                });
+            }
+
+            // Save Changes Button
+            const saveBtn = document.querySelector('button[type="submit"]');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function(e) {
+                    // Form validation before submission
+                    const form = this.closest('form');
+                    const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+                    let isValid = true;
+
+                    requiredFields.forEach(field => {
+                        if (!validateField(field)) {
+                            isValid = false;
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        showNotification('Please fill in all required fields correctly', 'error');
+                        return;
+                    }
+
+                    showNotification('Saving changes...', 'info');
+                });
+            }
+
+            // Edit Icons functionality
+            const editIcons = document.querySelectorAll('.edit-icon button');
+            editIcons.forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const card = this.closest('.hrm-card');
+                    const inputs = card.querySelectorAll('input, select, textarea');
+                    
+                    // Toggle edit mode
+                    inputs.forEach(input => {
+                        if (input.disabled) {
+                            input.disabled = false;
+                            input.classList.add('border-primary-blue');
+                        } else {
+                            input.disabled = true;
+                            input.classList.remove('border-primary-blue');
+                        }
+                    });
+
+                    // Show feedback
+                    const cardTitle = card.querySelector('h3').textContent;
+                    showNotification(`${cardTitle} edit mode toggled`, 'info');
+                });
+            });
+        }
+
+// Utility Functions
 function validateField(field) {
     const value = field.value.trim();
     const fieldName = field.name;
@@ -998,89 +1184,626 @@ function validateField(field) {
 
 function showFieldError(field, message) {
     clearFieldError(field);
-    field.classList.add('is-invalid');
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'invalid-feedback';
-    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`;
+            field.classList.add('border-red-500');
+            
+            const errorDiv = document.createElement('p');
+            errorDiv.className = 'text-red-500 text-sm mt-1 flex items-center';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
     field.parentNode.appendChild(errorDiv);
 }
 
 function clearFieldError(field) {
-    field.classList.remove('is-invalid');
-    const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+            field.classList.remove('border-red-500');
+            const errorDiv = field.parentNode.querySelector('.text-red-500');
     if (errorDiv) {
         errorDiv.remove();
     }
 }
 
-function updateFormProgress() {
-    const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('.form-control');
-    const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
-    const progressPercentage = (filledInputs.length / inputs.length) * 100;
-    
-    const progressFill = document.querySelector('.progress-fill');
-    if (progressFill) {
-        progressFill.style.width = `${progressPercentage}%`;
-    }
-}
-
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);';
+            let bgColor, iconColor, icon;
+            
+            switch(type) {
+                case 'success':
+                    bgColor = 'border-healthcare-green';
+                    iconColor = 'text-healthcare-green';
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    bgColor = 'border-red-500';
+                    iconColor = 'text-red-500';
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                case 'info':
+                default:
+                    bgColor = 'border-primary-blue';
+                    iconColor = 'text-primary-blue';
+                    icon = 'fa-info-circle';
+                    break;
+            }
+            
+            notification.className = `bg-white border-l-4 ${bgColor} p-6 rounded-xl shadow-xl max-w-sm animate-slide-up fixed top-4 right-4 z-50`;
     notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas ${icon} ${iconColor} text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">${message}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button type="button" class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
     `;
     
     document.body.appendChild(notification);
     
     setTimeout(() => {
         if (notification.parentNode) {
-            notification.remove();
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
         }
     }, 5000);
 }
 
-function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+// Notification System (from profile_dashboard.html)
+const NotificationSystem = {
+    // Show toast notification
+    showToast: (message, type = 'info') => {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'polite');
+        toast.textContent = message;
+        
+        // Style the toast
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        
+        // Set background color based on type
+        switch(type) {
+            case 'success':
+                toast.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                break;
+            case 'error':
+                toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                break;
+            case 'warning':
+                toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                break;
+            case 'info':
+            default:
+                toast.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                break;
+        }
+        
+        // Add to DOM
+        document.body.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
+};
+
+// Hospital data from Django template (same as profile_dashboard.html)
+const hospitals = [
+    {% for hospital in hospitals %}
+    {
+        id: {{ hospital.id }},
+        name: "{{ hospital.name }}",
+        location: "{{ hospital.location }}",
+        email: "{{ hospital.email }}",
+        contact_no: "{{ hospital.contact_no }}",
+        registration_number: "{{ hospital.registration_number }}",
+        logo: "{% if hospital.logo %}{{ hospital.logo.url }}{% else %}{% endif %}",
+        specializations: [
+            {% for spec in hospital.specialization.all %}
+            "{{ spec.sname }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        doctors: [
+            {% for doctor in hospital.doctor_set.all %}
+            {
+                id: {{ doctor.id }},
+                name: "{{ doctor.full_name }}",
+                contact: "{{ doctor.contact_number }}",
+                gender: "{{ doctor.gender }}",
+                specializations: [
+                    {% for spec in doctor.specialization.all %}
+                    "{{ spec.sname }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Debug: Log hospitals data
+console.log('Hospitals loaded:', hospitals);
+
+// Quick Actions Functions (exact copy from profile_dashboard.html)
+function bookAppointment() {
+    console.log('bookAppointment called');
+    NotificationSystem.showToast('Opening hospital selection...', 'info');
+    setTimeout(() => {
+        showHospitalSelection();
+    }, 500);
 }
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    .animate-fade-in {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-        transform: translateY(20px);
+function showHospitalSelection() {
+    console.log('showHospitalSelection called');
+    NotificationSystem.showToast('Opening hospital selection...', 'info');
+    setTimeout(() => {
+        const modal = new bootstrap.Modal(document.getElementById('hospitalSelectionModal'));
+        
+        // Load hospital, specialization, and location content
+        loadHospitalContent();
+        loadSpecializationContent();
+        loadLocationContent();
+        
+        // Show hospital content by default
+        switchSelectionMethod('hospital');
+        
+        modal.show();
+    }, 500);
+}
+
+function switchSelectionMethod(method) {
+    // Update tab buttons
+    document.getElementById('hospitalTab').classList.toggle('active', method === 'hospital');
+    document.getElementById('specializationTab').classList.toggle('active', method === 'specialization');
+    document.getElementById('locationTab').classList.toggle('active', method === 'location');
+    
+    // Show/hide content
+    document.getElementById('hospitalSelectionContent').style.display = method === 'hospital' ? 'block' : 'none';
+    document.getElementById('specializationSelectionContent').style.display = method === 'specialization' ? 'block' : 'none';
+    document.getElementById('locationSelectionContent').style.display = method === 'location' ? 'block' : 'none';
+    
+    // Load content if needed
+    if (method === 'location') {
+        loadLocationContent();
+    }
+}
+
+function loadHospitalContent() {
+    console.log('loadHospitalContent called, hospitals:', hospitals);
+    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
+    
+    if (hospitals.length > 0) {
+        const hospitalsHtml = hospitals.map(hospital => `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                                🏥
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
+                                <p class="card-text text-muted small mb-2">${hospital.location}</p>
+                                <p class="card-text text-muted small mb-0">
+                                    <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hospital-specializations mb-3">
+                            ${hospital.specializations.slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
+                            ${hospital.specializations.length > 2 ? `<span class="badge bg-secondary" style="font-size: 0.7rem;">+${hospital.specializations.length - 2}</span>` : ''}
+                        </div>
+                        <div class="hospital-contact mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">${hospital.doctors.length} doctors available</small>
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+                                Book Appointment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        hospitalsList.innerHTML = hospitalsHtml;
+    } else {
+        hospitalsList.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
+                <h5 class="text-muted">No hospitals available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+    }
+}
+
+function loadSpecializationContent() {
+    const specializationsList = document.querySelector('#specializationSelectionContent .row');
+    
+    // Get all unique specializations
+    const allSpecializations = new Set();
+    hospitals.forEach(hospital => {
+        hospital.specializations.forEach(spec => allSpecializations.add(spec));
+    });
+    
+    const specializationsArray = Array.from(allSpecializations);
+    
+    if (specializationsArray.length > 0) {
+        const specializationsHtml = specializationsArray.map(specialization => `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 specialization-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectSpecialization('${specialization}')">
+                    <div class="card-body text-center">
+                        <div class="specialization-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
+                            🩺
+                        </div>
+                        <h6 class="card-title mb-2" style="font-weight: 600; color: #1f2937;">${specialization}</h6>
+                        <p class="card-text text-muted small mb-3">Find specialists in this field</p>
+                        <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); selectSpecialization('${specialization}')">
+                            Find Specialists
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        specializationsList.innerHTML = specializationsHtml;
+    } else {
+        specializationsList.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🩺</div>
+                <h5 class="text-muted">No specializations available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+    }
+}
+
+function loadLocationContent() {
+    const locationsList = document.querySelector('#locationSelectionContent .row');
+    
+    // Get unique locations from hospitals
+    const uniqueLocations = [...new Set(hospitals.map(hospital => hospital.location))].filter(location => location);
+    
+    if (uniqueLocations.length > 0) {
+        const locationsHtml = uniqueLocations.map(location => {
+            // Count hospitals in this location
+            const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
+            
+            return `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 location-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectLocation('${location}')">
+                        <div class="card-body text-center">
+                            <div class="location-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
+                                📍
+                            </div>
+                            <h6 class="card-title mb-2" style="font-weight: 600; color: #1f2937;">${location}</h6>
+                            <p class="card-text text-muted small mb-3">${hospitalsInLocation.length} hospital${hospitalsInLocation.length !== 1 ? 's' : ''} available</p>
+                            <div class="location-specializations mb-3">
+                                ${hospitalsInLocation.slice(0, 3).map(hospital => 
+                                    hospital.specializations.slice(0, 2).map(spec => 
+                                        `<span class="badge bg-light text-dark me-1" style="font-size: 0.6rem;">${spec}</span>`
+                                    ).join('')
+                                ).join('')}
+                                ${hospitalsInLocation.length > 3 ? `<span class="badge bg-secondary" style="font-size: 0.6rem;">+more</span>` : ''}
+                            </div>
+                            <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); selectLocation('${location}')">
+                                View Hospitals
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        locationsList.innerHTML = locationsHtml;
+    } else {
+        locationsList.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📍</div>
+                <h5 class="text-muted">No locations available</h5>
+                <p class="text-muted">Please check back later or contact support.</p>
+            </div>
+        `;
+    }
+}
+
+function selectLocation(location) {
+    // Filter hospitals in this location
+    const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
+    
+    if (hospitalsInLocation.length === 0) {
+        NotificationSystem.showToast('No hospitals found in this location', 'info');
+        return;
     }
     
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
+    // Show hospitals in this location
+    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
+    const hospitalsHtml = hospitalsInLocation.map(hospital => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                            🏥
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
+                            <p class="card-text text-muted small mb-2">${hospital.location}</p>
+                            <p class="card-text text-muted small mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="hospital-specializations mb-3">
+                        <span class="badge bg-warning me-1" style="font-size: 0.7rem;">${location}</span>
+                        ${hospital.specializations.slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
+                    </div>
+                    <div class="hospital-contact mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${hospital.doctors.length} doctors available</small>
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+                            Book Appointment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    hospitalsList.innerHTML = hospitalsHtml;
+    
+    // Switch to hospital view
+    switchSelectionMethod('hospital');
+}
+
+function selectHospital(hospitalId) {
+    const hospital = hospitals.find(h => h.id === hospitalId);
+    if (!hospital) return;
+    
+    // Redirect to hospital doctors page
+    NotificationSystem.showToast(`Loading doctors at ${hospital.name}...`, 'info');
+    setTimeout(() => {
+        window.location.href = `/hospitals/${hospitalId}/doctors/`;
+    }, 500);
+}
+
+function selectSpecialization(specialization) {
+    // Filter hospitals that have this specialization
+    const hospitalsWithSpecialization = hospitals.filter(hospital => 
+        hospital.specializations.includes(specialization)
+    );
+    
+    if (hospitalsWithSpecialization.length === 0) {
+        NotificationSystem.showToast('No hospitals found for this specialization', 'info');
+        return;
+    }
+    
+    // Show hospitals with this specialization
+    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
+    const hospitalsHtml = hospitalsWithSpecialization.map(hospital => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                            🏥
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
+                            <p class="card-text text-muted small mb-2">${hospital.location}</p>
+                            <p class="card-text text-muted small mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="hospital-specializations mb-3">
+                        <span class="badge bg-success me-1" style="font-size: 0.7rem;">${specialization}</span>
+                        ${hospital.specializations.filter(spec => spec !== specialization).slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
+                    </div>
+                    <div class="hospital-contact mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${hospital.doctors.length} doctors available</small>
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
+                            Book Appointment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    hospitalsList.innerHTML = hospitalsHtml;
+    
+    // Switch to hospital view
+    switchSelectionMethod('hospital');
+}
+
+function showHospitalDetails(hospitalId) {
+    const hospital = hospitals.find(h => h.id === hospitalId);
+    if (!hospital) return;
+
+    const modal = new bootstrap.Modal(document.getElementById('hospitalDetailsModal'));
+    const content = document.getElementById('hospitalDetailsContent');
+    const bookBtn = document.getElementById('bookAppointmentBtn');
+
+    // Build hospital details HTML
+    let specializationsHtml = '';
+    if (hospital.specializations.length > 0) {
+        specializationsHtml = `
+            <div class="mb-3">
+                <h6 class="fw-bold">Hospital Specializations:</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    ${hospital.specializations.map(spec => `<span class="badge bg-primary">${spec}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Build doctors list HTML
+    let doctorsHtml = '';
+    if (hospital.doctors.length > 0) {
+        doctorsHtml = `
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3">Available Doctors (${hospital.doctors.length}):</h6>
+                <div class="row g-3">
+                    ${hospital.doctors.map(doctor => `
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="bookDoctorAppointment(${hospital.id}, ${doctor.id}, '${doctor.name}')">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="doctor-avatar me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                            ${doctor.name.charAt(0)}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">Dr. ${doctor.name}</h6>
+                                            <p class="text-muted small mb-1">${doctor.specializations.join(', ')}</p>
+                                            <p class="text-muted small mb-0">
+                                                <i class="fas fa-phone me-1"></i> ${doctor.contact}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button class="btn btn-success btn-sm w-100" onclick="event.stopPropagation(); bookDoctorAppointment(${hospital.id}, ${doctor.id}, '${doctor.name}')">
+                                            📅 Book Appointment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else {
+        doctorsHtml = `
+            <div class="text-center py-4">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👨‍⚕️</div>
+                <h6 class="text-muted">No doctors available</h6>
+                <p class="text-muted small">Please contact the hospital directly</p>
+            </div>
+        `;
+    }
+
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center mb-4">
+                    ${hospital.logo ? 
+                        `<img src="${hospital.logo}" alt="${hospital.name}" class="img-fluid rounded mb-3" style="width: 120px; height: 120px; object-fit: cover;">` :
+                        `<div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 20px;">
+                            <span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
+                        </div>`
+                    }
+                    <h4 class="fw-bold">${hospital.name}</h4>
+                    <p class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
+                    </p>
+                </div>
+                
+                <div class="hospital-info">
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Contact Information:</h6>
+                        <p class="mb-1">
+                            <i class="fas fa-phone me-2"></i> ${hospital.contact_no}
+                        </p>
+                        <p class="mb-1">
+                            <i class="fas fa-envelope me-2"></i> ${hospital.email}
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-id-card me-2"></i> ${hospital.registration_number}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                ${specializationsHtml}
+                ${doctorsHtml}
+            </div>
+        </div>
+    `;
+    
+    // Hide the general book appointment button since we have individual doctor buttons
+    bookBtn.style.display = 'none';
+    
+    modal.show();
+}
+
+function bookDoctorAppointment(hospitalId, doctorId, doctorName) {
+    // Close the modal first
+    const modal = bootstrap.Modal.getInstance(document.getElementById('hospitalDetailsModal'));
+    modal.hide();
+    
+    // Show confirmation using NotificationSystem (same as profile_dashboard.html)
+    NotificationSystem.showToast(`Redirecting to book appointment with Dr. ${doctorName}...`, 'info');
+    
+    // Redirect to appointment booking with hospital and doctor pre-selected
+    setTimeout(() => {
+        window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
+    }, 1000);
+}
+
+function bookAppointmentWithDoctor(hospitalId, doctorId, doctorName, specialization) {
+    // Close all modals
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
         }
-    }
+    });
     
-    .form-control.is-invalid {
-        border-color: #dc3545;
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-    }
+    // Show confirmation using NotificationSystem (same as profile_dashboard.html)
+    NotificationSystem.showToast(`Redirecting to book appointment with ${doctorName}...`, 'info');
     
-    .invalid-feedback {
-        display: block;
-        color: #dc3545;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-`;
-document.head.appendChild(style);
+    // Redirect to appointment booking with hospital and doctor pre-selected
+    setTimeout(() => {
+        window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
+    }, 1000);
+}
 </script>
 
-{% endblock %}
+</body>
+</html>

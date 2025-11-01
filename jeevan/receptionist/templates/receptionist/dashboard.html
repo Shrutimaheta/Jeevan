@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Receptionist Dashboard - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables matching profile theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        
+        /* Global font styling */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Modern Header Styles matching profile */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        .healthcare-main {
+            margin-left: 250px;
+            background: #F8FAFC;
+            min-height: calc(100vh - 72px);
+            padding: 2rem;
+            margin-top: 72px;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .healthcare-main.sidebar-collapsed {
+            margin-left: 70px;
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: calc(100vh - 72px);
+            position: fixed;
+            left: 0;
+            top: 72px;
+            width: 250px;
+            z-index: 999;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .healthcare-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-user-info,
+        .healthcare-sidebar.collapsed .healthcare-nav-link span {
+            display: none;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link i {
+            margin-right: 0;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-profile {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-avatar-placeholder {
+            margin: 0;
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-height: 100px;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .healthcare-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .healthcare-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .healthcare-nav-link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .content-area {
+            padding: 0;
+        }
+        
+        .stats-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            color: #2c5aa0;
+        }
+        
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .chart-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .data-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            overflow: hidden;
+        }
+        
+        .chart-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .chart-header {
+            padding: 1.5rem 2rem 1rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .chart-container {
+            padding: 1rem 2rem 2rem 2rem;
+        }
+        
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .table {
+            margin: 0;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .table td {
+            border-top: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+        
+        .badge {
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        
+        .badge.bg-success {
+            background-color: #28a745 !important;
+        }
+        
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+        
+        .badge.bg-danger {
+            background-color: #dc3545 !important;
+        }
+        
+        .badge.bg-info {
+            background-color: #17a2b8 !important;
+        }
+        
+        .badge.bg-primary {
+            background-color: #2c5aa0 !important;
+        }
+        
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn {
+            border-radius: 4px;
+            font-weight: 500;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #2c5aa0;
+            border-color: #2c5aa0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 1rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .action-btn:hover {
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .action-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .action-btn span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .form-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <a href="{% url 'receptionist:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                                <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {% if receptionist.profile_picture %}
+                                    <img src="{{ receptionist.profile_picture.url }}" alt="Profile" class="user-avatar">
+                {% else %}
+                                    <div class="user-avatar-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                                <span class="user-name">{{ receptionist.full_name|default:"Receptionist" }}</span>
+                        </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'receptionist:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:doctor_schedule' %}"><i class="fas fa-user-md me-2"></i>Doctor Schedule</a></li>
+                                <li><a class="dropdown-item" href="{% url 'receptionist:patient_list' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'receptionist:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Sidebar Navigation -->
+    <div class="healthcare-sidebar">
+        <!-- Receptionist Profile Section -->
+        <div class="healthcare-sidebar-profile">
+            <div class="healthcare-sidebar-avatar-placeholder">
+                {% if receptionist.profile_picture %}
+                    <img src="{{ receptionist.profile_picture.url }}" alt="{{ receptionist.full_name|default:'Receptionist' }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">{{ receptionist.full_name|default:"Receptionist" }}</div>
+                <div class="healthcare-sidebar-user-email">{{ receptionist.hospital.name|default:"Hospital" }}</div>
+            </div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="healthcare-nav-link active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-md"></i>
+                    <span>Doctor Schedules</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:doctor_availability' %}" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Doctor Availability</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:patient_list' %}" class="healthcare-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Patient Registration</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Profile</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <main class="healthcare-main">
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3 class="stats-number">{{ total_appointments }}</h3>
+                        <p class="stats-label">Total Appointments</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <h3 class="stats-number">{{ today_appointments }}</h3>
+                        <p class="stats-label">Today's Appointments</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, var(--warning-color) 0%, #fd7e14 100%);">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3 class="stats-number">{{ pending_appointments }}</h3>
+                        <p class="stats-label">Pending Appointments</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon" style="background: linear-gradient(135deg, var(--info-color) 0%, #6f42c1 100%);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3 class="stats-number">{{ accepted_appointments }}</h3>
+                        <p class="stats-label">Accepted Appointments</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h5 class="chart-title">
+                                <i class="fas fa-chart-pie me-2"></i>Appointments by Status
+                            </h5>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h5 class="chart-title">
+                                <i class="fas fa-chart-line me-2"></i>Weekly Appointments (Next 7 Days)
+                            </h5>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Row -->
+            <div class="row">
+                <!-- Recent Appointments -->
+                <div class="col-md-6">
+                    <div class="data-table">
+                        <div class="table-header d-flex justify-content-between align-items-center">
+                            <h5 class="table-title">
+                                <i class="fas fa-list me-2"></i>Recent Appointments
+                            </h5>
+                            <a href="{% url 'receptionist:appointments' %}" class="btn btn-sm btn-primary">View All</a>
+                        </div>
+                        {% if recent_appointments %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Doctor</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appointment in recent_appointments %}
+                                        <tr>
+                                            <td>{{ appointment.patient.full_name }}</td>
+                                            <td>{{ appointment.doctor.full_name }}</td>
+                                            <td>{{ appointment.appointment_date }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                    {{ appointment.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">No recent appointments</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Doctor Schedules -->
+                <div class="col-md-6">
+                    <div class="data-table">
+                        <div class="table-header d-flex justify-content-between align-items-center">
+                            <h5 class="table-title">
+                                <i class="fas fa-user-md me-2"></i>Today's Doctor Schedules
+                            </h5>
+                            <a href="{% url 'receptionist:doctor_schedule' %}" class="btn btn-sm btn-primary">Manage</a>
+                        </div>
+                        {% if doctor_schedules %}
+                            <div class="p-3">
+                                {% for schedule in doctor_schedules %}
+                                <div class="mb-3">
+                                    <h6 class="mb-2 fw-bold">{{ schedule.doctor.full_name }}</h6>
+                                    {% if schedule.appointments %}
+                                        <div class="list-group list-group-flush">
+                                            {% for appointment in schedule.appointments %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center py-2 border-0">
+                                                <div>
+                                                    <small class="text-muted">{{ appointment.appointment_time }}</small>
+                                                    <div class="fw-medium">{{ appointment.patient.full_name }}</div>
+                                                </div>
+                                                <span class="badge bg-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                    {{ appointment.status|title }}
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted small mb-0">No appointments today</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-md fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">No doctors have appointments today</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="quick-actions">
+                        <h5 class="mb-3">
+                            <i class="fas fa-bolt me-2"></i>Quick Actions
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="{% url 'receptionist:patient_list' %}" class="action-btn">
+                                    <i class="fas fa-users"></i>
+                                    <span>Patient Registration</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'receptionist:appointments' %}" class="action-btn">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>Manage Appointments</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'receptionist:doctor_schedule' %}" class="action-btn">
+                                    <i class="fas fa-user-md"></i>
+                                    <span>Doctor Schedules</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'receptionist:profile' %}" class="action-btn">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Edit Profile</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Sidebar Toggle Functions
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.healthcare-sidebar');
+        const mainContent = document.querySelector('.healthcare-main');
+        
+        if (sidebar && mainContent) {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+        }
+    }
+    
+    function toggleMobileSidebar() {
+        const sidebar = document.querySelector('.healthcare-sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('show');
+        }
+    }
+</script>
+
+<script>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing charts...');
+    
+    // Status Chart
+    const statusCanvas = document.getElementById('statusChart');
+    if (statusCanvas) {
+        const statusCtx = statusCanvas.getContext('2d');
+        const statusData = {{ chart_data|safe }};
+        
+        console.log('Status chart data:', statusData);
+        
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusData.labels,
+                datasets: [{
+                    data: statusData.data,
+                    backgroundColor: [
+                        '#2c5aa0', // Primary Blue
+                        '#3b82f6', // Secondary Blue
+                        '#1e3a8a', // Dark Blue
+                        '#dbeafe', // Light Blue
+                        '#28a745', // Success - Green
+                        '#ffc107', // Warning - Yellow  
+                        '#dc3545'  // Danger - Red
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        console.error('Status chart canvas not found');
+    }
+
+    // Weekly Appointments Chart (Next 7 Days from Current Date)
+    const trendCanvas = document.getElementById('trendChart');
+    if (trendCanvas) {
+        const trendCtx = trendCanvas.getContext('2d');
+        
+        // Use database data for next 7 days (from current date to next 7 days)
+        const next7Days = [
+            {% for label in next_7_days_labels %}
+            '{{ label }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        const appointmentCounts = [
+            {% for count in next_7_days_counts %}
+            {{ count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: next7Days,
+                datasets: [{
+                    label: 'Appointments',
+                    data: appointmentCounts,
+                    borderColor: '#2c5aa0',
+                    backgroundColor: 'rgba(44, 90, 160, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2c5aa0',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#2c5aa0',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                return context.parsed.y + ' appointments';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#718096',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#718096',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            stepSize: 1
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    point: {
+                        hoverBackgroundColor: '#2c5aa0'
+                    }
+                }
+            }
+        });
+    } else {
+        console.error('Trend chart canvas not found');
+    }
+});
+</script>
+</body>
+</html>

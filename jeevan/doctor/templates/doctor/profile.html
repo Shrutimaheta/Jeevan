@@ -1,0 +1,1329 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Profile - Patient Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#2c5aa0',
+                        'primary-dark-blue': '#1e3a8a',
+                        'light-blue': '#f0f9ff',
+                        'healthcare-green': '#10b981',
+                        'healthcare-teal': '#14b8a6',
+                        'hrm-orange': '#f97316',
+                        'hrm-teal': '#14b8a6',
+                        'hrm-bg': '#f8fafc'
+                    },
+                    spacing: {
+                        '18': '4.5rem',
+                        '88': '22rem'
+                    },
+                    maxHeight: {
+                        'screen-90': '90vh'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS Variables matching home.html theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        /* Modern Header Styles */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 8px 32px rgba(44, 90, 160, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            min-height: 72px;
+            width: 100%;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .main-nav {
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+        border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+        border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #2c5aa0;
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .main-content {
+            min-height: calc(100vh - 72px);
+            background: #f8fafc;
+            margin-top: 72px;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Smooth animations */
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Focus ring customization */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* HRM Style Cards */
+        .hrm-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+        
+        .hrm-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .edit-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .hrm-card:hover .edit-icon {
+            opacity: 1;
+        }
+        
+        /* Form field states */
+        .form-field-disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .form-field-enabled {
+            background-color: white;
+            color: #212529;
+            cursor: text;
+        }
+
+        /* Button loading states */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        /* Healthcare Sidebar Styles */
+        .healthcare-sidebar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: calc(100vh - 80px);
+            position: fixed;
+            left: 0;
+            top: 80px;
+            width: 250px;
+            z-index: 999;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .healthcare-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-user-info,
+        .healthcare-sidebar.collapsed .healthcare-nav-link span {
+            display: none;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-nav-link {
+            justify-content: center;
+                padding: 1rem;
+            }
+            
+        .healthcare-sidebar.collapsed .healthcare-nav-link i {
+            margin-right: 0;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-profile {
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .healthcare-sidebar.collapsed .healthcare-sidebar-avatar-placeholder {
+            margin: 0;
+        }
+        
+        .healthcare-sidebar-profile {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-height: 100px;
+        }
+        
+        .healthcare-sidebar-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+        
+        .healthcare-sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .healthcare-sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .healthcare-nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .healthcare-nav-link span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .healthcare-main {
+            margin-left: 250px;
+            background: #F8FAFC;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+            margin-top: 80px;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .healthcare-main.sidebar-collapsed {
+            margin-left: 70px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-hrm-bg overflow-x-hidden">
+
+    <!-- Modern Header with Integrated Navigation -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <a href="{% url 'doctor:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                                <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                    </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {% if doctor.profile_picture %}
+                                    <img src="{{ doctor.profile_picture.url }}" alt="Profile" class="user-avatar">
+                {% else %}
+                                    <div class="user-avatar-placeholder">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                {% endif %}
+                                <span class="user-name">Dr. {{ doctor.full_name|default:"Doctor" }}</span>
+                        </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'doctor:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:patients' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'doctor:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Healthcare Sidebar -->
+    <div class="healthcare-sidebar">
+        <!-- Doctor Profile Section -->
+        <div class="healthcare-sidebar-profile">
+                    <div class="healthcare-sidebar-avatar-placeholder">
+                        <i class="fas fa-user-md"></i>
+            </div>
+            <div class="healthcare-sidebar-user-info">
+                <div class="healthcare-sidebar-user-name">Dr. {{ doctor.full_name|default:"Doctor" }}</div>
+                <div class="healthcare-sidebar-user-email">{{ doctor.hospital.name|default:"Hospital" }}</div>
+            </div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:profile' %}" class="healthcare-nav-link active">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=accepted" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Accepted Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-list"></i>
+                    <span>All Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=pending" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=completed" class="healthcare-nav-link">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Completed Appointments</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:patients' %}" class="healthcare-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>View Patients</span>
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:calendar' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendar View</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content Area -->
+    <main class="healthcare-main">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Main Profile Card -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                
+                <!-- Header with Back Button -->
+                <div class="border-b border-gray-200">
+                    <div class="flex items-center justify-between px-8 py-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Doctor Profile</h2>
+                        <a href="{% url 'doctor:dashboard' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+
+                <!-- Profile Summary Section -->
+                <div class="px-8 py-2 border-b border-gray-200">
+                    <div class="flex items-center space-x-6">
+                        <!-- Profile Photo -->
+                        <div class="flex-shrink-0 relative">
+                        {% if doctor.profile_picture %}
+                                <img src="{{ doctor.profile_picture.url }}?v={{ doctor.id }}{% now 'U' %}" alt="Profile Photo" 
+                                     class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" id="profile-photo-preview"
+                                     onerror="this.style.display='none'; document.getElementById('profile-photo-placeholder').style.display='flex';">
+                        {% else %}
+                                <div class="w-24 h-24 rounded-full bg-gradient-to-r from-primary-blue to-primary-dark-blue flex items-center justify-center shadow-lg" id="profile-photo-placeholder">
+                                    <i class="fas fa-user-md text-white text-2xl"></i>
+                                        </div>
+                                    {% endif %}
+                            <button type="button" class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-full flex items-center justify-center shadow-lg transition-colors duration-200" id="photo-upload-btn">
+                                <i class="fas fa-camera text-sm"></i>
+                            </button>
+                                    </div>
+
+                        <!-- Doctor Info -->
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-gray-900 mb-1">Dr. {{ doctor.full_name|default:"Doctor" }}</h1>
+                            <p class="text-gray-600">
+                                <span class="text-primary-blue font-medium">Doctor</span>
+                            </p>
+                                    </div>
+
+                        <!-- Doctor Details -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="grid grid-cols-2 gap-6 text-sm">
+                                <div>
+                                    <p class="text-gray-600 text-sm">Doctor ID</p>
+                                    <p class="font-semibold text-gray-900 text-base">#{{ doctor.id }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">Hospital</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ doctor.hospital.name|default:"Not assigned" }}</p>
+                            </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">Email Address</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ doctor.email|default:"Not provided" }}</p>
+                    </div>
+                                <div>
+                                    <p class="text-gray-600 text-sm">Experience</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ doctor.experience|default:"0" }} years</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Doctor Profile Tab -->
+                    <div id="profile-tab" class="tab-panel p-8">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                            <!-- Information Blocks Grid -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- Personal Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                            </button>
+                                        </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Full Name</p>
+                                    <input type="text" name="{{ form.full_name.name }}" value="{{ form.full_name.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your full name" required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Gender</p>
+                                        <select name="{{ form.gender.name }}" 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male" {% if form.gender.value == 'Male' %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if form.gender.value == 'Female' %}selected{% endif %}>Female</option>
+                                            <option value="Other" {% if form.gender.value == 'Other' %}selected{% endif %}>Other</option>
+                                        </select>
+                            </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Date of Birth</p>
+                                        <input type="date" name="{{ form.dob.name }}" value="{{ form.dob.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+                                        </div>
+                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Email Address</p>
+                                    <input type="email" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your email address" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Professional Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
+                                        </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Hospital</p>
+                                    <div class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                                        {% if doctor.hospital %}
+                                            {{ doctor.hospital.name }}
+                                        {% else %}
+                                            <span class="text-gray-500 italic">No hospital assigned</span>
+                                    {% endif %}
+                                </div>
+                                    <p class="text-xs text-gray-500 mt-1">Hospital assignment is managed by administrators</p>
+                            </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Registration Number</p>
+                                        <input type="text" name="{{ form.registration_number.name }}" value="{{ form.registration_number.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                               placeholder="Enter registration number">
+                                        </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">Experience (Years)</p>
+                                        <input type="number" name="{{ form.experience.name }}" value="{{ form.experience.value|default:'' }}" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                               placeholder="Years of experience">
+                                </div>
+                            </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Qualification</p>
+                                    <input type="text" name="{{ form.qualification.name }}" value="{{ form.qualification.value|default:'' }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring" 
+                                           placeholder="Enter your qualification">
+                        </div>
+                                </div>
+                            </div>
+                            
+                        <!-- Specializations Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
+                                        </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Specializations</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Medical Specializations</p>
+                                    <div class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                                        {% if doctor.specialization.all %}
+                                            {% for spec in doctor.specialization.all %}
+                                                {{ spec.sname }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-gray-500 italic">No specializations assigned</span>
+                                    {% endif %}
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Specializations are managed by administrators</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Address Information Block -->
+                        <div class="hrm-card p-6 relative">
+                            <div class="absolute top-4 right-4 edit-icon">
+                                <button type="button" class="p-2 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-pencil-alt text-sm"></i>
+                                </button>
+                                        </div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-base font-medium text-gray-700">Address</p>
+                                    <textarea name="{{ form.address.name }}" rows="3" 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring resize-none" 
+                                              placeholder="Enter your complete address">{{ form.address.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                                        </div>
+                                </div>
+
+                        <!-- Hidden Photo Upload Field (EXACT COPY FROM PATIENT PROFILE) -->
+                        <div style="display: none;">
+                            {{ form.profile_picture }}
+                        </div>
+                        <!-- Debug: Log form field info -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const photoInput = document.querySelector('input[name="profile_picture"]') || document.getElementById('id_profile_picture');
+                                if (photoInput) {
+                                    console.log('Photo input found in DOM:', {
+                                        id: photoInput.id,
+                                        name: photoInput.name,
+                                        type: photoInput.type,
+                                        disabled: photoInput.disabled
+                                    });
+                                } else {
+                                    console.error('Photo input NOT found in DOM!');
+                                }
+                            });
+                        </script>
+                        
+                        <!-- Action Buttons -->
+                            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                                <a href="{% url 'doctor:dashboard' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center space-x-2">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <span>Back to Dashboard</span>
+                                </a>
+                                <button type="submit" class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                                    Save Changes
+                            </button>
+                                    </div>
+                    </form>
+                            </div>
+                                </div>
+                        </div>
+    </main>
+    
+    <!-- Enhanced Success/Error Messages -->
+{% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-3">
+        {% for message in messages %}
+                <div class="bg-white border-l-4 border-healthcare-green p-6 rounded-xl shadow-xl max-w-sm animate-slide-up">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-healthcare-green text-xl"></i>
+                                </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">{{ message }}</p>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button type="button" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+        {% endfor %}
+            </div>
+{% endif %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Enhanced Profile Page Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check and update profile picture display on page load
+            // This ensures image shows after form submission and redirect
+            const profileImg = document.getElementById('profile-photo-preview');
+            const placeholder = document.getElementById('profile-photo-placeholder');
+            
+            function checkAndDisplayImage() {
+                if (profileImg) {
+                    // Check if image source exists
+                    const imgSrc = profileImg.getAttribute('src');
+                    if (imgSrc && imgSrc !== '' && !imgSrc.includes('data:')) {
+                        // Image URL exists - wait for it to load
+                        profileImg.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                        
+                        // Force reload image with cache busting if needed
+                        if (profileImg.complete && profileImg.naturalHeight === 0) {
+                            // Image failed to load, reload with timestamp
+                            const newSrc = imgSrc.split('?')[0] + '?v=' + Date.now();
+                            profileImg.src = newSrc;
+                        }
+                    }
+                } else if (placeholder) {
+                    // No image element - show placeholder
+                    placeholder.style.display = 'flex';
+                }
+            }
+            
+            if (profileImg) {
+                profileImg.addEventListener('load', function() {
+                    console.log('Profile picture loaded successfully:', this.src);
+                    this.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                });
+                
+                profileImg.addEventListener('error', function() {
+                    console.error('Profile picture failed to load:', this.src);
+                    // Try reloading with cache bust
+                    const currentSrc = this.src.split('?')[0];
+                    const newSrc = currentSrc + '?v=' + Date.now();
+                    console.log('Trying to reload image:', newSrc);
+                    
+                    // Only try once
+                    if (!this.dataset.retried) {
+                        this.dataset.retried = 'true';
+                        this.src = newSrc;
+                    } else {
+                        this.style.display = 'none';
+                        if (placeholder) {
+                            placeholder.style.display = 'flex';
+                        }
+                    }
+                });
+            }
+            
+            // Initial check
+            checkAndDisplayImage();
+            
+            // Also check after a short delay to catch any async loading
+            setTimeout(checkAndDisplayImage, 100);
+            
+            // Tab functionality removed - no longer needed
+
+            // Photo upload functionality (EXACT COPY FROM PATIENT PROFILE)
+            // Try multiple methods to find the input element
+            let photoInput = null;
+            // Method 1: Try id_for_label (like patient profile)
+            try {
+                photoInput = document.getElementById('{{ form.profile_picture.id_for_label }}');
+            } catch(e) {
+                console.log('Method 1 failed:', e);
+            }
+            // Method 2: Try by name attribute
+            if (!photoInput) {
+                photoInput = document.querySelector('input[name="profile_picture"]');
+            }
+            // Method 3: Try standard Django ID format
+            if (!photoInput) {
+                photoInput = document.getElementById('id_profile_picture');
+            }
+            
+            const photoUploadBtn = document.getElementById('photo-upload-btn');
+            
+            // Debug logging
+            console.log('Photo input search result:', {
+                found: !!photoInput,
+                method1_id: '{{ form.profile_picture.id_for_label }}',
+                method2_name: document.querySelector('input[name="profile_picture"]') ? 'found' : 'not found',
+                method3_id: document.getElementById('id_profile_picture') ? 'found' : 'not found',
+                uploadBtn: !!photoUploadBtn
+            });
+
+            if (photoInput && photoUploadBtn) {
+                photoUploadBtn.addEventListener('click', function() {
+                    photoInput.click();
+                });
+
+                photoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validate file type
+                        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                        if (!allowedTypes.includes(file.type)) {
+                            showNotification('Please select a valid image file (JPG, PNG, GIF)', 'error');
+                            this.value = '';
+                            return;
+                        }
+
+                        // Validate file size (5MB max)
+                        const maxSize = 5 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                            showNotification('File size must be less than 5MB', 'error');
+                            this.value = '';
+                            return;
+                        }
+
+                        // Show loading state
+                        photoUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+                        photoUploadBtn.disabled = true;
+
+                        // Preview the selected image
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.getElementById('profile-photo-preview');
+                            const placeholder = document.getElementById('profile-photo-placeholder');
+                            
+                            // Update preview immediately
+                            if (img) {
+                                img.src = e.target.result;
+                                img.style.display = 'block';
+                                if (placeholder) placeholder.style.display = 'none';
+                            } else if (placeholder) {
+                                placeholder.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" class="w-full h-full rounded-full object-cover" id="profile-photo-preview" style="display: block;">`;
+                                placeholder.style.display = 'flex';
+                            }
+                            
+                            photoUploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                            photoUploadBtn.disabled = false;
+                            
+                            // Auto-save the photo by submitting the form
+                            savePhotoToDatabase();
+                        };
+                        reader.onerror = function() {
+                            console.error('FileReader error');
+                            showNotification('Error reading image file. Please try again.', 'error');
+                            photoUploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                            photoUploadBtn.disabled = false;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+
+            // CSRF token helper function (from patient profile)
+            function getCSRFToken() {
+                let token = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (token) return token.value;
+                const metaToken = document.querySelector('meta[name="csrf-token"]');
+                if (metaToken) return metaToken.getAttribute('content');
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                return cookieValue;
+            }
+
+            // Function to save photo to database (EXACT COPY FROM PATIENT PROFILE WITH DEBUG)
+            function savePhotoToDatabase() {
+                const photoForm = document.querySelector('form');
+                if (!photoForm) {
+                    console.error('Form not found');
+                    showNotification('Form not found. Please refresh the page.', 'error');
+                    return;
+                }
+                
+                const formData = new FormData(photoForm);
+                
+                // Debug: Check if profile_picture is in FormData
+                const photoInput = document.querySelector('input[name="profile_picture"]') || document.getElementById('id_profile_picture');
+                let uploadBtn = document.getElementById('photo-upload-btn');
+                
+                if (photoInput && photoInput.files && photoInput.files[0]) {
+                    console.log('File ready for upload:', {
+                        name: photoInput.files[0].name,
+                        size: photoInput.files[0].size,
+                        type: photoInput.files[0].type
+                    });
+                } else {
+                    console.error('No file in photo input!');
+                    showNotification('No file selected. Please select an image.', 'error');
+                    if (uploadBtn) {
+                        uploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                        uploadBtn.disabled = false;
+                    }
+                    return;
+                }
+                
+                // Get CSRF token
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    showNotification('CSRF token not found. Please refresh the page.', 'error');
+                    if (uploadBtn) {
+                        uploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                        uploadBtn.disabled = false;
+                    }
+                    return;
+                }
+                
+                // Debug: Log FormData contents
+                console.log('FormData entries:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name + ' (file)' : pair[1]));
+                }
+                
+                // Show saving notification
+                showNotification('Saving photo...', 'info');
+                
+                // Update button state
+                if (uploadBtn) {
+                    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i>';
+                    uploadBtn.disabled = true;
+                }
+                
+                // Dispatch custom event to indicate this is a photo upload
+                const photoUploadEvent = new CustomEvent('submit', {
+                    detail: { isPhotoUpload: true }
+                });
+                photoForm.dispatchEvent(photoUploadEvent);
+                
+                console.log('Sending fetch request...');
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    console.log('Response received:', response.status, response.statusText);
+                    // Check if response is successful
+                    if (response.ok || response.status >= 200 && response.status < 400) {
+                        showNotification('Photo saved successfully!', 'success');
+                        // Wait a moment to ensure file is saved to disk
+                        setTimeout(() => {
+                            // Force full page reload with cache busting timestamp
+                            const timestamp = new Date().getTime();
+                            window.location.href = window.location.pathname + '?v=' + timestamp;
+                        }, 1500);
+                    } else {
+                        return response.text().then(text => {
+                            console.error('Server error response:', text.substring(0, 500));
+                        showNotification('Failed to save photo. Please try again.', 'error');
+                            if (uploadBtn) {
+                                uploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                                uploadBtn.disabled = false;
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showNotification('Error saving photo: ' + error.message, 'error');
+                    if (uploadBtn) {
+                        uploadBtn.innerHTML = '<i class="fas fa-camera text-sm"></i>';
+                        uploadBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Enhanced form validation
+            const mainForm = document.querySelector('form');
+            if (mainForm) {
+                mainForm.addEventListener('submit', function(e) {
+                    // Check if this is a photo-only upload (triggered by savePhotoToDatabase)
+                    const isPhotoUpload = e.detail && e.detail.isPhotoUpload;
+                    
+                    if (!isPhotoUpload) {
+                        // Ensure CSRF token is present
+                        const csrfToken = getCSRFToken();
+                        if (!csrfToken) {
+                            e.preventDefault();
+                            showNotification('CSRF token not found. Please refresh the page.', 'error');
+                            return;
+                        }
+                        
+                        const submitBtn = mainForm.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Updating Profile...';
+                            submitBtn.disabled = true;
+                        }
+                    }
+                });
+
+                // Real-time validation
+                const inputs = mainForm.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        validateField(this);
+                    });
+                    
+                    input.addEventListener('input', function() {
+                        clearFieldError(this);
+                    });
+                });
+            }
+
+            // Auto-hide messages after 5 seconds
+            const messages = document.querySelectorAll('.fixed .bg-white');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => message.remove(), 300);
+                }, 5000);
+            });
+
+            // Smooth scroll to sections
+            const sections = document.querySelectorAll('.hrm-card');
+            sections.forEach(section => {
+                section.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                section.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+        });
+
+        // Notification function (same as patient profile)
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            let bgColor, iconColor, icon;
+            
+            switch(type) {
+                case 'success':
+                    bgColor = 'border-green-500';
+                    iconColor = 'text-green-500';
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    bgColor = 'border-red-500';
+                    iconColor = 'text-red-500';
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                case 'info':
+                default:
+                    bgColor = 'border-primary-blue';
+                    iconColor = 'text-primary-blue';
+                    icon = 'fa-info-circle';
+                    break;
+            }
+            
+            notification.className = `bg-white border-l-4 ${bgColor} p-6 rounded-xl shadow-xl max-w-sm animate-slide-up fixed top-4 right-4 z-50`;
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas ${icon} ${iconColor} text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">${message}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button type="button" class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Utility Functions
+        function validateField(field) {
+    const value = field.value.trim();
+    const fieldName = field.name;
+
+    if (field.required && !value) {
+        showFieldError(field, 'This field is required');
+                return false;
+            }
+            
+    if (fieldName === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid email address');
+                return false;
+            }
+    }
+
+    if (fieldName === 'experience' && value) {
+        const experience = parseInt(value);
+        if (isNaN(experience) || experience < 0 || experience > 50) {
+            showFieldError(field, 'Experience must be between 0 and 50 years');
+                return false;
+            }
+    }
+
+    clearFieldError(field);
+            return true;
+        }
+
+function showFieldError(field, message) {
+    clearFieldError(field);
+            field.classList.add('border-red-500');
+            
+            const errorDiv = document.createElement('p');
+            errorDiv.className = 'text-red-500 text-sm mt-1 flex items-center';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+    field.parentNode.appendChild(errorDiv);
+}
+
+function clearFieldError(field) {
+            field.classList.remove('border-red-500');
+            const errorDiv = field.parentNode.querySelector('.text-red-500');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+}
+
+// Duplicate showNotification function removed - using the one defined above
+        
+        // Sidebar Toggle Functions
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            const mainContent = document.querySelector('.healthcare-main');
+            const toggleBtn = document.querySelector('.sidebar-toggle i');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                // Expand sidebar
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                toggleBtn.classList.remove('fa-bars');
+                toggleBtn.classList.add('fa-times');
+            } else {
+                // Collapse sidebar
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+                toggleBtn.classList.remove('fa-times');
+                toggleBtn.classList.add('fa-bars');
+            }
+        }
+        
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            sidebar.classList.toggle('show');
+        }
+        
+        // Handle mobile sidebar toggle
+        const toggleBtn = document.querySelector('.sidebar-toggle');
+        if (toggleBtn && window.innerWidth <= 768) {
+            toggleBtn.onclick = toggleMobileSidebar;
+        }
+        
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.healthcare-sidebar');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                sidebar.classList.contains('show') && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

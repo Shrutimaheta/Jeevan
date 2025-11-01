@@ -17,6 +17,7 @@ urlpatterns = [
     
     # API Endpoints
     path('api/dashboard-data/', views.dashboard_data, name='dashboard_data'),
+    path('api/upload-report/', views.upload_report, name='upload_report'),
     
     # Health Data APIs
     path('api/vital-signs/', api_views.vital_signs_api, name='vital_signs_api'),
@@ -41,6 +42,13 @@ urlpatterns = [
     path('documents/<int:document_id>/', views.document_detail, name='document_detail'),
     path('documents/<int:document_id>/delete/', views.document_delete, name='document_delete'),
     path('documents/<int:document_id>/download/', views.document_download, name='document_download'),
+    
+    # Prescriptions
+    path('prescriptions/', views.prescription_list, name='prescription_list'),
+    path('prescriptions/<int:prescription_id>/', views.prescription_detail, name='prescription_detail'),
+    
+    # Consent Management
+    path('consent-requests/', views.consent_requests, name='consent_requests'),
     
     # Help & Support
     path('help/', views.help_support, name='help_support'),

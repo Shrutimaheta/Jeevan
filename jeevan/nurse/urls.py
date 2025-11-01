@@ -1,8 +1,11 @@
 from django.urls import path
-from .views import some_view, NURSESIGNUP, nurse_list_api
+from .views import some_view, NURSESIGNUP, nurse_list_api, nurse_dashboard
+
+app_name = 'nurse'
 
 urlpatterns = [
-    path('', some_view, name='some_view'),
+    path('', nurse_dashboard, name='dashboard'),
+    path('dashboard/', nurse_dashboard, name='dashboard'),
     path('nursesignup/', NURSESIGNUP, name='nursesignup'),
     path('api/nurses/', nurse_list_api, name='nurse_list_api'),
 ]

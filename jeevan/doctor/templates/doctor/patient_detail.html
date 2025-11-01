@@ -1,0 +1,1061 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Details - Patient Management System</title>
+    <!-- Cache cleared - Template updated at {{ "now"|date:"Y-m-d H:i:s" }} -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/healthcare-theme.css' %}" rel="stylesheet">
+    <style>
+        /* CSS Variables matching home.html theme */
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+        }
+        
+        /* Modern Header Styles matching dashboard */
+        .modern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(44, 90, 160, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        
+        .user-section {
+            position: relative;
+        }
+        
+        .welcome-text {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        /* User Profile Dropdown Styles */
+        .user-profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.4rem 0;
+            margin-top: 0.4rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+        
+        .dropdown-item.text-danger:hover {
+            background: #fef2f2;
+            color: var(--danger-color);
+        }
+        
+        /* Healthcare Sidebar Styles matching dashboard */
+        .healthcare-sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: calc(100vh - 80px);
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 80px;
+            z-index: 999;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .healthcare-profile {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .healthcare-profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .healthcare-profile-name {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-profile-role {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+        
+        .healthcare-nav {
+            padding: 1rem 0;
+        }
+        
+        .healthcare-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .healthcare-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .healthcare-nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .healthcare-nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-right: 3px solid white;
+        }
+        
+        .healthcare-nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content Styles */
+        .healthcare-main {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+            background: #f8f9fa;
+        }
+        
+        /* Patient Info Card Styles */
+        .patient-info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Search Section Styles */
+        .search-section {
+            background: #f8f9ff;
+            border: 1px solid #e3e8ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .search-section h6 {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        /* Simple Search Form Styles */
+        .search-form {
+            width: 100%;
+        }
+        
+        .search-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-field {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-field input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .search-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+        }
+        
+        .search-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-search, .btn-clear {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-search {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-search:hover {
+            background: #1e40af;
+        }
+        
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-clear:hover {
+            background: #5a6268;
+            color: white;
+        }
+        
+        .search-results-info {
+            background: #e7f3ff;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #1e3a8a;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-field {
+                min-width: auto;
+            }
+            
+            .search-buttons {
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+        
+        .appointment-item {
+            background: #f8f9fa;
+            border-left: 4px solid #1e3a8a;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .appointment-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        /* Dark Blue Button Theme */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-success {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-success:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-warning {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-warning:hover {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-info {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-info:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-outline-success {
+            color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+        }
+        
+        .btn-outline-success:hover {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        .btn-outline-warning {
+            color: #1e40af !important;
+            border-color: #1e40af !important;
+        }
+        
+        .btn-outline-warning:hover {
+            background-color: #1e40af !important;
+            border-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .btn-outline-info {
+            color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+        }
+        
+        .btn-outline-info:hover {
+            background-color: var(--primary-color) !important;
+            border-color: #1e3a8a !important;
+            color: white !important;
+        }
+        
+        /* Custom Status Badge Colors - Dark Blue Theme */
+        .badge.bg-success {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+        
+        .badge.bg-warning {
+            background-color: #1e40af !important;
+            color: white !important;
+        }
+        
+        .badge.bg-info {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+        
+        .badge.bg-danger {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .healthcare-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .healthcare-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .healthcare-main {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .modern-header {
+                position: relative;
+            }
+        }
+        
+        /* Page Title Styles */
+        .page-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Patient Info Styles */
+        .patient-name {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .info-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <a href="{% url 'doctor:dashboard' %}" class="d-flex align-items-center text-decoration-none">
+                        <div class="logo-container">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h1 class="logo-text">Patient Management System</h1>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <nav class="main-nav d-none d-md-flex justify-content-center">
+                        <!-- Navigation menu items removed -->
+                    </nav>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="dropdown">
+                            <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                {% if doctor.profile_picture %}
+                                    <img src="{{ doctor.profile_picture.url }}" alt="Profile" class="user-avatar">
+                                {% else %}
+                                    <div class="user-avatar-placeholder">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="user-name">Dr. {{ doctor.full_name|default:"Doctor" }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'doctor:dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:appointments' %}"><i class="fas fa-calendar me-2"></i>Appointments</a></li>
+                                <li><a class="dropdown-item" href="{% url 'doctor:patients' %}"><i class="fas fa-users me-2"></i>Patients</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'doctor:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Healthcare Sidebar -->
+    <aside class="healthcare-sidebar">
+        <div class="healthcare-profile">
+            <div class="healthcare-profile-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="healthcare-profile-name">Dr. {{ doctor.full_name|default:"Doctor" }}</div>
+            <div class="healthcare-profile-role">Healthcare Professional</div>
+        </div>
+        
+        <nav class="healthcare-nav">
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:dashboard' %}" class="healthcare-nav-link">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:profile' %}" class="healthcare-nav-link">
+                    <i class="fas fa-user-edit"></i>Edit Profile
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=accepted" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-check"></i>Accepted Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}" class="healthcare-nav-link">
+                    <i class="fas fa-list"></i>All Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=pending" class="healthcare-nav-link">
+                    <i class="fas fa-clock"></i>Pending Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:appointments' %}?status=completed" class="healthcare-nav-link">
+                    <i class="fas fa-check-circle"></i>Completed Appointments
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:patients' %}" class="healthcare-nav-link active">
+                    <i class="fas fa-users"></i>View Patients
+                </a>
+            </div>
+            <div class="healthcare-nav-item">
+                <a href="{% url 'doctor:calendar' %}" class="healthcare-nav-link">
+                    <i class="fas fa-calendar-alt"></i>Calendar View
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="healthcare-main">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="page-title">Patient Details</h3>
+                    <p class="page-subtitle">View detailed information about the patient</p>
+                </div>
+                <a href="{% url 'doctor:patients' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Patients
+                </a>
+            </div>
+
+            {% if patient %}
+                <!-- Patient Basic Information -->
+                <div class="patient-info-card">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="patient-name">{{ patient.full_name }}</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-phone me-1"></i>Contact:</span> 
+                                        <span class="info-value">{{ patient.contact_number|default:"Not provided" }}</span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-birthday-cake me-1"></i>Date of Birth:</span> 
+                                        <span class="info-value">{{ patient.dob|date:"M d, Y"|default:"Not provided" }}</span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-venus-mars me-1"></i>Gender:</span> 
+                                        <span class="info-value">{{ patient.gender|default:"Not specified" }}</span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-envelope me-1"></i>Email:</span> 
+                                        <span class="info-value">{{ patient.email|default:"Not provided" }}</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-id-card me-1"></i>ABHA ID:</span> 
+                                        <span class="info-value">{{ patient.abha_id|default:"Not provided" }}</span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-phone-alt me-1"></i>Emergency Contact:</span> 
+                                        <span class="info-value">{{ patient.emergency_number|default:"Not provided" }}</span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <span class="info-label"><i class="fas fa-tint me-1"></i>Blood Group:</span> 
+                                        <span class="info-value">{{ patient.blood_group|default:"Not specified" }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            {% if patient.profile_photo %}
+                                <img src="{{ patient.profile_photo.url }}" alt="{{ patient.full_name }}" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="avatar-placeholder mx-auto mb-3" style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="patient-info-card">
+                    <h5 class="mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Address Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-12">
+                            {% if patient.address %}
+                                <p class="mb-2">
+                                    <span class="info-label"><i class="fas fa-home me-1"></i>Address:</span> 
+                                    <span class="info-value">{{ patient.address }}</span>
+                                </p>
+                            {% endif %}
+                            {% if patient.city %}
+                                <p class="mb-2">
+                                    <span class="info-label"><i class="fas fa-city me-1"></i>City:</span> 
+                                    <span class="info-value">{{ patient.city }}</span>
+                                </p>
+                            {% endif %}
+                            {% if patient.pincode %}
+                                <p class="mb-2">
+                                    <span class="info-label"><i class="fas fa-mail-bulk me-1"></i>Pincode:</span> 
+                                    <span class="info-value">{{ patient.pincode }}</span>
+                                </p>
+                            {% endif %}
+                            {% if not patient.address and not patient.city and not patient.pincode %}
+                                <p class="text-muted"><i class="fas fa-info-circle me-1"></i>No address information provided</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Information -->
+                <div class="patient-info-card">
+                    <h5 class="mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        Health Information
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if patient.existing_condition %}
+                                <p class="mb-2">
+                                    <span class="info-label"><i class="fas fa-stethoscope me-1"></i>Existing Conditions:</span> 
+                                    <span class="info-value">{{ patient.existing_condition }}</span>
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if patient.allergies %}
+                                <p class="mb-2">
+                                    <span class="info-label"><i class="fas fa-exclamation-triangle me-1"></i>Allergies:</span> 
+                                    <span class="info-value">{{ patient.allergies }}</span>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if not patient.existing_condition and not patient.allergies %}
+                        <p class="text-muted"><i class="fas fa-info-circle me-1"></i>No health information provided</p>
+                    {% endif %}
+                </div>
+
+                <!-- Patient Documents -->
+                {% if consent_status == 'rejected' and patient.documents.all %}
+                <!-- Show message when consent is rejected - Documents are hidden -->
+                <div class="patient-info-card">
+                    <div class="alert alert-danger mb-3">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Access Restricted:</strong> Patient <strong>{{ patient.full_name }}</strong> has rejected your consent request to view their medical reports and documents. 
+                        You cannot access their documents until they approve a new consent request.
+                        {% if existing_consent.responded_at %}
+                            <br><small class="mt-2 d-block">
+                                <i class="fas fa-clock me-1"></i>
+                                Rejected on: {{ existing_consent.responded_at|date:"F d, Y g:i A" }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color: var(--primary-color);">
+                            <i class="fas fa-file-medical me-2"></i>
+                            Patient Documents
+                        </h5>
+                        <a href="{% url 'doctor:request_consent' patient.id %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Request Consent Again
+                        </a>
+                    </div>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-lock me-1"></i>
+                        Documents are hidden because consent has been rejected. Please request new consent to view patient documents.
+                    </p>
+                </div>
+                {% elif patient.documents.all %}
+                <!-- Show documents when consent is not rejected -->
+                <div class="patient-info-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color: var(--primary-color);">
+                            <i class="fas fa-file-medical me-2"></i>
+                            Patient Documents
+                        </h5>
+                        <a href="{% url 'doctor:patient_reports' patient.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>
+                            View Reports Details
+                        </a>
+                    </div>
+                    {% if consent_status == 'pending' %}
+                        <div class="alert alert-warning mb-3">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Consent Pending:</strong> Your consent request is pending approval. 
+                            Documents may be restricted until consent is approved.
+                        </div>
+                    {% endif %}
+                    <div class="row">
+                        {% for document in patient.documents.all %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if document.is_image %}
+                                                <i class="fas fa-image text-primary" style="font-size: 1.5rem;"></i>
+                                            {% elif document.is_pdf %}
+                                                <i class="fas fa-file-pdf text-danger" style="font-size: 1.5rem;"></i>
+                                            {% else %}
+                                                <i class="fas fa-file text-secondary" style="font-size: 1.5rem;"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ document.title }}</h6>
+                                            <p class="card-text text-muted small mb-1">
+                                                <span class="badge bg-secondary">{{ document.get_document_type_display }}</span>
+                                                <span class="ms-2">{{ document.file_size }}</span>
+                                            </p>
+                                            <p class="card-text text-muted small mb-2">
+                                                Uploaded: {{ document.uploaded_at|date:"M d, Y g:i A" }}
+                                            </p>
+                                            {% if document.description %}
+                                                <p class="card-text small">{{ document.description }}</p>
+                                            {% endif %}
+                                            {% if has_consent %}
+                                                <a href="{{ document.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download me-1"></i>View Document
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary" disabled title="Consent required to view documents">
+                                                    <i class="fas fa-lock me-1"></i>Consent Required
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Medical Reports Access -->
+                <div class="patient-info-card">
+                    {% if consent_status == 'rejected' %}
+                        <div class="alert alert-danger mb-3">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>Consent Rejected:</strong> Patient <strong>{{ patient.full_name }}</strong> has rejected your consent request to view their medical reports. 
+                            You cannot access their reports until they approve a new consent request.
+                            {% if existing_consent.responded_at %}
+                                <br><small class="mt-2 d-block">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Rejected on: {{ existing_consent.responded_at|date:"F d, Y g:i A" }}
+                                </small>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0" style="color: var(--primary-color);">
+                                <i class="fas fa-file-medical-alt me-2"></i>
+                                Medical Reports Access
+                            </h5>
+                            <a href="{% url 'doctor:request_consent' patient.id %}" class="btn btn-warning">
+                                <i class="fas fa-paper-plane me-1"></i>
+                                Request Consent Again
+                            </a>
+                        </div>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            You need patient consent to view medical reports. Please send a new consent request.
+                        </p>
+                    {% else %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0" style="color: var(--primary-color);">
+                                <i class="fas fa-file-medical-alt me-2"></i>
+                                Medical Reports Access
+                            </h5>
+                            <a href="{% url 'doctor:patient_reports' patient.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye me-1"></i>
+                                View Reports Details
+                            </a>
+                        </div>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Access detailed medical reports, lab results, and medical records for this patient. 
+                            {% if consent_status == 'pending' %}
+                                <span class="text-warning">
+                                    <i class="fas fa-clock me-1"></i>Consent request is pending approval.
+                                </span>
+                            {% elif not has_consent %}
+                                Consent from the patient may be required.
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="patient-info-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color: var(--primary-color);">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Appointment History
+                        </h5>
+                    </div>
+                    
+                    <!-- Search Form -->
+                    <div class="search-section mb-4">
+                        <h6 class="mb-2 text-primary">
+                            <i class="fas fa-search me-1"></i>Search Appointments by Date
+                        </h6>
+                        <form method="get" class="search-form">
+                            <div class="search-row">
+                                <div class="search-field">
+                                    <input type="date" 
+                                           id="date" 
+                                           name="date" 
+                                           value="{{ search_date }}"
+                                           placeholder="Filter by appointment date..."
+                                           style="border: 2px solid var(--primary-color); background: #f8f9ff;">
+                                </div>
+                                <div class="search-buttons">
+                                    <button type="submit" class="btn-search">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                    <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn-clear">
+                                        <i class="fas fa-times"></i> Clear
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Search Results Info -->
+                    {% if search_date %}
+                    <div class="search-results-info mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-primary">
+                                    <i class="fas fa-filter me-1"></i>Search Results
+                                </h6>
+                                <small class="text-muted">
+                                    Showing appointments on {{ search_date|date:"M d, Y" }}
+                                    ({{ appointments|length }} result{{ appointments|length|pluralize }})
+                                </small>
+                            </div>
+                            <a href="{% url 'doctor:patient_detail' patient.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-times me-1"></i>Clear Filter
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if appointments %}
+                        <!-- Column Headers -->
+                        <div class="row mb-3" style="background: var(--light-bg); padding: 0.75rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                            <div class="col-md-6">
+                                <h6 class="mb-0 fw-semibold" style="color: var(--primary-color);">Appointment Details</h6>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h6 class="mb-0 fw-semibold" style="color: var(--primary-color);">Status</h6>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <h6 class="mb-0 fw-semibold" style="color: var(--primary-color);">Actions</h6>
+                            </div>
+                        </div>
+                        
+                        {% for appointment in appointments %}
+                        <div class="appointment-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1" style="color: var(--primary-color);">
+                                        {{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.appointment_time|time:"g:i A" }}
+                                    </h6>
+                                    {% if appointment.symptoms %}
+                                    <p class="mb-1 text-muted">{{ appointment.symptoms }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">Payment: {{ appointment.payment_mode }}</small>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <span class="badge bg-{% if appointment.status == 'accepted' %}success{% elif appointment.status == 'pending' %}warning{% elif appointment.status == 'completed' %}info{% else %}danger{% endif %}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    {% if appointment.status == 'accepted' %}
+                                    <a href="{% url 'doctor:appointment_prescription' appointment.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-prescription me-1"></i>
+                                        Prescription
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="avatar-placeholder mx-auto mb-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <h5 class="text-muted">No appointments found</h5>
+                            <p class="text-muted">This patient doesn't have any appointments with you yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="avatar-placeholder mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <h4 class="text-muted">Patient not found</h4>
+                    <p class="text-muted">The requested patient could not be found.</p>
+                    <a href="{% url 'doctor:patients' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Patients
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Template updated - cache cleared at {{ "now"|date:"Y-m-d H:i:s" }}
+        console.log('Patient detail template loaded successfully - Cache cleared!');
+        console.log('Current timestamp: {{ "now"|date:"Y-m-d H:i:s" }}');
+    </script>
+</body>
+</html>

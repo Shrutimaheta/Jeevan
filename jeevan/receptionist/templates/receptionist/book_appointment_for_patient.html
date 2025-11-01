@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - {{ patient.full_name }} - Jeevan Healthcare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #333;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            height: calc(100vh - 80px);
+            width: var(--sidebar-width);
+            background: var(--primary-color);
+            color: white;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            margin: 0.25rem 0;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        
+        .topbar {
+            background: var(--primary-color);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        
+        .topbar h2 {
+            margin: 0;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .topbar h2 i {
+            font-size: 1.8rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            color: white;
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .user-info i:hover {
+            opacity: 0.8;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .user-dropdown {
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        
+        .user-dropdown:hover {
+            opacity: 0.8;
+        }
+        
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .content-area {
+            margin-top: 80px;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .page-subtitle {
+            color: #6c757d;
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+        }
+        
+        .patient-info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .patient-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .patient-id {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .info-item i {
+            color: var(--primary-color);
+            width: 20px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+        
+        .info-value {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+        
+        .form-control.is-invalid {
+            border-color: var(--danger-color);
+        }
+        
+        .invalid-feedback {
+            display: block;
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .btn-primary {
+            background-color: #2c5aa0;
+            border-color: #2c5aa0;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+        
+        .help-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .required {
+            color: var(--danger-color);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .patient-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="{% url 'receptionist:dashboard' %}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:appointments' %}" class="nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointments
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:doctor_schedule' %}" class="nav-link">
+                    <i class="fas fa-user-md"></i>
+                    Doctor Schedules
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:patient_list' %}" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Patient Registration
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'receptionist:profile' %}" class="nav-link">
+                    <i class="fas fa-user-edit"></i>
+                    Profile
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <h2>
+                <i class="fas fa-heartbeat"></i>
+                Patient Management System (Receptionist Portal)
+            </h2>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span class="user-name">{{ receptionist.full_name }}</span>
+                <a href="{% url 'receptionist:logout' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-calendar-plus"></i>
+                    Book Appointment
+                </h1>
+                <p class="page-subtitle">Schedule an appointment for {{ patient.full_name }}</p>
+                <div class="mt-3">
+                    <a href="{% url 'receptionist:patient_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Patient List
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Patient Information -->
+            <div class="patient-info-card">
+                <div class="patient-header">
+                    <div>
+                        <h3 class="patient-name">{{ patient.full_name }}</h3>
+                        <p class="patient-id">Patient ID: {{ patient.id }}</p>
+                    </div>
+                </div>
+                
+                <div class="patient-info">
+                    {% if patient.email %}
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ patient.email }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if patient.contact_number %}
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <span class="info-label">Contact:</span>
+                        <span class="info-value">{{ patient.contact_number }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if patient.gender %}
+                    <div class="info-item">
+                        <i class="fas fa-venus-mars"></i>
+                        <span class="info-label">Gender:</span>
+                        <span class="info-value">{{ patient.gender }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if patient.abha_id %}
+                    <div class="info-item">
+                        <i class="fas fa-id-card"></i>
+                        <span class="info-label">ABHA ID:</span>
+                        <span class="info-value">{{ patient.abha_id }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if patient.city %}
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="info-label">City:</span>
+                        <span class="info-value">{{ patient.city }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if patient.blood_group %}
+                    <div class="info-item">
+                        <i class="fas fa-tint"></i>
+                        <span class="info-label">Blood Group:</span>
+                        <span class="info-value">{{ patient.blood_group }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Appointment Form -->
+            <div class="form-container">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Appointment Details -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Appointment Details
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.doctor.id_for_label }}" class="form-label">
+                                        {{ form.doctor.label }} <span class="required">*</span>
+                                    </label>
+                                    {{ form.doctor }}
+                                    {% if form.doctor.help_text %}
+                                        <div class="help-text">{{ form.doctor.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.doctor.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.doctor.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.appointment_date.id_for_label }}" class="form-label">
+                                        {{ form.appointment_date.label }} <span class="required">*</span>
+                                    </label>
+                                    {{ form.appointment_date }}
+                                    {% if form.appointment_date.help_text %}
+                                        <div class="help-text">{{ form.appointment_date.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.appointment_date.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.appointment_date.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.appointment_time.id_for_label }}" class="form-label">
+                                        {{ form.appointment_time.label }} <span class="required">*</span>
+                                    </label>
+                                    {{ form.appointment_time }}
+                                    {% if form.appointment_time.help_text %}
+                                        <div class="help-text">{{ form.appointment_time.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.appointment_time.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.appointment_time.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.symptoms.id_for_label }}" class="form-label">
+                                {{ form.symptoms.label }}
+                            </label>
+                            {{ form.symptoms }}
+                            {% if form.symptoms.help_text %}
+                                <div class="help-text">{{ form.symptoms.help_text }}</div>
+                            {% endif %}
+                            {% if form.symptoms.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.symptoms.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'receptionist:patient_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus"></i> Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
