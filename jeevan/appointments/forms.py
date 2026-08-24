@@ -123,7 +123,7 @@ class AppointmentForm(forms.ModelForm):
             # Use the hidden field value if it's provided
             cleaned_data['appointment_time'] = appointment_time
         elif hour and minute and am_pm:
-        # Convert custom time fields to 24-hour format
+            # Convert custom time fields to 24-hour format
             try:
                 hour_24 = int(hour)
                 minute_int = int(minute)
@@ -138,13 +138,11 @@ class AppointmentForm(forms.ModelForm):
             except (ValueError, TypeError):
                 raise forms.ValidationError("Invalid time format selected.")
         else:
-            # Set a default time if nothing is provided
-            cleaned_data['appointment_time'] = time(9, 0)  # 9:00 AM
+            raise forms.ValidationError("Appointment time must be explicitly specified.")
         
-        # If no date provided, default to today so the form can submit with defaults
+        # Date must be explicitly specified
         if not appointment_date:
-            appointment_date = timezone.now().date()
-            cleaned_data['appointment_date'] = appointment_date
+            raise forms.ValidationError("Appointment date must be explicitly specified.")
         # Check if appointment date is in the past
         if appointment_date and appointment_date < timezone.now().date():
             raise forms.ValidationError("Appointment date cannot be in the past.")
@@ -279,7 +277,6 @@ class AppointmentUpdateForm(forms.ModelForm):
             elif hour_12 == 12:
                 am_pm = 'PM'
             
-            print(f"Debug: Converting time {appointment_time} to {hour_12}:{minute} {am_pm}")
             
             self.fields['hour'].initial = hour_12
             self.fields['minute'].initial = minute

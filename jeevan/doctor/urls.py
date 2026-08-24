@@ -8,6 +8,8 @@
 
 from django.urls import path
 from django.shortcuts import render
+from django.views.generic import RedirectView
+from django.conf import settings
 from . import views
 
 app_name = "doctor"
@@ -16,12 +18,12 @@ def doctor_test(request):
     return render(request, 'doctor/test.html')
 
 urlpatterns = [
-    # Test
-    path("test/", doctor_test, name="test"),
+    # Public Profile
+    path("<int:doctor_id>/", views.public_doctor_profile, name="public_profile"),
 
     # Auth
-    path("login/", views.doctor_login, name="login"),
-    path("logout/", views.doctor_logout, name="logout"),
+    path("login/", RedirectView.as_view(pattern_name='universal_login', permanent=False), name="login"),
+    path("logout/", RedirectView.as_view(pattern_name='universal_logout', permanent=False), name="logout"),
     
     # Dashboard and Profile
     path("", views.doctor_dashboard, name="dashboard"),
@@ -54,3 +56,8 @@ urlpatterns = [
     path("api/profile/", views.doctor_profile_api, name="profile_api"),
     path("api/list/", views.doctor_list_api, name="doctor_list_api"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path("test/", doctor_test, name="test"),
+    ]

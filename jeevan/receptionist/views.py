@@ -1,6 +1,8 @@
 from .models import Receptionist
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from jeevan.decorators import receptionist_required, log_audit_event
+from django.db import transaction, IntegrityError
 from django.db.models import Q, Count
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -14,86 +16,9 @@ from appointments.models import Appointment
 from doctor.models import Doctor
 
 
-def receptionist_login(request):
-    """Receptionist login view"""
-    if request.user.is_authenticated and hasattr(request.user, 'receptionist'):
-        return redirect('receptionist:dashboard')
-    
-    if request.method == 'POST':
-        form = ReceptionistLoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            
-            if user and hasattr(user, 'receptionist'):
-                login(request, user)
-                messages.success(request, f'Welcome back, {user.receptionist.full_name}!')
-                return redirect('receptionist:dashboard')
-            else:
-                messages.error(request, 'Invalid credentials or not a receptionist account.')
-    else:
-        form = ReceptionistLoginForm()
-    
-    # Use the universal auth login template
-    next_url = request.GET.get('next') or '/receptionist/'
-    context = {
-        'form': form,
-        'next_url': next_url,
-    }
-    return render(request, 'universal_auth/login.html', context)
-
-@login_required(login_url='/login/')
-def receptionist_logout(request):
-    """Secure receptionist logout view with proper security measures"""
-    # Get user info before logout for logging
-    user_name = request.user.get_full_name() or request.user.username if request.user.is_authenticated else 'Unknown'
-    user_id = request.user.id if request.user.is_authenticated else None
-    
-    # Log the logout action for security audit
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f'Receptionist logout: User {user_name} (ID: {user_id}) logged out from IP: {request.META.get("REMOTE_ADDR")}')
-    
-    # Clear all session data securely
-    request.session.flush()
-    
-    # Logout user
-    logout(request)
-    
-    # Create redirect response with logout parameter to trigger security measures
-    response = redirect('/?logout=true')
-    
-    # Clear any remaining cookies for security
-    response.delete_cookie('sessionid')
-    response.delete_cookie('csrftoken')
-    
-    # Add cache prevention headers to prevent back button issues
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['X-Frame-Options'] = 'DENY'
-    response['X-XSS-Protection'] = '1; mode=block'
-    
-    # Show success message
-    messages.success(request, 'You have been successfully logged out. Please login again to continue.')
-    
-    return response
-
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_dashboard(request):
     """Receptionist dashboard with appointments summary, doctor schedules, and charts"""
-    # Verify user is authenticated
-    if not request.user.is_authenticated:
-        messages.error(request, 'Please login to access the dashboard.')
-        return redirect('/login/')
-    
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     # Get the logged-in receptionist
     try:
         receptionist = request.user.receptionist
@@ -106,7 +31,7 @@ def receptionist_dashboard(request):
     
     # Get appointments for the receptionist's hospital (exclude cancelled)
     today = timezone.now().date()
-    appointments = Appointment.objects.filter(doctor__hospital=receptionist.hospital).exclude(status='cancelled')
+    appointments = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(doctor__hospital=receptionist.hospital).exclude(status='cancelled')
     
     # Dashboard statistics
     total_appointments = appointments.count()
@@ -191,14 +116,9 @@ def receptionist_dashboard(request):
     
     return response
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_profile(request):
     """Receptionist profile view - allows editing profile"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -225,14 +145,9 @@ def receptionist_profile(request):
     }
     return render(request, 'receptionist/profile.html', context)
 
-@login_required(login_url='/login/')
+@receptionist_required
 def appointment_list(request):
     """Appointment list with accept/reject functionality"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -302,7 +217,7 @@ def appointment_list(request):
             appointment.save(update_fields=['status'])
     
     # Get appointments for the receptionist's hospital (exclude cancelled)
-    appointments = Appointment.objects.filter(
+    appointments = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(
         Q(doctor__hospital=receptionist.hospital) | Q(hospital=receptionist.hospital)
     ).exclude(status='cancelled').order_by('-created_at')
     
@@ -339,13 +254,9 @@ def appointment_list(request):
     
     return render(request, 'receptionist/appointment_list.html', context)
 
-@login_required(login_url='/login/')
+@receptionist_required
 def appointment_action(request, appointment_id, action):
     """Accept or reject appointment"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        return JsonResponse({'error': 'You are not authorized to perform this action.'}, status=403)
-    
     try:
         receptionist = request.user.receptionist
     except Receptionist.DoesNotExist:
@@ -358,59 +269,46 @@ def appointment_action(request, appointment_id, action):
     except Appointment.DoesNotExist:
         return JsonResponse({'error': 'Appointment not found for your hospital.'}, status=404)
     
-    # Check if appointment can be modified
-    if appointment.status not in ['pending']:
-        return JsonResponse({'error': f'Appointment is already {appointment.status} and cannot be modified.'}, status=400)
-    
-    print(f"Processing action: {action}")
-    
-    if action == 'accept':
-        appointment.status = 'accepted'
-        appointment.rejection_reason = None  # Clear any previous rejection reason
-        appointment.save()
-        
-        # Log the action
-        print(f"Appointment {appointment_id} accepted by receptionist {receptionist.full_name}")
-        
-        return JsonResponse({
-            'success': True, 
-            'message': f'Appointment with {appointment.patient.full_name} has been accepted for {appointment.appointment_date} at {appointment.appointment_time}.',
-            'new_status': 'accepted',
-            'appointment_id': appointment_id
-        })
-    elif action == 'reject':
-        # Get rejection reason from request
-        rejection_reason = request.POST.get('rejection_reason', '').strip()
-        
-        if not rejection_reason:
-            return JsonResponse({'error': 'Rejection reason is required.'}, status=400)
-        
-        appointment.status = 'rejected'
-        appointment.rejection_reason = rejection_reason
-        appointment.save()
-        
-        # Log the action
-        print(f"Appointment {appointment_id} rejected by receptionist {receptionist.full_name}. Reason: {rejection_reason}")
-        
-        return JsonResponse({
-            'success': True, 
-            'message': f'Appointment with {appointment.patient.full_name} has been rejected. Reason: {rejection_reason}',
-            'new_status': 'rejected',
-            'appointment_id': appointment_id,
-            'rejection_reason': rejection_reason
-        })
-    else:
-        print(f"Invalid action: {action}")
-        return JsonResponse({'error': 'Invalid action. Use "accept" or "reject".'}, status=400)
+    try:
+        from appointments.services import update_appointment_status
+        if action == 'accept':
+            appointment = update_appointment_status(
+                appointment_id=appointment_id,
+                new_status='accepted',
+                actor=request.user
+            )
+            return JsonResponse({
+                'success': True, 
+                'message': f'Appointment with {appointment.patient.full_name} has been accepted for {appointment.appointment_date} at {appointment.appointment_time}.',
+                'new_status': 'accepted',
+                'appointment_id': appointment_id
+            })
+        elif action == 'reject':
+            rejection_reason = request.POST.get('rejection_reason', '').strip()
+            if not rejection_reason:
+                return JsonResponse({'error': 'Rejection reason is required.'}, status=400)
+                
+            appointment = update_appointment_status(
+                appointment_id=appointment_id,
+                new_status='rejected',
+                actor=request.user,
+                reason=rejection_reason
+            )
+            return JsonResponse({
+                'success': True, 
+                'message': f'Appointment with {appointment.patient.full_name} has been rejected. Reason: {rejection_reason}',
+                'new_status': 'rejected',
+                'appointment_id': appointment_id,
+                'rejection_reason': rejection_reason
+            })
+        else:
+            return JsonResponse({'error': 'Invalid action. Use "accept" or "reject".'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
-@login_required(login_url='/login/')
+@receptionist_required
 def doctor_availability(request):
     """Doctor availability management for receptionists"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -596,14 +494,9 @@ def generate_doctor_availability(doctor, selected_date, status_filter):
     
     return availability_slots
 
-@login_required(login_url='/login/')
+@receptionist_required
 def doctor_schedule_manage(request):
     """Doctor schedule management for receptionists"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -651,14 +544,9 @@ def doctor_schedule_manage(request):
     
     return render(request, 'receptionist/doctor_schedule.html', context)
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_change_password(request):
     """Receptionist change password view"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -680,11 +568,6 @@ def receptionist_change_password(request):
                 receptionist.user.set_password(new_password)
                 receptionist.user.save()
                 
-                # Update receptionist password field as well
-                from django.contrib.auth.hashers import make_password
-                receptionist.password = make_password(new_password)
-                receptionist.save()
-                
                 messages.success(request, 'Password changed successfully! Please login again.')
                 return redirect('receptionist:login')
             else:
@@ -699,14 +582,9 @@ def receptionist_change_password(request):
     return render(request, 'receptionist/change_password.html', context)
 
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_book_appointment(request):
     """Receptionist book appointment view"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
         if not receptionist:
@@ -830,16 +708,18 @@ def receptionist_book_appointment(request):
                     
                     patient_profile.save()
                 
-                # Create appointment
-                appointment = Appointment.objects.create(
+                # Create appointment using service
+                from appointments.services import create_appointment
+                appointment = create_appointment(
                     patient=patient_profile,
                     doctor=patient_data['doctor'],
-                    hospital=receptionist.hospital,  # Add hospital field
+                    hospital=receptionist.hospital,
                     appointment_date=patient_data['appointment_date'],
                     appointment_time=patient_data['appointment_time'],
                     symptoms=patient_data.get('symptoms', ''),
+                    payment_mode='offline',
                     status='pending',
-                    payment_mode='offline'  # Default to offline for receptionist bookings
+                    actor=request.user
                 )
                 
                 messages.success(request, f'Appointment booked successfully! Appointment ID: {appointment.id}')
@@ -871,24 +751,19 @@ def receptionist_book_appointment(request):
     return render(request, 'receptionist/book_appointment.html', context)
 
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_patient_list(request):
     """Show list of patients registered by the receptionist"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
     except Receptionist.DoesNotExist:
         messages.error(request, 'Receptionist profile not linked to this user. Please contact admin.')
         return redirect('receptionist:login')
     
-    # Patients who have appointments within this hospital
+    # Patients who are associated with this hospital (Tenant Isolation)
     from patient.models import Patient
     all_patients = Patient.objects.filter(
-        appointments__doctor__hospital=receptionist.hospital
+        associated_hospitals=receptionist.hospital
     ).distinct().order_by('-user__date_joined')
     
     context = {
@@ -898,14 +773,9 @@ def receptionist_patient_list(request):
     return render(request, 'receptionist/patient_list.html', context)
 
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_register_patient(request):
     """Register a new patient by receptionist"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = Receptionist.objects.get(user=request.user)
     except Receptionist.DoesNotExist:
@@ -918,8 +788,9 @@ def receptionist_register_patient(request):
         form = ReceptionistPatientRegistrationForm(request.POST)
         if form.is_valid():
             try:
-                # Create or get patient user
-                patient_data = form.cleaned_data
+                with transaction.atomic():
+                    # Create or get patient user
+                    patient_data = form.cleaned_data
                 
                 # Check if patient already exists by email or contact number
                 patient_user = None
@@ -994,15 +865,11 @@ def receptionist_register_patient(request):
                     user=patient_user,
                     defaults={
                         'full_name': full_name,
-                        'email': email,
-                        'contact_number': contact_number,
                         'gender': patient_data['gender'],
-                        'dob': patient_data['dob'],
                         'date_of_birth': patient_data['dob'],
                         'address': patient_data['address'],
                         'city': patient_data['city'],
                         'pincode': patient_data['pincode'],
-                        'password': patient_data['password']  # Store password in patient model
                     }
                 )
                 
@@ -1010,16 +877,15 @@ def receptionist_register_patient(request):
                     # Update existing patient profile
                     full_name = f"{patient_data['first_name']} {patient_data['last_name']}"
                     patient_profile.full_name = full_name
-                    patient_profile.email = email
-                    patient_profile.contact_number = contact_number
                     patient_profile.gender = patient_data['gender']
-                    patient_profile.dob = patient_data['dob']
                     patient_profile.date_of_birth = patient_data['dob']
                     patient_profile.address = patient_data['address']
                     patient_profile.city = patient_data['city']
                     patient_profile.pincode = patient_data['pincode']
-                    patient_profile.password = patient_data['password']
                     patient_profile.save()
+                
+                # Associate the patient with the receptionist's hospital (Tenant Isolation)
+                patient_profile.associated_hospitals.add(receptionist.hospital)
                 
                 messages.success(request, f'Patient {patient_profile.full_name} registered successfully!')
                 return redirect('receptionist:patient_list')
@@ -1047,14 +913,9 @@ def receptionist_register_patient(request):
     return render(request, 'receptionist/register_patient.html', context)
 
 
-@login_required(login_url='/login/')
+@receptionist_required
 def receptionist_book_appointment_for_patient(request, patient_id):
     """Book appointment for a specific patient"""
-    # Verify user has receptionist role
-    if not hasattr(request.user, 'role') or request.user.role != 'receptionist':
-        messages.error(request, 'You are not authorized to access this page.')
-        return redirect('/login/')
-    
     try:
         receptionist = request.user.receptionist
     except Receptionist.DoesNotExist:
@@ -1064,9 +925,13 @@ def receptionist_book_appointment_for_patient(request, patient_id):
     # Get the patient
     from patient.models import Patient
     try:
-        patient = Patient.objects.get(id=patient_id)
+        # Scope lookup to hospital bounds (Tenant Isolation)
+        patient = Patient.objects.filter(
+            id=patient_id,
+            associated_hospitals=receptionist.hospital
+        ).distinct().get()
     except Patient.DoesNotExist:
-        messages.error(request, 'Patient not found.')
+        messages.error(request, 'Patient not found or not authorized for your hospital.')
         return redirect('receptionist:patient_list')
     
     # Get doctors from the same hospital
@@ -1077,16 +942,18 @@ def receptionist_book_appointment_for_patient(request, patient_id):
         form = SimpleAppointmentBookingForm(request.POST, hospital=receptionist.hospital)
         if form.is_valid():
             try:
-                # Create appointment
-                appointment = Appointment.objects.create(
+                # Create appointment using service
+                from appointments.services import create_appointment
+                appointment = create_appointment(
                     patient=patient,
                     doctor=form.cleaned_data['doctor'],
                     hospital=receptionist.hospital,
                     appointment_date=form.cleaned_data['appointment_date'],
                     appointment_time=form.cleaned_data['appointment_time'],
                     symptoms=form.cleaned_data.get('symptoms', ''),
+                    payment_mode='offline',
                     status='pending',
-                    payment_mode='offline',  # Default to offline for receptionist bookings
+                    actor=request.user
                 )
                 
                 messages.success(request, f'Appointment booked successfully for {patient.full_name}! Appointment ID: {appointment.id}')

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Record Details</title>
+</head>
+<body>
+    <h1>Medical Record Details</h1>
+    <p>Summary: {{ record.summary }}</p>
+    <p>Diagnosis: {{ record.diagnosis }}</p>
+    
+    {% if record.snomed_diagnosis_code %}
+        <p><strong>SNOMED-CT Diagnosis Code:</strong> {{ record.snomed_diagnosis_code }}</p>
+        <p><strong>SNOMED-CT Preferred Name:</strong> {{ record.snomed_diagnosis_display }}</p>
+    {% endif %}
+    
+    <p>Prescription: {{ record.prescription }}</p>
+
+    {% if fhir_condition_json or fhir_medication_request_json %}
+        <hr>
+        <h3>HL7 FHIR Interoperability Resources</h3>
+        {% if fhir_condition_json %}
+            <h4>FHIR Condition (Diagnosis)</h4>
+            <pre style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc; max-height: 250px; overflow: auto; font-family: monospace;">{{ fhir_condition_json }}</pre>
+        {% endif %}
+        {% if fhir_medication_request_json %}
+            <h4>FHIR MedicationRequest (Prescription)</h4>
+            <pre style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc; max-height: 250px; overflow: auto; font-family: monospace;">{{ fhir_medication_request_json }}</pre>
+        {% endif %}
+    {% endif %}
+</body>
+</html>

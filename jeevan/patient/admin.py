@@ -5,16 +5,16 @@ from .help_models import FAQ, SupportTicket, SupportMessage, HealthResource, Con
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ('id', 'full_name', 'email', 'contact_number', 'gender', 'dob', 'city', 'blood_group')
+    list_display = ('id', 'full_name', 'email_display', 'contact_number_display', 'gender', 'date_of_birth', 'city', 'blood_group')
     list_filter = ('gender', 'blood_group', 'city')
-    search_fields = ('id', 'full_name', 'email', 'contact_number', 'abha_id')
+    search_fields = ('id', 'full_name', 'user__email', 'user__contact_number', 'abha_id')
     readonly_fields = ('id',)
     fieldsets = (
         ('Basic Information', {
-            'fields': ('id', 'user', 'full_name', 'email', 'password')
+            'fields': ('id', 'user', 'full_name')
         }),
         ('Personal Details', {
-            'fields': ('contact_number', 'gender', 'dob', 'profile_photo')
+            'fields': ('gender', 'date_of_birth', 'profile_photo')
         }),
         ('Address Information', {
             'fields': ('address', 'city', 'pincode')
@@ -24,12 +24,21 @@ class PatientAdmin(admin.ModelAdmin):
         }),
     )
 
+    def email_display(self, obj):
+        return obj.user.email if obj.user else ''
+    email_display.short_description = 'Email'
+
+    def contact_number_display(self, obj):
+        return obj.user.contact_number if obj.user else ''
+    contact_number_display.short_description = 'Contact Number'
+
+
 
 @admin.register(PatientDocument)
 class PatientDocumentAdmin(admin.ModelAdmin):
     list_display = ('id', 'patient', 'title', 'document_type', 'file_size', 'uploaded_at')
     list_filter = ('document_type', 'uploaded_at')
-    search_fields = ('patient__full_name', 'patient__email', 'title', 'description')
+    search_fields = ('patient__full_name', 'patient__user__email', 'title', 'description')
     readonly_fields = ('id', 'uploaded_at', 'updated_at', 'file_size', 'file_extension', 'is_image', 'is_pdf')
     fieldsets = (
         ('Document Information', {
@@ -57,7 +66,7 @@ class FAQAdmin(admin.ModelAdmin):
 class SupportTicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'patient', 'subject', 'category', 'status', 'priority', 'created_at')
     list_filter = ('status', 'priority', 'category', 'created_at')
-    search_fields = ('subject', 'description', 'patient__full_name', 'patient__email')
+    search_fields = ('subject', 'description', 'patient__full_name', 'patient__user__email')
     readonly_fields = ('id', 'created_at', 'updated_at', 'resolved_at')
     fieldsets = (
         ('Ticket Information', {

@@ -329,7 +329,7 @@
                                 <i class="fas fa-sign-in-alt me-1"></i>Login to Book
                             </a>
                             {% endif %}
-                            <a href="/doctor/{{ doctor.id }}/" class="btn btn-outline-primary btn-sm flex-fill">
+                            <a href="{% url 'doctor:public_profile' doctor.id %}" class="btn btn-outline-primary btn-sm flex-fill">
                                 <i class="fas fa-info-circle me-1"></i>View Profile
                             </a>
                         </div>

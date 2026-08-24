@@ -41,9 +41,61 @@ class Appointment(models.Model):
         ordering = ['-created_at']
         verbose_name = "Appointment"
         verbose_name_plural = "Appointments"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['doctor', 'appointment_date', 'appointment_time'],
+                condition=~models.Q(status__in=['cancelled', 'rejected', 'expired']),
+                name='unique_active_appointment_slot'
+            )
+        ]
+        indexes = [
+            models.Index(fields=["appointment_date"]),
+            models.Index(fields=["doctor"]),
+            models.Index(fields=["patient"]),
+            models.Index(fields=["status"]),
+        ]
 
     def __str__(self):
         return f"Appointment of {self.patient.full_name} with {self.doctor.full_name} on {self.appointment_date}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        from datetime import time, datetime
+        super().clean()
+        if self.doctor and self.hospital and self.doctor.hospital != self.hospital:
+            raise ValidationError("The selected doctor does not belong to the selected hospital.")
+            
+        date_val = self.appointment_date
+        if isinstance(date_val, str):
+            try:
+                date_val = datetime.strptime(date_val, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValidationError("Invalid date format.")
+
+        if date_val and date_val < timezone.localdate():
+            raise ValidationError("Appointment date cannot be in the past.")
+            
+        time_val = self.appointment_time
+        if isinstance(time_val, str):
+            try:
+                time_val = datetime.strptime(time_val, "%H:%M:%S").time()
+            except ValueError:
+                try:
+                    time_val = datetime.strptime(time_val, "%H:%M").time()
+                except ValueError:
+                    raise ValidationError("Invalid time format.")
+
+        if time_val:
+            start_time = time(9, 0)
+            end_time = time(18, 0)
+            if time_val < start_time or time_val > end_time:
+                raise ValidationError("Appointments must be scheduled within business hours (9:00 AM - 6:00 PM).")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+        if self.patient and self.hospital:
+            self.patient.associated_hospitals.add(self.hospital)
 
     @property
     def can_edit(self):

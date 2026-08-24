@@ -6,6 +6,9 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
+from django.db.models.functions import TruncDate, TruncMonth
+from django.db.models import Avg
+from django.core.paginator import Paginator
 
 from .models import Patient, VitalSign, WellnessLog, Medication, MedicationLog, Notification, LabResult, HealthGoal
 
@@ -13,12 +16,11 @@ from .models import Patient, VitalSign, WellnessLog, Medication, MedicationLog, 
 @login_required
 @require_http_methods(["GET"])
 def vital_signs_api(request):
-    """Get vital signs history for the patient"""
+    """Get vital signs history for the patient with aggregation for longer periods"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
         period = request.GET.get('period', 'week')  # week, month, year
         
-        # Calculate date range based on period
         end_date = timezone.now()
         if period == 'week':
             start_date = end_date - timedelta(days=7)
@@ -28,34 +30,96 @@ def vital_signs_api(request):
             start_date = end_date - timedelta(days=365)
         else:
             start_date = end_date - timedelta(days=7)
-        
-        vital_signs = VitalSign.objects.filter(
-            patient=patient,
-            recorded_at__gte=start_date,
-            recorded_at__lte=end_date
-        ).order_by('-recorded_at')
-        
-        data = []
-        for vs in vital_signs:
-            data.append({
-                'id': vs.id,
-                'recorded_at': vs.recorded_at.isoformat(),
-                'blood_pressure_systolic': vs.blood_pressure_systolic,
-                'blood_pressure_diastolic': vs.blood_pressure_diastolic,
-                'heart_rate': vs.heart_rate,
-                'temperature': float(vs.temperature),
-                'oxygen_saturation': vs.oxygen_saturation,
-                'weight': float(vs.weight) if vs.weight else None,
-                'notes': vs.notes,
-            })
-        
+            
+        if period == 'week':
+            vital_signs = VitalSign.objects.filter(
+                patient=patient,
+                recorded_at__gte=start_date,
+                recorded_at__lte=end_date
+            ).order_by('-recorded_at')
+            
+            data = []
+            for vs in vital_signs:
+                data.append({
+                    'id': vs.id,
+                    'recorded_at': vs.recorded_at.isoformat(),
+                    'blood_pressure_systolic': vs.blood_pressure_systolic,
+                    'blood_pressure_diastolic': vs.blood_pressure_diastolic,
+                    'heart_rate': vs.heart_rate,
+                    'temperature': float(vs.temperature),
+                    'oxygen_saturation': vs.oxygen_saturation,
+                    'weight': float(vs.weight) if vs.weight else None,
+                    'notes': vs.notes,
+                })
+        elif period == 'month':
+            vital_signs = (
+                VitalSign.objects.filter(
+                    patient=patient,
+                    recorded_at__gte=start_date,
+                    recorded_at__lte=end_date
+                )
+                .annotate(date_only=TruncDate('recorded_at'))
+                .values('date_only')
+                .annotate(
+                    avg_systolic=Avg('blood_pressure_systolic'),
+                    avg_diastolic=Avg('blood_pressure_diastolic'),
+                    avg_heart_rate=Avg('heart_rate'),
+                    avg_temperature=Avg('temperature'),
+                    avg_oxygen=Avg('oxygen_saturation'),
+                    avg_weight=Avg('weight')
+                )
+                .order_by('date_only')
+            )
+            
+            data = []
+            for item in vital_signs:
+                data.append({
+                    'date': item['date_only'].isoformat() if item['date_only'] else None,
+                    'blood_pressure_systolic': float(item['avg_systolic']) if item['avg_systolic'] is not None else 0,
+                    'blood_pressure_diastolic': float(item['avg_diastolic']) if item['avg_diastolic'] is not None else 0,
+                    'heart_rate': float(item['avg_heart_rate']) if item['avg_heart_rate'] is not None else 0,
+                    'temperature': float(item['avg_temperature']) if item['avg_temperature'] is not None else 0,
+                    'oxygen_saturation': float(item['avg_oxygen']) if item['avg_oxygen'] is not None else 0,
+                    'weight': float(item['avg_weight']) if item['avg_weight'] is not None else None,
+                })
+        else: # year
+            vital_signs = (
+                VitalSign.objects.filter(
+                    patient=patient,
+                    recorded_at__gte=start_date,
+                    recorded_at__lte=end_date
+                )
+                .annotate(month_only=TruncMonth('recorded_at'))
+                .values('month_only')
+                .annotate(
+                    avg_systolic=Avg('blood_pressure_systolic'),
+                    avg_diastolic=Avg('blood_pressure_diastolic'),
+                    avg_heart_rate=Avg('heart_rate'),
+                    avg_temperature=Avg('temperature'),
+                    avg_oxygen=Avg('oxygen_saturation'),
+                    avg_weight=Avg('weight')
+                )
+                .order_by('month_only')
+            )
+            
+            data = []
+            for item in vital_signs:
+                data.append({
+                    'month': item['month_only'].strftime('%Y-%m') if item['month_only'] else None,
+                    'blood_pressure_systolic': float(item['avg_systolic']) if item['avg_systolic'] is not None else 0,
+                    'blood_pressure_diastolic': float(item['avg_diastolic']) if item['avg_diastolic'] is not None else 0,
+                    'heart_rate': float(item['avg_heart_rate']) if item['avg_heart_rate'] is not None else 0,
+                    'temperature': float(item['avg_temperature']) if item['avg_temperature'] is not None else 0,
+                    'oxygen_saturation': float(item['avg_oxygen']) if item['avg_oxygen'] is not None else 0,
+                    'weight': float(item['avg_weight']) if item['avg_weight'] is not None else None,
+                })
+                
         return JsonResponse({
             'success': True,
             'data': data,
             'period': period,
             'count': len(data)
         })
-    
     except Exception as e:
         return JsonResponse({
             'success': False,
@@ -63,9 +127,11 @@ def vital_signs_api(request):
         }, status=500)
 
 
+from jeevan.decorators import rate_limit
+
 @login_required
-@csrf_exempt
 @require_http_methods(["POST"])
+@rate_limit(key_prefix="vitals", limit=5, period=60, is_api=True)
 def add_vital_sign_api(request):
     """Add new vital sign reading"""
     try:
@@ -148,7 +214,6 @@ def wellness_log_api(request):
 
 
 @login_required
-@csrf_exempt
 @require_http_methods(["POST"])
 def log_wellness_api(request):
     """Log daily wellness data"""
@@ -248,25 +313,29 @@ def medications_api(request):
 
 
 @login_required
-@csrf_exempt
 @require_http_methods(["POST"])
 def log_medication_api(request):
-    """Log medication taken"""
+    """Log medication taken with daily idempotence"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
         data = json.loads(request.body)
         
         medication = get_object_or_404(Medication, id=data.get('medication_id'), patient=patient)
         
-        medication_log = MedicationLog.objects.create(
+        today = timezone.localdate()
+        medication_log, created = MedicationLog.objects.get_or_create(
             medication=medication,
-            notes=data.get('notes', '')
+            taken_date=today,
+            defaults={
+                'notes': data.get('notes', '')
+            }
         )
         
         return JsonResponse({
             'success': True,
-            'message': 'Medication logged successfully',
-            'id': medication_log.id
+            'message': 'Medication logged successfully' if created else 'Medication already logged for today',
+            'id': medication_log.id,
+            'already_logged': not created
         })
     
     except Exception as e:
@@ -435,19 +504,24 @@ def medication_adherence_api(request):
 @login_required
 @require_http_methods(["GET"])
 def notifications_api(request):
-    """Get user notifications"""
+    """Get user notifications with pagination"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
         unread_only = request.GET.get('unread_only', 'false').lower() == 'true'
         
-        notifications = Notification.objects.filter(patient=patient)
+        notifications = Notification.objects.filter(patient=patient).order_by('-created_at')
         if unread_only:
             notifications = notifications.filter(is_read=False)
-        
-        notifications = notifications.order_by('-created_at')[:20]  # Limit to 20 most recent
-        
+            
+        page_number = request.GET.get('page', 1)
+        paginator = Paginator(notifications, 10)  # 10 notifications per page
+        try:
+            page_obj = paginator.get_page(page_number)
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'Invalid page number'}, status=400)
+            
         data = []
-        for notification in notifications:
+        for notification in page_obj:
             data.append({
                 'id': notification.id,
                 'title': notification.title,
@@ -458,11 +532,15 @@ def notifications_api(request):
                 'read_at': notification.read_at.isoformat() if notification.read_at else None,
                 'action_url': notification.action_url
             })
-        
+            
         return JsonResponse({
             'success': True,
             'data': data,
-            'count': len(data)
+            'count': len(data),
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'total_pages': paginator.num_pages,
+            'current_page': page_obj.number,
         })
     
     except Exception as e:
@@ -473,7 +551,6 @@ def notifications_api(request):
 
 
 @login_required
-@csrf_exempt
 @require_http_methods(["POST"])
 def mark_notification_read_api(request):
     """Mark notification as read"""

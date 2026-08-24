@@ -89,7 +89,7 @@
 <div class="registration-container">
   <h2 class="text-center text-white mb-4"><i class="fas fa-user-plus me-2"></i>Patient Registration</h2>
   <div class="outer-card">
-    <form method="POST" action="/patient/register/" onsubmit="return validateForm()">
+    <form method="POST" action="{% url 'patient:register' %}" onsubmit="return validateForm()">
       <div class="row">
 
         <!-- Left Column -->

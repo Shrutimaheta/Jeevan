@@ -1,0 +1,136 @@
+{% extends 'patient/base.html' %}
+{% load static %}
+
+{% block title %}Dr. {{ doctor.full_name }} - Profile | Patient Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Back Navigation -->
+    <div class="mb-4">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Hospital Doctors
+        </a>
+    </div>
+
+    <!-- Doctor Public Profile Header Card -->
+    <div class="row g-4">
+        <!-- Left Side: Doctor Main Card -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100" style="background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);">
+                <div class="card-body text-center p-5">
+                    <!-- Profile Picture / Placeholder -->
+                    <div class="position-relative d-inline-block mb-4">
+                        {% if doctor.profile_picture %}
+                        <img src="{{ doctor.profile_picture.url }}" alt="{{ doctor.full_name }}" class="rounded-circle border border-4 border-white shadow-sm" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle border border-4 border-white shadow-sm bg-primary text-white d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px; font-size: 4rem; font-weight: 700;">
+                            {{ doctor.full_name|first }}
+                        </div>
+                        {% endif %}
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-3 border-white rounded-circle p-2" title="Active License"></span>
+                    </div>
+
+                    <!-- Name and Title -->
+                    <h3 class="fw-bold text-dark mb-1">Dr. {{ doctor.full_name }}</h3>
+                    <p class="text-primary fw-semibold mb-3">{{ doctor.qualification|default:"Medical Specialist" }}</p>
+
+                    <!-- Rating and Stars -->
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+                            <i class="fas fa-star me-1 text-white"></i>{{ doctor.rating|default:"5.0" }}
+                        </span>
+                        <span class="text-muted small">Rating</span>
+                    </div>
+
+                    <!-- Quick Stats Grid -->
+                    <div class="row g-2 border-top border-bottom py-3 my-4">
+                        <div class="col-6 border-end">
+                            <h5 class="fw-bold mb-0 text-dark">{{ doctor.experience|default:"5+" }} Yrs</h5>
+                            <small class="text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Experience</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                {% if doctor.accepts_insurance %}
+                                <i class="fas fa-shield-halved text-success"></i> Yes
+                                {% else %}
+                                <i class="fas fa-xmark text-danger"></i> No
+                                {% endif %}
+                            </h5>
+                            <small class="text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Insurance</small>
+                        </div>
+                    </div>
+
+                    <!-- Medical Registration License -->
+                    {% if doctor.registration_number %}
+                    <div class="p-3 bg-light rounded-3 mb-4">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Medical License Number</small>
+                        <code class="text-dark fw-bold fs-6">{{ doctor.registration_number }}</code>
+                    </div>
+                    {% endif %}
+
+                    <!-- Gender and Personal Info -->
+                    <div class="text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="fas fa-venus-mars me-2 text-primary"></i>Gender:</span>
+                            <span class="fw-semibold text-dark">{{ doctor.gender }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Details & Hospital Information -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+                <div class="card-body">
+                    <!-- Specializations -->
+                    <h4 class="fw-bold text-dark mb-3"><i class="fas fa-stethoscope me-2 text-primary"></i>Specializations</h4>
+                    <div class="d-flex flex-wrap gap-2 mb-4 pb-4 border-bottom">
+                        {% for spec in doctor.specialization.all %}
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-medium fs-6" style="background-color: rgba(44, 90, 160, 0.1);">
+                            {{ spec.sname }}
+                        </span>
+                        {% empty %}
+                        <span class="text-muted">General Medicine</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Associated Hospital Card Info -->
+                    <h4 class="fw-bold text-dark mb-3"><i class="fas fa-hospital me-2 text-primary"></i>Affiliated Hospital</h4>
+                    <div class="p-4 bg-light rounded-4 border mb-4">
+                        <h5 class="fw-bold text-dark mb-2">{{ doctor.hospital.name }}</h5>
+                        <p class="text-muted mb-3"><i class="fas fa-location-dot me-2 text-danger"></i>{{ doctor.hospital.address|default:"Healthcare Center Address" }}</p>
+                        
+                        <div class="d-flex flex-wrap gap-3">
+                            <span class="badge bg-white border text-dark px-3 py-2 rounded-pill">
+                                <i class="fas fa-phone text-primary me-2"></i>{{ doctor.hospital.contact_number }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Appointment Booking Action Box -->
+                    <div class="card border-0 rounded-4 mt-5 p-4 shadow-sm" style="background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border: 1px solid rgba(44, 90, 160, 0.1) !important;">
+                        <div class="row align-items-center">
+                            <div class="col-md-7 mb-3 mb-md-0 text-md-start">
+                                <h5 class="fw-bold text-dark mb-1">Need to consult Dr. {{ doctor.full_name }}?</h5>
+                                <p class="text-muted mb-0 small">Secure your slot now to avoid long waiting times.</p>
+                            </div>
+                            <div class="col-md-5 text-md-end">
+                                {% if is_authenticated %}
+                                <a href="{% url 'appointments:appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm w-100">
+                                    <i class="fas fa-calendar-plus me-2"></i>Book Now
+                                </a>
+                                {% else %}
+                                <a href="/login/?next={% url 'appointments:appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm w-100">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Book
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

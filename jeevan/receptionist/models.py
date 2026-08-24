@@ -55,7 +55,6 @@ class Receptionist(models.Model):
         null=True, 
         help_text='Upload your profile picture (JPG, PNG, GIF - Max 5MB)'
     )
-    password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     
     def clean(self):

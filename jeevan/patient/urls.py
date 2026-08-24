@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views, api_views
 
 app_name = 'patient'
@@ -8,8 +9,8 @@ urlpatterns = [
     path('', views.patient_list, name='patient_list'),
     path('<int:patient_id>/', views.patient_detail, name='patient_detail'),
     path('register/', views.patient_register, name='patient_register'),
-    path('login/', views.patient_login, name='patient_login'),
-    path('logout/', views.patient_logout, name='patient_logout'),
+    path('login/', RedirectView.as_view(pattern_name='universal_login', permanent=False), name='patient_login'),
+    path('logout/', RedirectView.as_view(pattern_name='universal_logout', permanent=False), name='patient_logout'),
     path('dashboard/', views.patient_dashboard, name='patient_dashboard'),
     path('welcomePatient/', views.profile_dashboard, name='profile_dashboard'),
     path('profile/', views.patient_profile, name='patient_profile'),

@@ -1,13 +1,14 @@
 from django.urls import path
-from .views import some_view, NURSESIGNUP, nurse_list_api, nurse_dashboard
+from . import views
 
-app_name = 'nurse'
+app_name = "nurse"
 
 urlpatterns = [
-    path('', nurse_dashboard, name='dashboard'),
-    path('dashboard/', nurse_dashboard, name='dashboard'),
-    path('nursesignup/', NURSESIGNUP, name='nursesignup'),
-    path('api/nurses/', nurse_list_api, name='nurse_list_api'),
+    path("", views.nurse_dashboard, name="dashboard"),
+    path("dashboard/", views.nurse_dashboard, name="dashboard"),
+    path("patient/<int:patient_id>/", views.patient_detail, name="patient_detail"),
+    path("patient/<int:patient_id>/log-vitals/", views.log_vitals, name="log_vitals"),
+    path("patient/<int:patient_id>/add-note/", views.add_note, name="add_note"),
+    path("note/<int:note_id>/edit/", views.edit_note, name="edit_note"),
+    path("list-api/", views.nurse_list_api, name="nurse_list_api"),
 ]
-
-# URLs are correct, no changes needed.

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/patient_login_premium.css' %}">
+    <link rel="stylesheet" href="{% static 'css/patient_login_premium.css' %}?v=1.0.3">
     <style>
     /* Hide native password reveal icons to avoid duplicate eyes (Edge/IE) */
     input[type="password"]::-ms-reveal,
@@ -31,7 +31,7 @@
 
     <div class="vm-container premium-container">
         <!-- Premium Auth Panel -->
-        <div class="vm-auth-panel premium-panel">
+        <div class="vm-auth-panel premium-panel" style="display: flex; flex-direction: column; overflow: hidden;">
             <!-- Premium Header Section -->
             <div class="premium-header">
                 <div class="brand-section">
@@ -152,20 +152,23 @@
                     </button>
                     
                 </div>
-
-                <div class="text-center" style="margin: 4px 0 0; position: relative; z-index: 5; text-align: center;">
-                    <a href="{% url 'patient:patient_register' %}" style="font-size: 0.875rem; color: #0d6efd; text-decoration: underline; font-weight: 500;">
-                        New here? Create your patient account
-                    </a>
-                </div>
-
-                <!-- Premium Footer -->
-                <div class="premium-footer">
-                    <p class="signup-text">
-                        Secure access to your healthcare dashboard
-                    </p>
-                </div>
             </form>
+
+            <!-- Divider and Registration Call-to-action -->
+            <div style="margin: 0.75rem 0; border-top: 1px dashed rgba(44, 90, 160, 0.15);"></div>
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; color: #64748b;">New Patient?</span>
+                <a href="{% url 'patient:patient_register' %}" style="font-size: 0.85rem; color: #2c5aa0; text-decoration: none; font-weight: 600; margin-left: 5px; border-bottom: 2px solid rgba(44, 90, 160, 0.2); padding-bottom: 1px; transition: border-color 0.2s ease;">
+                    Register Here
+                </a>
+            </div>
+
+            <!-- Premium Footer -->
+            <div class="premium-footer">
+                <p class="signup-text">
+                    Secure access to your healthcare dashboard
+                </p>
+            </div>
         </div>
 
         <!-- Premium Illustration Section -->

@@ -44,5 +44,19 @@ class Nurse(models.Model):
     def __str__(self):
         return self.full_name
 
+class ClinicalNote(models.Model):
+    id = models.AutoField(primary_key=True)
+    patient = models.ForeignKey('patient.Patient', on_delete=models.CASCADE, related_name='clinical_notes')
+    nurse = models.ForeignKey(Nurse, on_delete=models.CASCADE, related_name='clinical_notes')
+    note = models.TextField(help_text="Clinical observation notes recorded by the nurse")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Note by {self.nurse.full_name} for {self.patient.full_name} ({self.created_at.date()})"
+
 # Model is correct, no changes needed.
 

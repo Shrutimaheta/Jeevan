@@ -9,45 +9,100 @@ import random
 import string
 
 
-class PatientRegistrationForm(forms.ModelForm):
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'Confirm Password'
-    }))
+def validate_file_security(file, is_image_only=False):
+    # 1. Size check
+    max_size = 5 * 1024 * 1024 if is_image_only else 10 * 1024 * 1024
+    if file.size > max_size:
+        raise ValidationError(f"File size exceeds limit of {max_size // (1024*1024)}MB.")
     
+    # 2. Extension check
+    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+    if not is_image_only:
+        allowed_extensions.extend(['.pdf', '.doc', '.docx'])
+    
+    file_name = file.name.lower()
+    ext = '.' + file_name.split('.')[-1] if '.' in file_name else ''
+    if ext not in allowed_extensions:
+        raise ValidationError(f"Unsupported file extension: {ext}")
+    
+    # 3. Read first 2048 bytes for MIME check and magic bytes
+    try:
+        header = file.read(2048)
+        file.seek(0)  # IMPORTANT: reset file pointer!
+    except Exception:
+        raise ValidationError("Could not read file header.")
+    
+    # Detect by magic bytes
+    is_valid = False
+    if ext in ['.jpg', '.jpeg'] and header.startswith(b'\xff\xd8'):
+        is_valid = True
+    elif ext == '.png' and header.startswith(b'\x89PNG\r\n\x1a\n'):
+        is_valid = True
+    elif ext == '.gif' and (header.startswith(b'GIF87a') or header.startswith(b'GIF89a')):
+        is_valid = True
+    elif ext == '.bmp' and header.startswith(b'BM'):
+        is_valid = True
+    elif ext == '.webp' and header.startswith(b'RIFF') and b'WEBP' in header[8:16]:
+        is_valid = True
+    elif not is_image_only:
+        if ext == '.pdf' and header.startswith(b'%PDF'):
+            is_valid = True
+        elif ext in ['.zip', '.docx', '.doc'] and header.startswith(b'PK\x03\x04'):
+            # docx/doc are zip archives or PK structures
+            is_valid = True
+        elif ext == '.doc' and header.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'):
+            is_valid = True
+            
+    if not is_valid:
+        raise ValidationError("File content does not match its extension.")
+        
+    # 4. Check image dimensions if it's an image
+    if ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
+        try:
+            from PIL import Image
+            img = Image.open(file)
+            img.verify()
+            file.seek(0)  # Reset after PIL verification
+            
+            # Check dimensions limit, e.g. 5000x5000 max
+            width, height = img.size
+            if width > 5000 or height > 5000:
+                raise ValidationError("Image dimensions are too large (maximum 5000x5000 pixels).")
+        except Exception:
+            raise ValidationError("Invalid or corrupted image file.")
+
+
+class PatientRegistrationForm(forms.ModelForm):
     username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Username'
     }))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Email Address'
+    }))
+    contact_number = forms.CharField(max_length=15, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Phone Number'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Password'
+    }))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Confirm Password'
+    }))
 
     class Meta:
         model = Patient
-        fields = ['full_name', 'email', 'contact_number']
+        fields = ['full_name']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Full Name'
             }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Email Address'
-            }),
-            'contact_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Phone Number'
-            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password'] = forms.CharField(widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Password'
-        }))
-        self.fields['confirm_password'] = forms.CharField(widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Confirm Password'
-        }))
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -64,11 +119,9 @@ class PatientRegistrationForm(forms.ModelForm):
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
         if contact_number:
-            # Check if any user exists with this contact number
             if CustomUser.objects.filter(contact_number=contact_number).exists():
                 raise ValidationError("A user with this phone number already exists.")
         return contact_number
-    
     
     def clean(self):
         cleaned_data = super().clean()
@@ -100,7 +153,6 @@ class PatientRegistrationForm(forms.ModelForm):
                 }
             )
 
-            # Ensure fields are synced in case of any mismatch
             user.email = email
             user.full_name = full_name
             user.contact_number = contact_number
@@ -110,8 +162,6 @@ class PatientRegistrationForm(forms.ModelForm):
             user.save()
 
             patient.user = user
-            # Store hashed copy if model requires it
-            patient.password = make_password(password)
 
             if commit:
                 patient.save()
@@ -135,28 +185,43 @@ class PatientLoginForm(forms.Form):
         password = cleaned_data.get('password')
         
         if email and password:
+            from django.contrib.auth import authenticate
             try:
-                patient = Patient.objects.get(email=email)
-                user = authenticate(username=patient.user.username, password=password)
-                if not user:
+                user = CustomUser.objects.get(email=email)
+                authenticated_user = authenticate(username=user.username, password=password)
+                if not authenticated_user:
                     raise ValidationError("Invalid email or password.")
+                patient = Patient.objects.get(user=user)
                 cleaned_data['patient'] = patient
-            except Patient.DoesNotExist:
+            except (CustomUser.DoesNotExist, Patient.DoesNotExist):
                 raise ValidationError("Invalid email or password.")
         
         return cleaned_data
 
 
 class PatientProfileForm(forms.ModelForm):
+    email = forms.EmailField(
+        label='Email Address',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Email Address'
+        })
+    )
+    contact_number = forms.CharField(
+        label='Contact Number',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Contact Number'
+        })
+    )
+
     class Meta:
         model = Patient
-        fields = ['full_name', 'email', 'contact_number', 'gender', 'dob', 'address', 'city', 'pincode', 'blood_group', 'emergency_number', 'existing_condition', 'allergies', 'profile_photo']
+        fields = ['full_name', 'gender', 'date_of_birth', 'address', 'city', 'pincode', 'blood_group', 'emergency_number', 'existing_condition', 'allergies', 'profile_photo']
         labels = {
             'full_name': 'Full Name',
-            'email': 'Email Address',
-            'contact_number': 'Contact Number',
             'gender': 'Gender',
-            'dob': 'Date of Birth',
+            'date_of_birth': 'Date of Birth',
             'address': 'Address',
             'city': 'City',
             'pincode': 'Pincode',
@@ -171,18 +236,10 @@ class PatientProfileForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Full Name'
             }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Email Address'
-            }),
-            'contact_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Contact Number'
-            }),
             'gender': forms.Select(attrs={
                 'class': 'form-control'
             }),
-            'dob': forms.DateInput(attrs={
+            'date_of_birth': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
             }),
@@ -221,53 +278,52 @@ class PatientProfileForm(forms.ModelForm):
                 'accept': 'image/*'
             }),
         }
-    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['email'].initial = self.instance.user.email
+            self.fields['contact_number'].initial = self.instance.user.contact_number
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if self.instance and self.instance.pk:
-            # If updating existing patient, exclude current patient from uniqueness check
-            if Patient.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
-                raise ValidationError("A patient with this email already exists.")
+        if self.instance and self.instance.user:
+            if CustomUser.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
+                raise ValidationError("A user with this email already exists.")
         else:
-            # If creating new patient
-            if Patient.objects.filter(email=email).exists():
-                raise ValidationError("A patient with this email already exists.")
+            if CustomUser.objects.filter(email=email).exists():
+                raise ValidationError("A user with this email already exists.")
         return email
-    
+
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
-        if self.instance and self.instance.pk:
-            # If updating existing patient, exclude current patient from uniqueness check
-            if Patient.objects.filter(contact_number=contact_number).exclude(pk=self.instance.pk).exists():
-                raise ValidationError("A patient with this contact number already exists.")
+        if self.instance and self.instance.user:
+            if CustomUser.objects.filter(contact_number=contact_number).exclude(pk=self.instance.user.pk).exists():
+                raise ValidationError("A user with this contact number already exists.")
         else:
-            # If creating new patient
-            if Patient.objects.filter(contact_number=contact_number).exists():
-                raise ValidationError("A patient with this contact number already exists.")
+            if CustomUser.objects.filter(contact_number=contact_number).exists():
+                raise ValidationError("A user with this contact number already exists.")
         return contact_number
-    
-    # Removed ABHA field and validation
-    
+
     def clean_profile_photo(self):
         profile_photo = self.cleaned_data.get('profile_photo')
         if profile_photo:
-            # Check file size (5MB max)
-            if profile_photo.size > 5 * 1024 * 1024:
-                raise ValidationError("Image file too large. Maximum size is 5MB.")
-            
-            # Check file type
-            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-            # Get content type from the file object
-            content_type = getattr(profile_photo, 'content_type', None)
-            if not content_type:
-                # Fallback: check file extension
-                file_name = profile_photo.name.lower()
-                if not any(file_name.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif']):
-                    raise ValidationError("Invalid file type. Please upload a JPG, PNG, or GIF image.")
-            elif content_type not in allowed_types:
-                raise ValidationError("Invalid file type. Please upload a JPG, PNG, or GIF image.")
-        
+            validate_file_security(profile_photo, is_image_only=True)
         return profile_photo
+
+    def save(self, commit=True):
+        patient = super().save(commit=False)
+        email = self.cleaned_data.get('email')
+        contact_number = self.cleaned_data.get('contact_number')
+        
+        if commit:
+            patient.save()
+            if patient.user:
+                patient.user.email = email
+                patient.user.contact_number = contact_number
+                patient.user.full_name = patient.full_name
+                patient.user.save()
+        return patient
 
 
 class ChangePasswordForm(forms.Form):
@@ -352,16 +408,7 @@ class PatientDocumentForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data.get('file')
         if file:
-            # Check file size (10MB max)
-            if file.size > 10 * 1024 * 1024:
-                raise ValidationError("File too large. Maximum size is 10MB.")
-            
-            # Check file type
-            allowed_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
-            file_extension = '.' + file.name.split('.')[-1].lower()
-            if file_extension not in allowed_extensions:
-                raise ValidationError("Invalid file type. Please upload PDF, DOC, DOCX, or image files.")
-        
+            validate_file_security(file, is_image_only=False)
         return file
 
 
@@ -406,24 +453,10 @@ class ForgotPasswordForm(forms.Form):
         email = cleaned_data.get('email')
         contact_number = cleaned_data.get('contact_number')
         
-        if recovery_method == 'email':
-            if not email:
-                raise ValidationError("Please enter your email address.")
-            # Check if patient exists with this email
-            try:
-                patient = Patient.objects.get(email=email)
-                cleaned_data['patient'] = patient
-            except Patient.DoesNotExist:
-                raise ValidationError("No account found with this email address.")
-        elif recovery_method == 'phone':
-            if not contact_number:
-                raise ValidationError("Please enter your phone number.")
-            # Check if patient exists with this contact number
-            try:
-                patient = Patient.objects.get(contact_number=contact_number)
-                cleaned_data['patient'] = patient
-            except Patient.DoesNotExist:
-                raise ValidationError("No account found with this phone number.")
+        if recovery_method == 'email' and not email:
+            raise ValidationError("Please enter your email address.")
+        elif recovery_method == 'phone' and not contact_number:
+            raise ValidationError("Please enter your phone number.")
         
         return cleaned_data
 
@@ -478,13 +511,13 @@ class VitalSignForm(forms.ModelForm):
             'blood_pressure_systolic': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '50',
-                'max': '300',
+                'max': '250',
                 'placeholder': 'e.g., 120'
             }),
             'blood_pressure_diastolic': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '30',
-                'max': '200',
+                'max': '150',
                 'placeholder': 'e.g., 80'
             }),
             'heart_rate': forms.NumberInput(attrs={
@@ -495,21 +528,21 @@ class VitalSignForm(forms.ModelForm):
             }),
             'temperature': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '90',
-                'max': '110',
+                'min': '90.0',
+                'max': '110.0',
                 'step': '0.1',
                 'placeholder': 'e.g., 98.6'
             }),
             'oxygen_saturation': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '70',
+                'min': '50',
                 'max': '100',
                 'placeholder': 'e.g., 98'
             }),
             'weight': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '50',
-                'max': '500',
+                'min': '2.0',
+                'max': '500.0',
                 'step': '0.1',
                 'placeholder': 'e.g., 150.5'
             }),

@@ -11,10 +11,12 @@ class AppointmentPrescriptionForm(forms.ModelForm):
     class Meta:
         model = AppointmentPrescription
         fields = [
-            'diagnosis', 'medications', 'tests_recommended', 'advice', 'follow_up_date'
+            'diagnosis', 'snomed_diagnosis_code', 'snomed_diagnosis_display', 'medications', 'tests_recommended', 'advice', 'follow_up_date'
         ]
         widgets = {
             'diagnosis': forms.Textarea(attrs={'rows':3, 'class':'form-control'}),
+            'snomed_diagnosis_code': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. 22298006'}),
+            'snomed_diagnosis_display': forms.TextInput(attrs={'class':'form-control', 'placeholder':'e.g. Myocardial infarction'}),
             'medications': forms.Textarea(attrs={'rows':5, 'class':'form-control', 'placeholder':'Drug Name - Dose - Frequency - Duration'}),
             'tests_recommended': forms.Textarea(attrs={'rows':3, 'class':'form-control'}),
             'advice': forms.Textarea(attrs={'rows':3, 'class':'form-control'}),

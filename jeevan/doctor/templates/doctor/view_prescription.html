@@ -659,6 +659,13 @@
                         {% else %}
                             No diagnosis provided
                         {% endif %}
+                        
+                        {% if prescription.snomed_diagnosis_code %}
+                            <div class="mt-2 p-2 bg-light rounded border text-secondary font-monospace" style="font-size: 0.85rem;">
+                                <strong>SNOMED-CT Code:</strong> {{ prescription.snomed_diagnosis_code }} <br>
+                                <strong>Preferred Term:</strong> {{ prescription.snomed_diagnosis_display }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 

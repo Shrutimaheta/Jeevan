@@ -1,8 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
+from django.db import transaction, IntegrityError
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from jeevan.decorators import role_required, patient_required, log_audit_event
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
@@ -10,13 +13,20 @@ from django.views import View
 import json
 from .models import Patient, PatientDocument, VitalSign, WellnessLog, Medication, MedicationLog, LabResult, HealthGoal, Notification
 from .forms import PatientRegistrationForm, PatientLoginForm, PatientProfileForm, ChangePasswordForm, PatientDocumentForm
-from .help_views import *
-from .forgot_password_views import *
+from .help_views import (
+    help_support, faq_list, support_tickets, create_support_ticket,
+    support_ticket_detail, health_resources, contact_info
+)
+from .forgot_password_views import (
+    forgot_password, verify_otp, verify_email_otp, reset_password, forgot_password_sent
+)
 from datetime import date, timedelta
 
 from django.views.decorators.http import require_GET, require_POST
 
 
+@login_required
+@role_required(['doctor', 'receptionist', 'nurse'])
 def patient_list(request):
     """View to list all patients"""
     patients = Patient.objects.all().order_by('-id')
@@ -33,15 +43,30 @@ def patient_list(request):
     return render(request, 'patient/patient_list.html', context)
 
 
+@login_required
 def patient_detail(request, patient_id):
     """View to show detailed information about a specific patient"""
     patient = get_object_or_404(Patient, id=patient_id)
+    
+    # Check permissions: must be the patient themselves or a staff member
+    if request.user.role == 'patient':
+        try:
+            user_patient = request.user.patient_profile
+            if user_patient.id != patient.id:
+                raise PermissionDenied("You do not have permission to view this profile.")
+        except Patient.DoesNotExist:
+            raise PermissionDenied("Patient profile not found.")
+    elif request.user.role not in ['doctor', 'receptionist', 'nurse']:
+        raise PermissionDenied("You do not have permission to view this profile.")
+        
     context = {
         'patient': patient,
     }
     return render(request, 'patient/patient_detail.html', context)
 
 
+@login_required
+@role_required(['doctor', 'receptionist', 'nurse'])
 def patient_api_list(request):
     """API view to return patient data as JSON"""
     patients = Patient.objects.all().order_by('-id')
@@ -52,10 +77,10 @@ def patient_api_list(request):
         patients_data.append({
             'id': patient.id,
             'full_name': patient.full_name,
-            'email': patient.email,
-            'contact_number': patient.contact_number,
+            'email': patient.user.email if patient.user else None,
+            'contact_number': patient.user.contact_number if patient.user else None,
             'gender': patient.gender,
-            'dob': patient.dob.strftime('%Y-%m-%d') if patient.dob else None,
+            'dob': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else None,
             'city': patient.city,
             'blood_group': patient.blood_group,
             'abha_id': patient.abha_id,
@@ -73,130 +98,17 @@ def patient_register(request):
     if request.method == 'POST':
         form = PatientRegistrationForm(request.POST)
         if form.is_valid():
-            patient = form.save()
-            messages.success(request, 'Registration successful! Please login.')
-            return redirect('patient:patient_login')
+            try:
+                with transaction.atomic():
+                    patient = form.save()
+                messages.success(request, 'Registration successful! Please login.')
+                return redirect('universal_login')
+            except IntegrityError:
+                form.add_error(None, "An error occurred during registration. The username or email might already be taken.")
     else:
         form = PatientRegistrationForm()
     
     return render(request, 'patient/register.html', {'form': form})
-
-
-def patient_login(request):
-    """Unified login view for all user types (patient, doctor, receptionist, nurse, admin)"""
-    from django.contrib.auth import authenticate
-    from care.models import CustomUser
-    
-    # Check if user was redirected from password change
-    if request.GET.get('password_changed') == '1':
-        messages.success(request, 'Password changed successfully! Please login with your new password.')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        role = request.POST.get('role', 'patient')  # Default to patient if no role selected
-        
-        if username and password:
-            # Try to authenticate the user - first try with username, then with email
-            user = authenticate(request, username=username, password=password)
-            
-            # If authentication failed and username looks like an email, try with email
-            if user is None and '@' in username:
-                try:
-                    from django.contrib.auth import get_user_model
-                    User = get_user_model()
-                    user_obj = User.objects.get(email=username)
-                    user = authenticate(request, username=user_obj.username, password=password)
-                except User.DoesNotExist:
-                    pass
-            
-            if user is not None:
-                # Validate role using user.role (except for admin)
-                has_role = (role == 'admin' and user.is_superuser) or (getattr(user, 'role', None) == role)
-                if has_role:
-                    login(request, user)
-
-                    # Get the user's full name based on role and redirect
-                    if role == 'patient':
-                        patient_obj = getattr(user, 'patient', None) or getattr(user, 'patient_profile', None)
-                        full_name = getattr(patient_obj, 'full_name', None) or getattr(user, 'full_name', None) or user.get_username()
-                        messages.success(request, f'Welcome back, {full_name}!')
-                        return redirect('patient:profile_dashboard')
-                    elif role == 'doctor':
-                        if hasattr(user, 'doctor'):
-                            full_name = user.doctor.full_name
-                            messages.success(request, f'Welcome back, Dr. {full_name}!')
-                            return redirect('doctor:dashboard')
-                        messages.success(request, f'Welcome back!')
-                        return redirect('doctor:dashboard')
-                    elif role == 'receptionist':
-                        if hasattr(user, 'receptionist'):
-                            full_name = user.receptionist.full_name
-                            messages.success(request, f'Welcome back, {full_name}!')
-                        else:
-                            messages.success(request, 'Welcome back!')
-                        return redirect('receptionist:dashboard')
-                    elif role == 'nurse':
-                        if hasattr(user, 'nurse'):
-                            full_name = user.nurse.full_name
-                            messages.success(request, f'Welcome back, {full_name}!')
-                        else:
-                            messages.success(request, 'Welcome back!')
-                        return redirect('nurse:dashboard')
-                    elif role == 'admin' and user.is_superuser:
-                        messages.success(request, 'Welcome back, Admin!')
-                        return redirect('/admin/')
-                    else:
-                        messages.error(request, f'User does not have {role} role.')
-                else:
-                    messages.error(request, f'Invalid credentials or user does not have {role} role.')
-            else:
-                messages.error(request, 'Invalid username or password.')
-        else:
-            messages.error(request, 'Please fill in all fields.')
-    
-    # Create a simple form for the template
-    form = PatientLoginForm()
-    return render(request, 'patient/login.html', {'form': form})
-
-
-@login_required
-def patient_logout(request):
-    """Secure patient logout view with proper security measures"""
-    # Get user info before logout for logging
-    user_name = request.user.get_full_name() or request.user.username if request.user.is_authenticated else 'Unknown'
-    user_id = request.user.id if request.user.is_authenticated else None
-    
-    # Log the logout action for security audit
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f'Patient logout: User {user_name} (ID: {user_id}) logged out from IP: {request.META.get("REMOTE_ADDR")}')
-    
-    # Clear all session data securely
-    request.session.flush()
-    
-    # Logout user
-    logout(request)
-    
-    # Create redirect response with logout parameter to trigger security measures
-    response = redirect('/?logout=true')
-    
-    # Clear any remaining cookies for security
-    response.delete_cookie('sessionid')
-    response.delete_cookie('csrftoken')
-    
-    # Add cache prevention headers to prevent back button issues
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['X-Content-Type-Options'] = 'nosniff'
-    response['X-Frame-Options'] = 'DENY'
-    response['X-XSS-Protection'] = '1; mode=block'
-    
-    # Show success message
-    messages.success(request, 'You have been successfully logged out. Please login again to continue.')
-    
-    return response
 
 
 @login_required
@@ -496,42 +408,63 @@ def document_delete(request, document_id):
 
 @login_required
 def document_download(request, document_id):
-    """View to download or view a document"""
-    try:
-        patient = Patient.objects.get(user=request.user)
-    except Patient.DoesNotExist:
-        messages.error(request, 'Patient profile not found.')
-        return redirect('patient:patient_login')
+    """View to download or view a document with secure role-based authorization check"""
+    document = get_object_or_404(PatientDocument, id=document_id)
+    
+    has_access = False
+    
+    # If logged-in user is the patient owner
+    if hasattr(request.user, 'role') and request.user.role == 'patient':
+        try:
+            patient = Patient.objects.get(user=request.user)
+            if document.patient == patient:
+                has_access = True
+        except Patient.DoesNotExist:
+            pass
+            
+    # If logged-in user is a doctor
+    elif hasattr(request.user, 'role') and request.user.role == 'doctor':
+        try:
+            from doctor.models import Doctor
+            from doctor.views import check_consent
+            doctor = Doctor.objects.get(user=request.user)
+            # A doctor can access if they have approved consent for this patient
+            if check_consent(doctor, document.patient):
+                has_access = True
+        except Doctor.DoesNotExist:
+            pass
+            
+    if not has_access:
+        messages.error(request, 'You are not authorized to view or download this document.')
+        raise PermissionDenied("You do not have permission to view this document.")
+        
+    file_ext = document.file_extension.lower()
+    content_types = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'bmp': 'image/x-ms-bmp',
+        'webp': 'image/webp',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    }
+    content_type = content_types.get(file_ext, 'application/octet-stream')
+    
+    # Check if viewing inline is requested
+    view_mode = request.GET.get('view', 'false').lower() == 'true'
+    
+    # Audit log
+    log_audit_event(request.user, "ACCESS_PATIENT_RECORDS", document.patient.id, f"Downloaded/Viewed document: {document.title} (ID: {document.id})")
     
     try:
-        document = PatientDocument.objects.get(id=document_id, patient=patient)
-        
-        # Check if viewing in browser is requested (for PDFs and images)
-        view_mode = request.GET.get('view', 'false').lower() == 'true'
-        file_ext = document.file_extension.lower()
-        
-        # Determine content type
-        content_types = {
-            'pdf': 'application/pdf',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'png': 'image/png',
-            'gif': 'image/gif',
-        }
-        content_type = content_types.get(file_ext, 'application/octet-stream')
-        
-        # For PDFs and images, allow viewing in browser if requested
-        if view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif']:
-            response = HttpResponse(document.file.read(), content_type=content_type)
-            response['Content-Disposition'] = f'inline; filename="{document.title}.{file_ext}"'
-        else:
-            # Force download for other file types or when download is requested
-            response = HttpResponse(document.file.read(), content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{document.title}.{file_ext}"'
-        
+        response = HttpResponse(document.file.read(), content_type=content_type)
+        disposition = 'inline' if (view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']) else 'attachment'
+        response['Content-Disposition'] = f'{disposition}; filename="{document.title}.{file_ext}"'
         return response
-    except PatientDocument.DoesNotExist:
-        messages.error(request, 'Document not found.')
+    except Exception as e:
+        messages.error(request, f"Error reading file: {str(e)}")
         return redirect('patient:document_list')
 
 

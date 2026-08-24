@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Records</title>
+</head>
+<body>
+    <h1>Medical Records for {{ patient.full_name }}</h1>
+    <ul>
+    {% for record in records %}
+        <li>{{ record.summary }} - {{ record.diagnosis }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

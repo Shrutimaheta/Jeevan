@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from jeevan.decorators import patient_required, log_audit_event
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -12,7 +13,7 @@ from doctor.models import Doctor
 from patient.models import Patient
 import json
 
-@login_required
+@patient_required
 def appointment_list(request):
     """Display list of appointments for the logged-in patient (exclude cancelled by default)"""
     try:
@@ -24,7 +25,7 @@ def appointment_list(request):
         # Optional status filter via query param (?status=pending|accepted|rejected|completed|expired|cancelled|all)
         selected_status = request.GET.get('status', '').strip().lower()
         
-        appointments_qs = Appointment.objects.filter(patient=patient)
+        appointments_qs = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(patient=patient)
         
         # By default, exclude cancelled appointments unless explicitly requested
         if selected_status == 'all':
@@ -61,7 +62,7 @@ def appointment_list(request):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
-@login_required
+@patient_required
 def appointment_list_accepted(request):
     """Display only accepted appointments for the logged-in patient"""
     try:
@@ -89,7 +90,7 @@ def appointment_list_accepted(request):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
-@login_required
+@patient_required
 def appointment_create(request):
     """Create a new appointment"""
     try:
@@ -128,11 +129,22 @@ def appointment_create(request):
                     form.fields['doctor'].widget.attrs['disabled'] = False
             
             if form.is_valid():
-                appointment = form.save(commit=False)
-                appointment.patient = patient
-                appointment.save()
-                messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
-                return redirect('appointments:appointment_list')
+                from .services import create_appointment
+                try:
+                    appointment = create_appointment(
+                        patient=patient,
+                        doctor=form.cleaned_data['doctor'],
+                        hospital=form.cleaned_data['hospital'],
+                        appointment_date=form.cleaned_data['appointment_date'],
+                        appointment_time=form.cleaned_data['appointment_time'],
+                        symptoms=form.cleaned_data.get('symptoms'),
+                        payment_mode=form.cleaned_data.get('payment_mode', 'cash'),
+                        actor=request.user
+                    )
+                    messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
+                    return redirect('appointments:appointment_list')
+                except Exception as e:
+                    messages.error(request, str(e))
             else:
                 # Check for slot busy errors specifically
                 slot_busy_error = None
@@ -209,7 +221,7 @@ def appointment_create(request):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
-@login_required
+@patient_required
 def appointment_update(request, appointment_id):
     """Update an existing appointment"""
     try:
@@ -223,13 +235,20 @@ def appointment_update(request, appointment_id):
         if request.method == 'POST':
             form = AppointmentUpdateForm(request.POST, instance=appointment)
             if form.is_valid():
-                form.save()
-                messages.success(request, 'Appointment updated successfully!')
-                return redirect('appointments:appointment_list')
-            else:
-                # Debug: Print form errors
-                print("Update form errors:", form.errors)
-                print("Update form data:", form.data)
+                from .services import reschedule_appointment
+                try:
+                    reschedule_appointment(
+                        appointment_id=appointment.id,
+                        new_date=form.cleaned_data['appointment_date'],
+                        new_time=form.cleaned_data['appointment_time'],
+                        symptoms=form.cleaned_data.get('symptoms'),
+                        payment_mode=form.cleaned_data.get('payment_mode'),
+                        actor=request.user
+                    )
+                    messages.success(request, 'Appointment updated successfully!')
+                    return redirect('appointments:appointment_list')
+                except Exception as e:
+                    messages.error(request, str(e))
         else:
             form = AppointmentUpdateForm(instance=appointment)
         
@@ -243,7 +262,7 @@ def appointment_update(request, appointment_id):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
-@login_required
+@patient_required
 def appointment_cancel(request, appointment_id):
     """Cancel an appointment"""
     try:
@@ -255,10 +274,17 @@ def appointment_cancel(request, appointment_id):
             return redirect('appointments:appointment_list')
         
         if request.method == 'POST':
-            appointment.status = 'cancelled'
-            appointment.save()
-            messages.success(request, 'Appointment cancelled successfully!')
-            return redirect('appointments:appointment_list')
+            from .services import update_appointment_status
+            try:
+                update_appointment_status(
+                    appointment_id=appointment.id,
+                    new_status='cancelled',
+                    actor=request.user
+                )
+                messages.success(request, 'Appointment cancelled successfully!')
+                return redirect('appointments:appointment_list')
+            except Exception as e:
+                messages.error(request, str(e))
         
         context = {
             'appointment': appointment,
@@ -307,7 +333,7 @@ def doctor_selection(request, hospital_id):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
-@login_required
+@patient_required
 def appointment_detail(request, appointment_id):
     """View appointment details"""
     try:

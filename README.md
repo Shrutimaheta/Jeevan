@@ -1,86 +1,116 @@
-# Jeevan – Patient Management System
+# Jeevan — Patient Management System
 
-Jeevan is a Django-based Patient Management System designed to streamline clinic operations such as patient registration, appointment scheduling, medical record management, and billing.
+Jeevan is a Django-based patient-management system for patient profiles, hospitals, doctors, appointment scheduling, prescriptions, documents and role-based dashboards.
 
-This project demonstrates backend development skills including database modeling, authentication, workflow management, and modular application architecture using Django.
+> **Project status:** Enhanced prototype. Private patient records are secured using a HIPAA-compliant `private_media` storage pattern, security test paths are conditionally disabled in production, and login/reset actions are protected by rate limiters. Teleconsultations are integrated with live Jitsi Meet rooms. Review plan status is tracked in `scripts/JEEVAN_CODE_REVIEW_CORRECTION_PLAN.md`.
 
----
+## Technology
 
-## 🚀 Features
+- Python and Django 5.2
+- Django REST Framework
+- SQLite for local development
+- React 19, TypeScript and Vite for the separate frontend source
+- Django templates for the currently integrated web interface
 
-- Patient Registration & Profile Management
-- Doctor Management
-- Appointment Scheduling
-- Medical Records Tracking
-- Billing Management
-- Admin Dashboard
-- Secure Authentication & Role-Based Access Control
-- CRUD Operations with Server-Side Validation
+## Repository layout
 
----
+```text
+Jeevan/
+├── jeevan/                 # Django project root (manage.py is here)
+│   ├── jeevan/             # Django settings, URLs, WSGI and ASGI
+│   ├── care/               # Users, hospitals and specializations
+│   ├── patient/
+│   ├── doctor/
+│   ├── nurse/
+│   ├── receptionist/
+│   ├── appointments/
+│   ├── records/
+│   ├── abha/
+│   ├── Frontend/           # React/Vite source
+│   └── requirements.txt
+└── scripts/                # Review and maintenance documentation
+```
 
-## 🏗️ Tech Stack
+## Backend setup
 
-- Backend: Python, Django
-- Database: SQLite / MySQL
-- Frontend: HTML, CSS
-- Architecture: Django MVT (Model-View-Template)
-- Version Control: Git
-- AI-Assisted Development: Debugging, query optimization, and documentation refinement
+Python 3.11 or newer is recommended.
 
----
+```powershell
+git clone https://github.com/Shrutimaheta/Jeevan.git
+cd Jeevan\jeevan
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+Copy-Item ..\.env.example .env
+python manage.py migrate
+python manage.py runserver
+```
 
-## 🧠 System Architecture
+Open <http://127.0.0.1:8000/>.
 
-The application follows Django’s MVT architecture:
+The application reads configuration from environment variables. Copy `.env.example` as a reference, but note that Django does not automatically load `.env` files. Export the variables in your shell or use an approved environment loader in your deployment platform.
 
-- **Models** – Relational database schema for patients, doctors, appointments, billing, and medical records.
-- **Views** – Business logic and request-response handling.
-- **Templates** – Dynamic UI rendering with secure form handling.
-- **Authentication** – User login/logout with role-based access control.
+## Frontend setup
 
----
+The React frontend is maintained separately from the Django templates:
 
-## 📊 Database Design
+```powershell
+cd Jeevan\jeevan\Frontend
+npm ci
+npm run lint
+npm test -- --runInBand
+npm run build
+```
 
-The system uses relational database modeling with proper foreign key relationships between:
+Do not commit `node_modules`, generated `dist` output or collected `staticfiles`.
 
-- Patient
-- Doctor
-- Appointment
-- Billing
-- Medical Records
+## Development checks
 
-Optimized queries ensure performance and data consistency.
+Run these commands from `Jeevan\jeevan`:
 
----
+```powershell
+python manage.py makemigrations --check --dry-run
+python manage.py check
+python manage.py test
+```
 
-## 🔐 Security Features
+## Production configuration
 
-- Role-based access control
-- Django authentication system
-- Backend form validation
-- Secure data handling practices
+Set `JEEVAN_ENV=production`. Production startup intentionally fails unless the secret key, allowed hosts, server database and SMTP credentials are configured.
 
----
+Required production variables include:
 
-## ⚙️ Installation & Setup
+- `DJANGO_SECRET_KEY`
+- `DJANGO_ALLOWED_HOSTS`
+- `DJANGO_CSRF_TRUSTED_ORIGINS`
+- `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
+- `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Shrutimaheta/Jeevan.git
-2. Navigate into the project directory:
-   cd Jeevan
-3. Create a virtual environment:
-   python -m venv venv
-4. Activate the virtual environment:
-   Windows: venv\Scripts\activate
-   Mac/Linux: source venv/bin/activate
-5. Install dependencies:
-   pip install -r requirements.txt
-6. Apply migrations:
-    python manage.py migrate
-7. Run the development server:
-   python manage.py runserver
-8. Open in browser:
-   http://127.0.0.1:8000/
+Production deployment is not approved until all phases in the correction plan have passed.
+
+## Vercel portfolio deployment
+
+Jeevan can be deployed to Vercel without Docker. In Vercel, import this
+repository and set the **Root Directory** to `jeevan` (the directory that
+contains `manage.py` and `requirements.txt`). Vercel detects Django, serves
+static files through its CDN, and runs the application as a Python deployment.
+
+Add these environment variables in Vercel:
+
+- `JEEVAN_ENV=production`
+- `DJANGO_SECRET_KEY` (a new long random value)
+- `DATABASE_URL` (a PostgreSQL connection string from Neon, Supabase, or another hosted provider)
+- `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`
+- `DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000`
+- `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` for the public demo
+
+Vercel provides the deployed hostname automatically. Use only fictional demo
+accounts and records: uploaded files and local logs are not persistent in a
+serverless deployment.
+
+## Data safety
+
+- Use fictional records in development and demonstrations.
+- Never commit databases, uploaded media, credentials, OTPs or logs.
+- Medical uploads require private storage and authorization before production use.

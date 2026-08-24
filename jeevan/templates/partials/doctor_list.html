@@ -22,7 +22,7 @@
             <a href="/login/?next={% url 'appointments:appointment_create' %}?doctor={{ doctor.id }}" class="btn btn-primary-custom btn-sm flex-fill" onclick="if (window.twOpenBooking) { event.preventDefault(); window.twOpenBooking(); }">
                 <i class="fas fa-calendar-plus me-1"></i>Book Appointment
             </a>
-            <a href="/doctor/{{ doctor.id }}/" class="btn btn-outline-primary btn-sm flex-fill">
+            <a href="{% url 'doctor:public_profile' doctor.id %}" class="btn btn-outline-primary btn-sm flex-fill">
                 <i class="fas fa-info-circle me-1"></i>View Profile
             </a>
         </div>

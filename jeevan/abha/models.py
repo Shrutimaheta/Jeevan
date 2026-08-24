@@ -1,5 +1,5 @@
 from django.db import models
-from care.models import Patient
+from patient.models import Patient
 
 class AbhaLink(models.Model):
     patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name='abha_link')

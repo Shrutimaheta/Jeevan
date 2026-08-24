@@ -10,9 +10,18 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect
 from urllib.parse import urlencode
 import json
+from jeevan.decorators import rate_limit
 
+@rate_limit(key_prefix="login", limit=5, period=60)
 def universal_login(request):
     """Universal login view for all user types"""
+    # Hide next query parameter in the address bar by storing it in the session
+    if request.method == 'GET' and 'next' in request.GET:
+        next_url = request.GET.get('next')
+        if next_url:
+            request.session['next_url'] = next_url
+        return redirect('universal_login')
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -37,6 +46,12 @@ def universal_login(request):
                 has_role = (role == 'admin' and user.is_superuser) or (getattr(user, 'role', None) == role)
                 if has_role:
                     login(request, user)
+
+                    # Retrieve and redirect to stored next_url if exists
+                    next_url = request.session.pop('next_url', None) or request.POST.get('next')
+                    if next_url:
+                        messages.success(request, 'Logged in successfully!')
+                        return redirect(next_url)
 
                     # Get the user's full name based on role and redirect
                     if role == 'patient':
@@ -208,17 +223,7 @@ def htmx_filter_doctors(request):
     html = render_to_string('partials/doctor_list.html', {'doctors': doctors}, request=request)
     return HttpResponse(html)
 
-def test(request):
-    return render(request, 'test.html')
 
-def debug(request):
-    return render(request, 'debug.html')
-
-def simple_test(request):
-    return render(request, 'simple_test.html')
-
-def react_debug(request):
-    return render(request, 'react_debug.html')
 
 def patient_home(request):
     doctors = [

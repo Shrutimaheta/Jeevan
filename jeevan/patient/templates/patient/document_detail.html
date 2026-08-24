@@ -56,7 +56,7 @@
                     <h6>File Preview:</h6>
                     {% if document.is_image %}
                         <div class="text-center">
-                            <img src="{{ document.file.url }}" alt="{{ document.title }}" class="img-fluid rounded" style="max-height: 400px;">
+                             <img src="{% url 'patient:document_download' document.id %}?view=true" alt="{{ document.title }}" class="img-fluid rounded" style="max-height: 400px;">
                         </div>
                     {% elif document.is_pdf %}
                         <div class="text-center">

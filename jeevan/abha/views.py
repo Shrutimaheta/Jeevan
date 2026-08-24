@@ -10,6 +10,7 @@ import random
 import string
 from datetime import datetime, timedelta
 import json
+from care.models import CustomUser
 
 def index(request):
     return HttpResponse("ABHA module works!")
@@ -72,20 +73,16 @@ def create_abha_id(request):
             from patient.models import Patient
             
             # Check if patient already exists with same mobile number
-            existing_by_mobile = Patient.objects.filter(mobile_number=mobile).first()
-            if existing_by_mobile and existing_by_mobile.abha_id:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'ABHA ID already exists for this mobile number: {existing_by_mobile.abha_id}'
-                })
-            
-            # Check if patient exists with same Aadhaar number
-            existing_by_aadhaar = Patient.objects.filter(contact_number=aadhaar).first()
-            if existing_by_aadhaar and existing_by_aadhaar.abha_id:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'ABHA ID already exists for this Aadhaar number: {existing_by_aadhaar.abha_id}'
-                })
+            existing_user = CustomUser.objects.filter(contact_number=mobile).first()
+            if existing_user:
+                try:
+                    if existing_user.patient_profile.abha_id:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                        })
+                except Patient.DoesNotExist:
+                    pass
             
             # Check if patient exists with same name, DOB, and gender (comprehensive check)
             existing_by_details = Patient.objects.filter(
@@ -116,24 +113,21 @@ def create_abha_id(request):
                 defaults={
                     'full_name': name,
                     'date_of_birth': dob,
-                    'dob': dob,  # Also set the existing dob field
                     'gender': gender,
-                    'mobile_number': mobile,
-                    'contact_number': mobile,  # Also set contact_number
-                    'email': request.user.email if request.user.email else '',
                     'address': '',
                     'abha_id': abha_id,
                 }
             )
             
+            # Also update contact number on request.user
+            request.user.contact_number = mobile
+            request.user.save()
+            
             if not created:
                 # Update existing patient with new details
                 patient.full_name = name
                 patient.date_of_birth = dob
-                patient.dob = dob  # Also update the existing dob field
                 patient.gender = gender
-                patient.mobile_number = mobile
-                patient.contact_number = mobile  # Also update contact_number
                 patient.abha_id = abha_id
                 patient.save()
             
@@ -238,20 +232,16 @@ def generate_otp(request):
             from patient.models import Patient
             
             # Check if patient already exists with same mobile number
-            existing_by_mobile = Patient.objects.filter(mobile_number=mobile).first()
-            if existing_by_mobile and existing_by_mobile.abha_id:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'ABHA ID already exists for this mobile number: {existing_by_mobile.abha_id}'
-                })
-            
-            # Check if patient exists with same Aadhaar number
-            existing_by_aadhaar = Patient.objects.filter(contact_number=aadhaar).first()
-            if existing_by_aadhaar and existing_by_aadhaar.abha_id:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'ABHA ID already exists for this Aadhaar number: {existing_by_aadhaar.abha_id}'
-                })
+            existing_user = CustomUser.objects.filter(contact_number=mobile).first()
+            if existing_user:
+                try:
+                    if existing_user.patient_profile.abha_id:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                        })
+                except Patient.DoesNotExist:
+                    pass
             
             # Check if patient exists with same name, DOB, and gender
             existing_by_details = Patient.objects.filter(
@@ -285,6 +275,7 @@ def generate_otp(request):
         cache_key = f"abha_otp_{mobile}_{aadhaar}"
         cache.set(cache_key, {
             'otp': otp,
+            'attempts': 0,
             'name': name,
             'dob': dob,
             'gender': gender,
@@ -293,14 +284,17 @@ def generate_otp(request):
             'created_at': timezone.now().isoformat()
         }, timeout=300)  # 5 minutes
         
-        # In a real implementation, you would send SMS here
-        # For now, we'll return the OTP for testing purposes
-        return JsonResponse({
+        # Return response. In production mode, OTP is not returned in the payload.
+        from django.conf import settings
+        response_data = {
             'success': True,
-            'otp': otp,  # Remove this in production
             'message': f'OTP sent to mobile number ending with {mobile[-4:]}',
             'expires_in': 300  # 5 minutes
-        })
+        }
+        if settings.DEBUG:
+            response_data['otp'] = otp
+            
+        return JsonResponse(response_data)
         
     except Exception as e:
         return JsonResponse({
@@ -338,10 +332,27 @@ def verify_otp(request):
             })
         
         # Verify OTP
-        if stored_data['otp'] != entered_otp:
+        attempts = stored_data.get('attempts', 0)
+        if attempts >= 3:
+            cache.delete(cache_key)
             return JsonResponse({
                 'success': False,
-                'error': 'Invalid OTP. Please check and try again.'
+                'error': 'Too many failed attempts. Please request a new OTP.'
+            })
+            
+        if stored_data['otp'] != entered_otp:
+            stored_data['attempts'] = attempts + 1
+            cache.set(cache_key, stored_data, timeout=300)
+            remaining = 3 - stored_data['attempts']
+            if remaining <= 0:
+                cache.delete(cache_key)
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Too many failed attempts. Please request a new OTP.'
+                })
+            return JsonResponse({
+                'success': False,
+                'error': f'Invalid OTP. Please check and try again. Attempts remaining: {remaining}'
             })
         
         # OTP verified successfully
@@ -383,20 +394,16 @@ def check_abha_uniqueness(request):
         from patient.models import Patient
         
         # Check if patient already exists with same mobile number
-        existing_by_mobile = Patient.objects.filter(mobile_number=mobile).first()
-        if existing_by_mobile and existing_by_mobile.abha_id:
-            return JsonResponse({
-                'can_create': False,
-                'error': f'ABHA ID already exists for this mobile number: {existing_by_mobile.abha_id}'
-            })
-        
-        # Check if patient exists with same Aadhaar number
-        existing_by_aadhaar = Patient.objects.filter(contact_number=aadhaar).first()
-        if existing_by_aadhaar and existing_by_aadhaar.abha_id:
-            return JsonResponse({
-                'can_create': False,
-                'error': f'ABHA ID already exists for this Aadhaar number: {existing_by_aadhaar.abha_id}'
-            })
+        existing_user = CustomUser.objects.filter(contact_number=mobile).first()
+        if existing_user:
+            try:
+                if existing_user.patient_profile.abha_id:
+                    return JsonResponse({
+                        'can_create': False,
+                        'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                    })
+            except Patient.DoesNotExist:
+                pass
         
         # Check if patient exists with same name, DOB, and gender
         existing_by_details = Patient.objects.filter(

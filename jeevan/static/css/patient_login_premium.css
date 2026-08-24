@@ -199,13 +199,13 @@ body {
 .vm-auth-panel.premium-panel {
   flex: 0 0 420px;
   max-width: 450px;
-  max-height: 90vh;
+  max-height: 96vh;
   background: var(--gradient-card);
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid rgba(44, 90, 160, 0.1);
   border-radius: 20px;
-  padding: 2.5rem;
+  padding: 1.25rem 1.5rem;
   box-shadow: 
     0 20px 40px -12px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(44, 90, 160, 0.05),
@@ -225,6 +225,15 @@ body {
     0 25px 50px -12px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(30, 64, 175, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.vm-auth-panel.premium-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vm-auth-panel.premium-panel::-webkit-scrollbar-thumb {
+  background: rgba(44, 90, 160, 0.2);
+  border-radius: 3px;
 }
 
 .premium-panel::before {
@@ -269,7 +278,7 @@ body {
 
 /* Premium Header */
 .premium-header {
-  margin-bottom: var(--space-md);
+  margin-bottom: 0.75rem;
   flex-shrink: 0;
 }
 
@@ -286,8 +295,8 @@ body {
 
 .logo-wrapper {
   position: relative;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
 }
 
@@ -335,7 +344,7 @@ body {
 
 .premium-brand-name {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -367,7 +376,7 @@ body {
 
 .premium-welcome {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #1e293b;
   margin-bottom: var(--space-xs);
@@ -415,7 +424,6 @@ body {
   flex-direction: column;
   gap: var(--space-sm);
   flex: 1;
-  overflow: hidden;
 }
 
 .premium-form-group {
@@ -456,7 +464,7 @@ body {
 
 .premium-input {
   width: 100%;
-  padding: 1rem 1.25rem 1rem 3rem;
+  padding: 0.55rem 1.25rem 0.55rem 3rem;
   border: 2px solid rgba(44, 90, 160, 0.1);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);

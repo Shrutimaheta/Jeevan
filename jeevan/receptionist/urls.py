@@ -1,7 +1,6 @@
 from django.urls import path, include
+from django.views.generic import RedirectView
 from .views import (
-    receptionist_login, 
-    receptionist_logout,
     receptionist_dashboard,
     receptionist_profile,
     appointment_list,
@@ -20,8 +19,8 @@ app_name = 'receptionist'
 urlpatterns = [
     path('', receptionist_dashboard, name='dashboard'),
     path('dashboard/', receptionist_dashboard, name='dashboard'),
-    path('login/', receptionist_login, name='login'),
-    path('logout/', receptionist_logout, name='logout'),
+    path('login/', RedirectView.as_view(pattern_name='universal_login', permanent=False), name='login'),
+    path('logout/', RedirectView.as_view(pattern_name='universal_logout', permanent=False), name='logout'),
     path('profile/', receptionist_profile, name='profile'),
     path('change-password/', receptionist_change_password, name='change_password'),
     path('appointments/', appointment_list, name='appointments'),

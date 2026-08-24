@@ -1,8 +1,14 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 import uuid
 from datetime import timedelta
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from jeevan.storage import private_storage
+
+
+pincode_validator = RegexValidator(regex=r'^\d{6}$', message='Pincode must be exactly 6 digits.')
 
 
 class Patient(models.Model):
@@ -27,28 +33,25 @@ class Patient(models.Model):
     
     # Personal Information
     full_name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True, blank=True, null=True)
-    contact_number = models.CharField(max_length=15, blank=True, null=True)
-    mobile_number = models.CharField(max_length=15, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
-    dob = models.DateField(blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    password = models.CharField(max_length=128, default='')  # Password field added
     profile_photo = models.ImageField(upload_to='patient_photos/', blank=True, null=True, help_text='Upload your profile photo')
+    abha_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
 
     # Address Information
     address = models.TextField(blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
-    pincode = models.CharField(max_length=10, blank=True, null=True)
+    pincode = models.CharField(max_length=10, blank=True, null=True, validators=[pincode_validator])
 
     # Health Information
     emergency_number = models.CharField(max_length=15, blank=True, null=True)
     blood_group = models.CharField(max_length=5, choices=BLOOD_GROUP_CHOICES, blank=True, null=True)
     existing_condition = models.TextField(blank=True, null=True)
     allergies = models.TextField(blank=True, null=True)
+    associated_hospitals = models.ManyToManyField('care.Hospital', blank=True, related_name='patients')
 
     def __str__(self):
-        return f"{self.full_name} ({self.email})"
+        return f"{self.full_name} ({self.user.email if self.user else ''})"
 
 
 class PatientDocument(models.Model):
@@ -66,7 +69,11 @@ class PatientDocument(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='documents')
     title = models.CharField(max_length=255, help_text='Document title or description')
     document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPES, default='other')
-    file = models.FileField(upload_to='patient_documents/%Y/%m/', help_text='Upload your document')
+    file = models.FileField(
+        upload_to=__import__('records.utils', fromlist=['secure_patient_documents_path']).secure_patient_documents_path,
+        storage=private_storage,
+        help_text='Upload your document'
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True, null=True, help_text='Additional notes about this document')
@@ -135,18 +142,57 @@ class PasswordResetToken(models.Model):
         return not self.is_used and not self.is_expired
 
 
+class OTPVerification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otp_verifications')
+    otp_hash = models.CharField(max_length=255)
+    purpose = models.CharField(max_length=50, default='password_reset')
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    max_attempts = models.IntegerField(default=3)
+    created_at = models.DateTimeField(auto_now_add=True)
+    resend_timestamp = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'OTP Verification'
+        verbose_name_plural = 'OTP Verifications'
+
+    def __str__(self):
+        return f"OTP verification for {self.user.username}"
+
+
 # Health Tracking Models
 
 class VitalSign(models.Model):
     """Store patient vital signs readings over time"""
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='vital_signs')
     recorded_at = models.DateTimeField(auto_now_add=True)
-    blood_pressure_systolic = models.IntegerField(help_text="Systolic blood pressure (mmHg)")
-    blood_pressure_diastolic = models.IntegerField(help_text="Diastolic blood pressure (mmHg)")
-    heart_rate = models.IntegerField(help_text="Heart rate (BPM)")
-    temperature = models.DecimalField(max_digits=4, decimal_places=1, help_text="Temperature (°F)")
-    oxygen_saturation = models.IntegerField(help_text="Oxygen saturation (%)")
-    weight = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, help_text="Weight (lbs)")
+    blood_pressure_systolic = models.IntegerField(
+        validators=[MinValueValidator(50), MaxValueValidator(250)],
+        help_text="Systolic blood pressure (mmHg)"
+    )
+    blood_pressure_diastolic = models.IntegerField(
+        validators=[MinValueValidator(30), MaxValueValidator(150)],
+        help_text="Diastolic blood pressure (mmHg)"
+    )
+    heart_rate = models.IntegerField(
+        validators=[MinValueValidator(30), MaxValueValidator(220)],
+        help_text="Heart rate (BPM)"
+    )
+    temperature = models.DecimalField(
+        max_digits=4, decimal_places=1,
+        validators=[MinValueValidator(90.0), MaxValueValidator(110.0)],
+        help_text="Temperature (°F)"
+    )
+    oxygen_saturation = models.IntegerField(
+        validators=[MinValueValidator(50), MaxValueValidator(100)],
+        help_text="Oxygen saturation (%)"
+    )
+    weight = models.DecimalField(
+        max_digits=5, decimal_places=1, null=True, blank=True,
+        validators=[MinValueValidator(2.0), MaxValueValidator(500.0)],
+        help_text="Weight (lbs)"
+    )
     notes = models.TextField(blank=True, help_text="Additional notes")
     
     class Meta:
@@ -180,10 +226,12 @@ class WellnessLog(models.Model):
     notes = models.TextField(blank=True, help_text="Daily wellness notes")
     
     class Meta:
-        unique_together = ['patient', 'date']
         ordering = ['-date']
         indexes = [
             models.Index(fields=['patient', '-date']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['patient', 'date'], name='unique_patient_wellness_log')
         ]
     
     def __str__(self):
@@ -257,7 +305,15 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False, help_text="Has notification been read")
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True, help_text="When notification was read")
-    action_url = models.URLField(blank=True, help_text="Optional action URL")
+    action_url = models.CharField(max_length=500, blank=True, help_text="Optional relative action URL path")
+    
+    def clean(self):
+        super().clean()
+        if self.action_url:
+            url = self.action_url.strip()
+            # Must start with '/' but not '//' or specify external hosts
+            if not url.startswith('/') or url.startswith('//'):
+                raise ValidationError("action_url must be a safe relative local route starting with a single '/'")
     
     class Meta:
         ordering = ['-created_at']
@@ -286,7 +342,7 @@ class LabResult(models.Model):
     status = models.CharField(max_length=20, choices=RESULT_STATUS, help_text="Result status")
     doctor_notes = models.TextField(blank=True, help_text="Doctor's interpretation")
     lab_name = models.CharField(max_length=200, blank=True, help_text="Laboratory name")
-    file_attachment = models.FileField(upload_to='lab_results/', blank=True, null=True)
+    file_attachment = models.FileField(upload_to='lab_results/', storage=private_storage, blank=True, null=True)
     
     class Meta:
         ordering = ['-test_date']
@@ -325,6 +381,12 @@ class HealthGoal(models.Model):
         ordering = ['-start_date']
         indexes = [
             models.Index(fields=['patient', 'is_active']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(target_date__gte=models.F('start_date')),
+                name='target_date_after_start_date'
+            )
         ]
     
     def __str__(self):
