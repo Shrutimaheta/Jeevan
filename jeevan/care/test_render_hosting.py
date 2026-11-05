@@ -61,6 +61,17 @@ class RenderConfigurationTests(SimpleTestCase):
         with self.assertRaises(ImproperlyConfigured):
             self.configuration(JEEVAN_RENDER_PROFILE='prodution')
 
+    def test_render_generated_secret_retains_entropy_and_rejects_weak_or_malformed_values(self):
+        import hashlib
+        raw = bytes(range(32))
+        encoded = base64.b64encode(raw).decode('ascii')
+        self.assertEqual(self.preview(DJANGO_SECRET_KEY=encoded)['SECRET_KEY'], hashlib.sha512(raw).hexdigest())
+        for secret in ('A' * 44, base64.b64encode(b'x' * 32).decode('ascii')):
+            with self.subTest(secret=secret), self.assertRaises(ImproperlyConfigured):
+                self.preview(DJANGO_SECRET_KEY=secret)
+        with self.assertRaises(ImproperlyConfigured):
+            self.configuration(DJANGO_SECRET_KEY=encoded)
+
 
 @override_settings(IS_RENDER_PREVIEW=True, PREVIEW_ACCESS_TOKEN='fictional-access-token-12345678901234567890')
 class PreviewAccessTests(SimpleTestCase):

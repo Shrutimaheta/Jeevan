@@ -1,6 +1,6 @@
 # Deploying Jeevan on Render
 
-Render is the selected host as of 4 November 2026. The configuration is prepared locally; it has not been pushed, synced or deployed to a Render account. The earlier Oracle/DuckDNS plan is an alternative only.
+Render is the selected host as of 4 November 2026. The tested source was published on `codex/render-preview-20261105`, and the user approved the free preview plan on 5 November. The earlier Oracle/DuckDNS plan is an alternative only. Check the Render dashboard for deployment status; source preparation alone is not deployment success.
 
 ## Start with the free protected preview
 
@@ -49,6 +49,8 @@ During live acceptance, also identify the actual proxy peer networks and configu
 Apply production only after budget authorization and infrastructure acceptance. Never remove the storage, schema, runtime-role or email checks to force an incomplete deployment to start.
 
 ## Verification supplied and performed
+
+Render's generated Django secret contains 32 random bytes encoded as 44 base64 characters. Settings validate that format and derive a stable SHA-512 representation to meet Django's 50-character check without losing the original randomness. Short, malformed or repetitive secrets remain rejected. The Render CI fixture now matches this format so build/start verification exercises the provider-generated secret path.
 
 Both Blueprints passed the current official [Render JSON Schema](https://render.com/schema/render.yaml.json) locally. Build/start shell syntax passed. The focused PostgreSQL checks verified configuration rejection paths, preview gating/notices, disabled recovery, public image boundaries and a genuine restricted PostgreSQL role passing the production startup verifier. No new Python dependency was required for these hosting changes.
 

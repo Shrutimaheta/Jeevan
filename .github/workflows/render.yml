@@ -19,7 +19,8 @@ jobs:
       JEEVAN_RENDER_PROFILE: preview
       JEEVAN_DEMO_MODE: 'true'
       DATABASE_URL: postgresql://render_ci:fictional-ci-only@127.0.0.1:5432/jeevan_qa
-      DJANGO_SECRET_KEY: fictional-render-ci-configuration-secret-20261104-not-a-deployment-key
+      # Fictional 32-byte base64 fixture matches Render's generateValue format.
+      DJANGO_SECRET_KEY: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
       PREVIEW_ACCESS_TOKEN: fictional-render-ci-access-token-20261104-only
       PREVIEW_ACCOUNT_PASSWORD: Fictional-CI-Password!47
       RENDER_EXTERNAL_HOSTNAME: 127.0.0.1

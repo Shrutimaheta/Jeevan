@@ -4,6 +4,9 @@ Local development is the default. Production values must be supplied through
 environment variables; secrets must never be committed to source control.
 """
 
+import base64
+import binascii
+import hashlib
 import os
 from pathlib import Path
 import dotenv
@@ -54,6 +57,15 @@ def required_env(name):
 
 if IS_PRODUCTION:
     SECRET_KEY = required_env("DJANGO_SECRET_KEY")
+    # Render generates 32 random bytes encoded as 44 base64 characters.
+    # Preserve their 256-bit entropy while satisfying Django's length check.
+    if os.getenv('JEEVAN_RENDER_PROFILE', '') in {'preview', 'production'} and len(SECRET_KEY) == 44:
+        try:
+            render_secret = base64.b64decode(SECRET_KEY, validate=True)
+        except (ValueError, binascii.Error):
+            render_secret = b''
+        if len(render_secret) == 32 and len(set(render_secret)) >= 16:
+            SECRET_KEY = hashlib.sha512(render_secret).hexdigest()
     if len(SECRET_KEY) < 50 or len(set(SECRET_KEY)) < 5 or SECRET_KEY.startswith('django-insecure-'):
         raise ImproperlyConfigured('Production requires a new random DJANGO_SECRET_KEY of at least 50 characters.')
     DEBUG = False
