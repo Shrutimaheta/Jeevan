@@ -16,7 +16,7 @@ const FormMask = () => {
     creditcard:"",
   });
 
-  const handleChange = (name: any) => (value: any) => {
+  const handleChange = (name: keyof typeof formData) => (value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

@@ -7,6 +7,8 @@ from django.db.models import Q, Count
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.utils.dateparse import parse_date
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -14,6 +16,13 @@ from .forms import ReceptionistProfileForm, ReceptionistLoginForm, ReceptionistC
 from care.models import CustomUser, Hospital
 from appointments.models import Appointment
 from doctor.models import Doctor
+
+
+def filter_date(value):
+    try:
+        return parse_date(value)
+    except ValueError:
+        return None
 
 
 @receptionist_required
@@ -30,7 +39,7 @@ def receptionist_dashboard(request):
         return redirect('/login/')
     
     # Get appointments for the receptionist's hospital (exclude cancelled)
-    today = timezone.now().date()
+    today = timezone.localdate()
     appointments = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(doctor__hospital=receptionist.hospital).exclude(status='cancelled')
     
     # Dashboard statistics
@@ -44,10 +53,12 @@ def receptionist_dashboard(request):
     recent_appointments = appointments.order_by('-created_at')[:5]
     
     # Upcoming appointments (next 7 days)
+    now = timezone.localtime()
     upcoming_appointments = appointments.filter(
         appointment_date__gte=today,
-        appointment_date__lte=today + timedelta(days=7)
-    ).order_by('appointment_date', 'appointment_time')[:10]
+        appointment_date__lte=today + timedelta(days=7),
+        status__in=['pending', 'accepted'],
+    ).filter(Q(appointment_date__gt=today) | Q(appointment_date=today, appointment_time__gte=now.time())).order_by('appointment_date', 'appointment_time')[:10]
     
     # Doctor schedules for today - only show doctors who have appointments today
     doctors_with_appointments = Doctor.objects.filter(
@@ -157,65 +168,9 @@ def appointment_list(request):
         messages.error(request, 'Receptionist profile not found.')
         return redirect('/login/')
     
-    # Mark expired appointments: accepted appointments that have passed their scheduled date and time
-    from datetime import date, datetime
-    # Use system local time for date and time comparisons (appointments are stored in local time)
-    today = date.today()  # This uses local date
-    # Get system local time (not Django's timezone-aware time, since TimeField doesn't have timezone)
-    now_local = datetime.now()  # Uses system's local timezone
-    current_time = now_local.time()  # Get local time for comparison
-    
-    # Find accepted appointments that have expired
-    # An appointment is expired if:
-    # 1. appointment_date < today, OR
-    # 2. appointment_date == today AND appointment_time < current_time
-    accepted_appointments = Appointment.objects.filter(
-        Q(doctor__hospital=receptionist.hospital) | Q(hospital=receptionist.hospital),
-        status='accepted'
-    )
-    
-    # Mark appointments with date < today as expired (bulk update for efficiency)
-    expired_past_date = accepted_appointments.filter(appointment_date__lt=today)
-    expired_past_date.update(status='expired')
-    
-    # For today's accepted appointments, check if time has passed
-    today_accepted = accepted_appointments.filter(appointment_date=today)
-    for appointment in today_accepted:
-        # Mark as expired if the appointment time has passed or is exactly at current time
-        if appointment.appointment_time <= current_time:
-            appointment.status = 'expired'
-            appointment.save(update_fields=['status'])
-    
-    # Mark rejected appointments: pending appointments that have passed their scheduled date and time
-    # IMPORTANT: This ONLY affects appointments with status='pending' (no accept/reject action performed)
-    # If an appointment is still pending when its scheduled date/time has passed, automatically mark as rejected
-    pending_appointments = Appointment.objects.filter(
-        Q(doctor__hospital=receptionist.hospital) | Q(hospital=receptionist.hospital),
-        status='pending'  # Only process appointments that haven't been accepted or rejected yet
-    )
-    
-    # Mark pending appointments with date < today as rejected (bulk update for efficiency)
-    # These are appointments from previous days that were never accepted/rejected
-    rejected_past_date = pending_appointments.filter(appointment_date__lt=today)
-    rejected_past_date.update(status='rejected')
-    
-    # For today's pending appointments, check if scheduled time has passed
-    # Re-query to get fresh pending appointments for today (in case some were updated above)
-    # This ensures we only check appointments that are still pending (no action performed)
-    today_pending_appointments = Appointment.objects.filter(
-        Q(doctor__hospital=receptionist.hospital) | Q(hospital=receptionist.hospital),
-        status='pending',  # Still checking only pending appointments
-        appointment_date=today
-    )
-    
-    for appointment in today_pending_appointments:
-        # Mark as rejected if the appointment time has passed or is exactly at current time
-        # Only pending appointments without any action (accept/reject) will reach here
-        if appointment.appointment_time <= current_time:
-            # Scheduled time has passed without any action, mark as rejected
-            appointment.status = 'rejected'
-            appointment.save(update_fields=['status'])
-    
+    # Opening a list must not expire accepted visits or reject pending requests.
+    # Staff may need to finish a consultation after its scheduled start time.
+
     # Get appointments for the receptionist's hospital (exclude cancelled)
     appointments = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(
         Q(doctor__hospital=receptionist.hospital) | Q(hospital=receptionist.hospital)
@@ -227,9 +182,9 @@ def appointment_list(request):
     if patient_filter:
         try:
             from patient.models import Patient
-            patient = Patient.objects.get(id=patient_filter)
+            patient = Patient.objects.filter(associated_hospitals=receptionist.hospital).get(id=patient_filter)
             appointments = appointments.filter(patient=patient)
-        except Patient.DoesNotExist:
+        except (Patient.DoesNotExist, ValueError, OverflowError):
             messages.error(request, 'Patient not found.')
             return redirect('receptionist:appointments')
     
@@ -241,7 +196,10 @@ def appointment_list(request):
     # Filter by date if provided
     date_filter = request.GET.get('date', '')
     if date_filter:
-        appointments = appointments.filter(appointment_date=date_filter)
+        selected_date = filter_date(date_filter)
+        if selected_date is None:
+            return JsonResponse({'error': 'Enter a valid date in YYYY-MM-DD format.'}, status=400)
+        appointments = appointments.filter(appointment_date=selected_date)
     
     context = {
         'receptionist': receptionist,
@@ -255,6 +213,7 @@ def appointment_list(request):
     return render(request, 'receptionist/appointment_list.html', context)
 
 @receptionist_required
+@require_POST
 def appointment_action(request, appointment_id, action):
     """Accept or reject appointment"""
     try:
@@ -265,7 +224,7 @@ def appointment_action(request, appointment_id, action):
     try:
         # Fetch only if appointment belongs to receptionist's hospital
         appointment = Appointment.objects.get(id=appointment_id, doctor__hospital=receptionist.hospital)
-        print(f"Found appointment: {appointment.id}, status: {appointment.status}")
+        pass  # Sensitive request data is not logged.
     except Appointment.DoesNotExist:
         return JsonResponse({'error': 'Appointment not found for your hospital.'}, status=404)
     
@@ -332,18 +291,22 @@ def doctor_availability(request):
     # Default to today if no date provided
     from datetime import date, timedelta
     if not date_filter:
-        date_filter = date.today().strftime('%Y-%m-%d')
+        date_filter = timezone.localdate().strftime('%Y-%m-%d')
     
-    selected_date = date.fromisoformat(date_filter)
+    selected_date = filter_date(date_filter)
+    if selected_date is None:
+        return JsonResponse({'error': 'Enter a valid date in YYYY-MM-DD format.'}, status=400)
     
     # Validate that the selected date is not in the past
-    today = date.today()
+    today = timezone.localdate()
     if selected_date < today:
         messages.warning(request, 'Cannot view availability for past dates. Showing today\'s availability.')
         date_filter = today.strftime('%Y-%m-%d')
         selected_date = today
     
     if doctor_id:
+        if not doctor_id.isascii() or not doctor_id.isdigit() or len(doctor_id) > 10:
+            return JsonResponse({'error': 'Select a valid doctor.'}, status=400)
         selected_doctor = get_object_or_404(Doctor, id=doctor_id, hospital=receptionist.hospital)
         
         # Debug: Check all appointments for this doctor on this date
@@ -352,15 +315,15 @@ def doctor_availability(request):
             appointment_date=selected_date
         ).exclude(status='cancelled')
         
-        print(f"\n=== DEBUG INFO ===")
-        print(f"Doctor: {selected_doctor.full_name}")
-        print(f"Date: {selected_date}")
-        print(f"Status Filter: {status_filter}")
-        print(f"Total appointments found: {all_appointments.count()}")
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
         
         for apt in all_appointments:
-            print(f"  - {apt.patient.full_name} at {apt.appointment_time} (Status: {apt.status})")
-        print(f"==================\n")
+            pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
         
         # Generate availability data for the selected date
         availability_data = generate_doctor_availability(selected_doctor, selected_date, status_filter)
@@ -421,78 +384,27 @@ def doctor_availability(request):
     return render(request, 'receptionist/doctor_availability.html', context)
 
 def generate_doctor_availability(doctor, selected_date, status_filter):
-    """Generate hourly availability data for a doctor on a specific date"""
-    from datetime import time, datetime, timedelta
-    
-    # Define working hours (9 AM to 6 PM)
-    start_time = time(9, 0)   # 9:00 AM
-    end_time = time(18, 0)     # 6:00 PM
-    
-    # Generate hourly slots
-    availability_slots = []
-    current_time = datetime.combine(selected_date, start_time)
-    end_datetime = datetime.combine(selected_date, end_time)
-    
-    while current_time < end_datetime:
-        slot_time = current_time.time()
-        slot_datetime = current_time
-        next_slot_time = (current_time + timedelta(hours=1)).time()
-        
-        # Check if doctor has appointments in this hour
-        appointments_in_slot = Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=selected_date,
-            appointment_time__hour=slot_time.hour
-        ).exclude(status='cancelled')
-        
-        # Debug: Print appointment details
-        print(f"Checking slot {slot_time} for doctor {doctor.full_name}")
-        print(f"Found {appointments_in_slot.count()} appointments")
-        for apt in appointments_in_slot:
-            print(f"  - Appointment: {apt.patient.full_name} at {apt.appointment_time}")
-        
-        if appointments_in_slot.exists():
-            # Doctor is busy in this slot
-            appointment = appointments_in_slot.first()
-            slot_status = 'busy'
-            slot_class = 'danger'
-            slot_text = f'Busy - {appointment.patient.full_name}'
-            slot_details = {
-                'appointment': appointment,
-                'patient_name': appointment.patient.full_name,
-                'symptoms': appointment.symptoms,
-                'status': appointment.status,
-                'appointment_time': appointment.appointment_time.strftime('%I:%M %p'),
-            }
-            print(f"  -> Slot marked as BUSY")
-        else:
-            # Doctor is available in this slot
-            slot_status = 'available'
-            slot_class = 'success'
-            slot_text = 'Available'
-            slot_details = None
-            print(f"  -> Slot marked as AVAILABLE")
-        
-        # Apply status filter
-        print(f"Filtering: status_filter='{status_filter}', slot_status='{slot_status}'")
-        if status_filter == 'all' or slot_status == status_filter:
-            print(f"  -> Adding slot to results")
-            availability_slots.append({
-                'time': slot_time,
-                'time_display': slot_time.strftime('%I:%M %p'),
-                'time_range': f"{slot_time.strftime('%I:%M %p')} - {next_slot_time.strftime('%I:%M %p')}",
-                'datetime': slot_datetime,
-                'status': slot_status,
-                'class': slot_class,
-                'text': slot_text,
-                'details': slot_details,
-            })
-        else:
-            print(f"  -> Filtering out slot")
-        
-        current_time += timedelta(hours=1)
-    
-    return availability_slots
+    from datetime import datetime, timedelta
+    from appointments.scheduling import OPENING_TIME, CLOSING_TIME, SLOT_MINUTES, INACTIVE_STATUSES
+    appointments = {appointment.appointment_time: appointment for appointment in
+        Appointment.objects.filter(doctor=doctor, appointment_date=selected_date).exclude(status__in=INACTIVE_STATUSES)}
+    current = datetime.combine(selected_date, OPENING_TIME)
+    end = datetime.combine(selected_date, CLOSING_TIME)
+    slots = []
+    while current < end:
+        appointment = appointments.get(current.time())
+        status = 'busy' if appointment else 'available'
+        next_slot = current + timedelta(minutes=SLOT_MINUTES)
+        if status_filter == 'all' or status_filter == status:
+            slots.append({'time': current.time(), 'time_display': current.strftime('%I:%M %p'),
+                'time_range': f"{current.strftime('%I:%M %p')} - {next_slot.strftime('%I:%M %p')}",
+                'datetime': current, 'status': status, 'class': 'danger' if appointment else 'success',
+                'text': 'Busy' if appointment else 'Available',
+                'details': {'appointment': appointment, 'patient_name': appointment.patient.full_name,
+                    'symptoms': appointment.symptoms, 'status': appointment.status,
+                    'appointment_time': current.strftime('%I:%M %p')} if appointment else None})
+        current = next_slot
+    return slots
 
 @receptionist_required
 def doctor_schedule_manage(request):
@@ -528,7 +440,7 @@ def doctor_schedule_manage(request):
         else:
             # Show today's appointments by default
             from datetime import date
-            today = date.today()
+            today = timezone.localdate()
             appointments = appointments.filter(appointment_date=today)
         
         appointments = appointments.order_by('appointment_date', 'appointment_time')
@@ -584,171 +496,25 @@ def receptionist_change_password(request):
 
 @receptionist_required
 def receptionist_book_appointment(request):
-    """Receptionist book appointment view"""
-    try:
-        receptionist = request.user.receptionist
-        if not receptionist:
-            messages.error(request, 'Receptionist profile not found. Please contact administrator.')
-            return redirect('/login/')
-    except Receptionist.DoesNotExist:
-        messages.error(request, 'Receptionist profile not found.')
-        return redirect('receptionist:dashboard')
-    
-    # Get doctors from the same hospital
-    doctors = Doctor.objects.filter(hospital=receptionist.hospital)
-    
-    if request.method == 'POST':
-        form = ReceptionistBookAppointmentForm(request.POST, hospital=receptionist.hospital)
-        if form.is_valid():
-            try:
-                # Create or get patient user
-                patient_data = form.cleaned_data
-                
-                # Check if patient already exists by email or contact number
-                patient_user = None
-                created = False
-                
-                email = patient_data.get('email', '')
-                contact_number = patient_data.get('contact_number', '')
-                
-                # First, try to find by email (if provided)
-                if email:
-                    try:
-                        patient_user = CustomUser.objects.get(email=email)
-                        created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If not found by email and contact number is provided, check by contact number
-                if not patient_user and contact_number:
-                    try:
-                        existing_user = CustomUser.objects.get(contact_number=contact_number)
-                        # If contact number exists but email is different, show error
-                        if email and existing_user.email != email:
-                            messages.error(request, f'A user with contact number {contact_number} already exists with a different email address.')
-                            return render(request, 'receptionist/book_appointment.html', {
-                                'form': form,
-                                'receptionist': receptionist,
-                                'doctors': doctors
-                            })
-                        else:
-                            patient_user = existing_user
-                            created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If no existing user found, create new user
-                if not patient_user:
-                    # Generate username if email not provided
-                    username = email if email else f"patient_{patient_data['patient_name'].replace(' ', '_').lower()}_{contact_number}"
-                    
-                    patient_user = CustomUser.objects.create(
-                        username=username,
-                        email=email if email else None,
-                        full_name=patient_data['patient_name'],
-                        contact_number=contact_number if contact_number else None,
-                        role='patient'
-                    )
-                    created = True
-                
-                if not created:
-                    # Update existing patient information
-                    patient_user.full_name = patient_data['patient_name']
-                    # Only update contact number if it's different and not already used
-                    if patient_user.contact_number != patient_data['contact_number']:
-                        try:
-                            patient_user.contact_number = patient_data['contact_number']
-                            patient_user.save()
-                        except Exception as e:
-                            messages.error(request, f'Contact number {patient_data["contact_number"]} is already in use by another user.')
-                            return render(request, 'receptionist/book_appointment.html', {
-                                'form': form,
-                                'receptionist': receptionist,
-                                'doctors': doctors
-                            })
-                    else:
-                        patient_user.save()
-                
-                # Create patient profile if it doesn't exist
-                from patient.models import Patient
-                patient_profile, profile_created = Patient.objects.get_or_create(
-                    user=patient_user,
-                    defaults={
-                        'full_name': patient_data['patient_name'],
-                        'email': email if email else None,
-                        'contact_number': contact_number if contact_number else None,
-                        'gender': patient_data['gender'],
-                        'dob': patient_data['date_of_birth'],
-                        'date_of_birth': patient_data['date_of_birth'],
-                        'address': patient_data['address'],
-                        'city': patient_data['city'],
-                        'pincode': patient_data['pincode'],
-                        'blood_group': patient_data.get('blood_group', ''),
-                        'emergency_number': patient_data['emergency_number'],
-                        'existing_condition': patient_data.get('existing_condition', ''),
-                        'allergies': patient_data.get('allergies', '')
-                    }
-                )
-                
-                if not profile_created:
-                    # Update existing patient profile
-                    patient_profile.full_name = patient_data['patient_name']
-                    patient_profile.email = email if email else patient_profile.email
-                    patient_profile.contact_number = contact_number if contact_number else patient_profile.contact_number
-                    patient_profile.gender = patient_data['gender']
-                    patient_profile.dob = patient_data['date_of_birth']
-                    patient_profile.date_of_birth = patient_data['date_of_birth']
-                    patient_profile.address = patient_data['address']
-                    patient_profile.city = patient_data['city']
-                    patient_profile.pincode = patient_data['pincode']
-                    patient_profile.blood_group = patient_data.get('blood_group', '')
-                    patient_profile.emergency_number = patient_data['emergency_number']
-                    patient_profile.existing_condition = patient_data.get('existing_condition', '')
-                    patient_profile.allergies = patient_data.get('allergies', '')
-                    
-                    patient_profile.save()
-                
-                # Create appointment using service
-                from appointments.services import create_appointment
-                appointment = create_appointment(
-                    patient=patient_profile,
-                    doctor=patient_data['doctor'],
-                    hospital=receptionist.hospital,
-                    appointment_date=patient_data['appointment_date'],
-                    appointment_time=patient_data['appointment_time'],
-                    symptoms=patient_data.get('symptoms', ''),
-                    payment_mode='offline',
-                    status='pending',
-                    actor=request.user
-                )
-                
-                messages.success(request, f'Appointment booked successfully! Appointment ID: {appointment.id}')
-                return redirect('receptionist:appointments')
-                
-            except Exception as e:
-                error_message = str(e)
-                if 'UNIQUE constraint failed: care_customuser.contact_number' in error_message:
-                    messages.error(request, 'This contact number is already registered with another user. Please use a different contact number.')
-                elif 'UNIQUE constraint failed: care_customuser.email' in error_message:
-                    messages.error(request, 'This email address is already registered. Please use a different email address.')
-                
-                else:
-                    messages.error(request, f'Error booking appointment: {error_message}')
-                
-                return render(request, 'receptionist/book_appointment.html', {
-                    'form': form,
-                    'receptionist': receptionist,
-                    'doctors': doctors
-                })
-    else:
-        form = ReceptionistBookAppointmentForm(hospital=receptionist.hospital)
-    
-    context = {
-        'receptionist': receptionist,
-        'form': form,
-        'doctors': doctors,
-    }
-    return render(request, 'receptionist/book_appointment.html', context)
+    """Create a new walk-in profile and appointment in one transaction."""
+    from .services import book_walkin_patient
+    from django.core.exceptions import ValidationError, PermissionDenied
+    receptionist = request.user.receptionist
+    form = ReceptionistBookAppointmentForm(request.POST or None, hospital=receptionist.hospital)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            appointment = book_walkin_patient(receptionist, form.cleaned_data)
+        except (ValidationError, PermissionDenied) as exc:
+            form.add_error(None, ' '.join(getattr(exc, 'messages', [str(exc)])))
+        except IntegrityError:
+            form.add_error(None, 'These details are already registered. Use Patients to book an existing patient.')
+        else:
+            messages.success(request, f'Appointment requested successfully. Appointment ID: {appointment.pk}')
+            return redirect('receptionist:appointments')
+    return render(request, 'receptionist/book_appointment.html', {
+        'form': form, 'receptionist': receptionist,
+        'doctors': Doctor.objects.filter(hospital=receptionist.hospital, is_active=True),
+    })
 
 
 @receptionist_required
@@ -775,142 +541,23 @@ def receptionist_patient_list(request):
 
 @receptionist_required
 def receptionist_register_patient(request):
-    """Register a new patient by receptionist"""
-    try:
-        receptionist = Receptionist.objects.get(user=request.user)
-    except Receptionist.DoesNotExist:
-        messages.error(request, 'Receptionist profile not linked to this user. Please contact admin.')
-        return redirect('receptionist:login')
-    
+    """Register a new portal patient without updating any existing account."""
     from .patient_forms import ReceptionistPatientRegistrationForm
-    
-    if request.method == 'POST':
-        form = ReceptionistPatientRegistrationForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Create or get patient user
-                    patient_data = form.cleaned_data
-                
-                # Check if patient already exists by email or contact number
-                patient_user = None
-                created = False
-                
-                email = patient_data.get('email', '')
-                contact_number = patient_data.get('contact_number', '')
-                
-                # First, try to find by email (if provided)
-                if email:
-                    try:
-                        patient_user = CustomUser.objects.get(email=email)
-                        created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If not found by email and contact number is provided, check by contact number
-                if not patient_user and contact_number:
-                    try:
-                        existing_user = CustomUser.objects.get(contact_number=contact_number)
-                        # If contact number exists but email is different, show error
-                        if email and existing_user.email != email:
-                            messages.error(request, f'A user with contact number {contact_number} already exists with a different email address.')
-                            return render(request, 'receptionist/register_patient.html', {
-                                'form': form,
-                                'receptionist': receptionist
-                            })
-                        else:
-                            patient_user = existing_user
-                            created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If no existing user found, create new user
-                if not patient_user:
-                    username = patient_data['username']
-                    password = patient_data['password']
-                    full_name = f"{patient_data['first_name']} {patient_data['last_name']}"
-                    
-                    patient_user = CustomUser.objects.create(
-                        username=username,
-                        email=email,
-                        full_name=full_name,
-                        contact_number=contact_number,
-                        role='patient'
-                    )
-                    patient_user.set_password(password)
-                    patient_user.save()
-                    created = True
-                
-                if not created:
-                    # Update existing patient information
-                    patient_user.full_name = patient_data['full_name']
-                    # Only update contact number if it's different and not already used
-                    if patient_user.contact_number != patient_data['contact_number']:
-                        try:
-                            patient_user.contact_number = patient_data['contact_number']
-                            patient_user.save()
-                        except Exception as e:
-                            messages.error(request, f'Contact number {patient_data["contact_number"]} is already in use by another user.')
-                            return render(request, 'receptionist/register_patient.html', {
-                                'form': form,
-                                'receptionist': receptionist
-                            })
-                    else:
-                        patient_user.save()
-                
-                # Create patient profile if it doesn't exist
-                from patient.models import Patient
-                full_name = f"{patient_data['first_name']} {patient_data['last_name']}"
-                patient_profile, profile_created = Patient.objects.get_or_create(
-                    user=patient_user,
-                    defaults={
-                        'full_name': full_name,
-                        'gender': patient_data['gender'],
-                        'date_of_birth': patient_data['dob'],
-                        'address': patient_data['address'],
-                        'city': patient_data['city'],
-                        'pincode': patient_data['pincode'],
-                    }
-                )
-                
-                if not profile_created:
-                    # Update existing patient profile
-                    full_name = f"{patient_data['first_name']} {patient_data['last_name']}"
-                    patient_profile.full_name = full_name
-                    patient_profile.gender = patient_data['gender']
-                    patient_profile.date_of_birth = patient_data['dob']
-                    patient_profile.address = patient_data['address']
-                    patient_profile.city = patient_data['city']
-                    patient_profile.pincode = patient_data['pincode']
-                    patient_profile.save()
-                
-                # Associate the patient with the receptionist's hospital (Tenant Isolation)
-                patient_profile.associated_hospitals.add(receptionist.hospital)
-                
-                messages.success(request, f'Patient {patient_profile.full_name} registered successfully!')
-                return redirect('receptionist:patient_list')
-                
-            except Exception as e:
-                error_message = str(e)
-                if 'UNIQUE constraint failed: care_customuser.contact_number' in error_message:
-                    messages.error(request, 'This contact number is already registered with another user. Please use a different contact number.')
-                elif 'UNIQUE constraint failed: care_customuser.email' in error_message:
-                    messages.error(request, 'This email address is already registered. Please use a different email address.')
-                else:
-                    messages.error(request, f'Error registering patient: {error_message}')
-                
-                return render(request, 'receptionist/register_patient.html', {
-                    'form': form,
-                    'receptionist': receptionist
-                })
-    else:
-        form = ReceptionistPatientRegistrationForm()
-    
-    context = {
-        'receptionist': receptionist,
-        'form': form,
-    }
-    return render(request, 'receptionist/register_patient.html', context)
+    from .services import register_patient
+    from django.core.exceptions import ValidationError, PermissionDenied
+    receptionist = request.user.receptionist
+    form = ReceptionistPatientRegistrationForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            patient = register_patient(receptionist, form.cleaned_data)
+        except (ValidationError, PermissionDenied) as exc:
+            form.add_error(None, ' '.join(getattr(exc, 'messages', [str(exc)])))
+        except IntegrityError:
+            form.add_error(None, 'An account already uses these details. No patient was created.')
+        else:
+            messages.success(request, f'Patient {patient.full_name} registered successfully!')
+            return redirect('receptionist:patient_list')
+    return render(request, 'receptionist/register_patient.html', {'form': form, 'receptionist': receptionist})
 
 
 @receptionist_required
@@ -951,7 +598,7 @@ def receptionist_book_appointment_for_patient(request, patient_id):
                     appointment_date=form.cleaned_data['appointment_date'],
                     appointment_time=form.cleaned_data['appointment_time'],
                     symptoms=form.cleaned_data.get('symptoms', ''),
-                    payment_mode='offline',
+                    payment_mode='cash',
                     status='pending',
                     actor=request.user
                 )

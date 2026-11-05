@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+from django.utils import timezone
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -46,7 +47,7 @@ class NurseModuleTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor_a,
             patient=self.patient_a,
             hospital=self.hospital_a,
-            appointment_date=date.today(),
+            appointment_date=timezone.localdate() + timedelta(days=1),
             appointment_time="09:00:00",
             status="accepted"
         )
@@ -136,6 +137,14 @@ class NurseModuleTests(TestCase, JeevanTestClientMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertTrue(len(data) >= 2)
+        self.assertEqual(len(data), 1)
+        self.assertNotIn('Nurse B', [item['full_name'] for item in data])
         self.assertEqual(data[0]['full_name'], "Nurse A")
         self.assertEqual(data[0]['hospital'], "Hospital A")
+
+    def test_associated_patient_stays_findable_after_visit_expires(self):
+        Appointment.objects.filter(pk=self.appointment_a.pk).update(status='expired')
+        self.client.force_login(self.nurse_user_a)
+        response = self.client.get(reverse('nurse:dashboard'))
+        self.assertContains(response, self.patient_a.full_name)
+        self.assertEqual(self.client.get(reverse('nurse:patient_detail', args=[self.patient_a.pk])).status_code, 200)

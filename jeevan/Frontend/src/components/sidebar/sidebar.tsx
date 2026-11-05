@@ -60,11 +60,11 @@ const Sidebar = () => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   }, []);
 
-  const toggleSubsidebar = useCallback((subitem: any) => {
+  const toggleSubsidebar = useCallback((subitem: string) => {
     setSubsidebar((prev) => (subitem === prev ? "" : subitem));
   }, []);
 
-  const handleClick = useCallback((label: any) => {
+  const handleClick = useCallback((label: string) => {
     handleMenuToggle(label);
   }, [handleMenuToggle]);
 
@@ -102,7 +102,7 @@ const Sidebar = () => {
   }, [dispatch]);
 
   const handleLayoutClick = useCallback((layout: string) => {
-    const layoutSettings: any = {
+    const layoutSettings: Record<string, string> = {
       "data-layout": "default",
       dir: "ltr",
     };
@@ -141,7 +141,7 @@ const Sidebar = () => {
     dispatch(setMobileSidebar(!mobileSidebar));
   }, [dispatch, mobileSidebar]);
   useEffect(() => {
-    const rootElement: any = document.documentElement;
+    const rootElement = document.documentElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
       rootElement.setAttribute(key, value);
     });
@@ -154,17 +154,7 @@ const Sidebar = () => {
     } else {
       rootElement.classList.remove("mini-sidebar");
     }
-  }, [
-    themeSettings["data-bs-theme"],
-    themeSettings["dir"],
-    themeSettings["data-layout"],
-    themeSettings["data-sidebar"],
-    themeSettings["data-color"],
-    themeSettings["data-topbar"],
-    themeSettings["data-size"],
-    themeSettings["data-width"],
-    themeSettings["data-sidebarbg"]
-  ]); // Depend on all relevant theme settings
+  }, [themeSettings]); // Depend on all relevant theme settings
 
   return (
     <>

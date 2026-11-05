@@ -7,7 +7,7 @@ import { publicRoutes, authRoutes } from "./router.link";
 type RouteWithMeta = {
   path: string;
   element: React.ReactElement;
-  route: (_props: any) => React.ReactElement | null;
+
   meta_title?: string;
 };
 

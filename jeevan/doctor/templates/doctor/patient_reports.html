@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Medical Reports - Patient Management System</title>
+    <title>Patient Medical Reports - Jeevan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -269,6 +269,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Modern Header -->
@@ -280,7 +281,7 @@
                         <div class="logo-container">
                             <i class="fas fa-heart"></i>
                         </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -503,7 +504,7 @@
                         
                         {% if record.report_file %}
                         <div class="report-actions">
-                            <a href="{{ record.report_file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                            <a href="{% url 'records:download_file' record.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-primary">
                                 <i class="fas fa-file-alt me-1"></i>View Report File
                             </a>
                         </div>

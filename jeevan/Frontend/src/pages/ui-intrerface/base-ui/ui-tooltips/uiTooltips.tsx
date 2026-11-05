@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 const UiTooltips = () => {
   useEffect(() => {
-    // @ts-ignore
+
     if (window.bootstrap) {
       // Clean up any existing tooltips
       const oldTooltips = document.querySelectorAll('.tooltip');
@@ -13,7 +13,7 @@ const UiTooltips = () => {
       // Initialize new tooltips
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       const tooltipInstances = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        // @ts-ignore
+
         return new window.bootstrap.Tooltip(tooltipTriggerEl);
       });
       // Cleanup on unmount

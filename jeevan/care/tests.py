@@ -171,6 +171,21 @@ class CareCoordinatorTests(TestCase, JeevanTestClientMixin):
             self.assertIn(f"Exported patient IDs: ['{self.patient_a.id}']", kwargs.get('details'))
             self.assertIn(f"Excluded patient IDs: ['{self.patient_b.id}']", kwargs.get('details'))
 
+    def test_inactive_coordinator_session_cannot_read_or_export(self):
+        self.client.force_login(self.coord_user)
+        self.coord.is_active = False
+        self.coord.save(update_fields=['is_active'])
+        self.assertEqual(self.client.get(reverse('coordinator_dashboard')).status_code, 403)
+        self.assertEqual(self.client.post(reverse('export_patient_reports_zip'),
+            {'patient_ids': [self.patient_a.pk]}).status_code, 403)
+
+    def test_export_rejects_malformed_identifiers(self):
+        self.client.force_login(self.coord_user)
+        for value in ('abc', '-1', '99999999999999999999999'):
+            with self.subTest(value=value):
+                response = self.client.post(reverse('export_patient_reports_zip'), {'patient_ids': [value]})
+                self.assertEqual(response.status_code, 400)
+
 
 class AdminDashboardTests(TestCase, JeevanTestClientMixin):
     def setUp(self):

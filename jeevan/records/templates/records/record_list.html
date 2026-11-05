@@ -1,14 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Medical Records</title>
-</head>
-<body>
-    <h1>Medical Records for {{ patient.full_name }}</h1>
-    <ul>
-    {% for record in records %}
-        <li>{{ record.summary }} - {{ record.diagnosis }}</li>
-    {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'records/base.html' %}
+{% block content %}
+<div class="records-heading"><h1>Medical records</h1><p>Records for {{ patient.full_name }}</p></div>
+{% for record in records %}
+<article class="records-card">
+<p class="records-meta">{{ record.created_at|date:"M j, Y" }} · {% if record.doctor %}Dr. {{ record.doctor.full_name }}{% else %}Care team{% endif %}</p>
+<h2>{{ record.diagnosis|default:"Clinical record"|truncatewords:15 }}</h2>
+<p>{{ record.summary|truncatewords:35 }}</p>
+<div class="records-actions"><a class="records-link primary" href="{% url 'records:record_detail' record.id %}">View record</a>{% if record.report_file %}<a class="records-link" href="{% url 'records:download_file' record.id %}">Download attachment</a>{% endif %}</div>
+</article>
+{% empty %}<section class="records-card records-empty"><h2>No medical records yet</h2><p>Records created by your care team will appear here.</p></section>{% endfor %}
+{% if request.user.role == 'patient' %}<a class="records-link" href="{% url 'patient:document_list' %}">Your uploaded documents</a>{% endif %}
+{% endblock %}

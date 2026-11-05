@@ -14,9 +14,11 @@ urlpatterns = [
     path('dashboard/', views.patient_dashboard, name='patient_dashboard'),
     path('welcomePatient/', views.profile_dashboard, name='profile_dashboard'),
     path('profile/', views.patient_profile, name='patient_profile'),
+    path('medical-records/', views.patient_medical_records, name='medical_records'),
     path('change-password/', views.change_password, name='change_password'),
     
     # API Endpoints
+    path('api/list/', views.patient_api_list, name='patient_api_list'),
     path('api/dashboard-data/', views.dashboard_data, name='dashboard_data'),
     path('api/upload-report/', views.upload_report, name='upload_report'),
     

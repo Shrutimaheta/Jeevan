@@ -1,0 +1,21 @@
+{
+    email {$ACME_EMAIL}
+}
+{$JEEVAN_DOMAIN} {
+    encode zstd gzip
+    request_body {
+        max_size 12MB
+    }
+    @private path /private_media /private_media/* /private-media /private-media/*
+    respond @private 404
+    handle_path /media/* {
+        root * /srv/media
+        header X-Content-Type-Options nosniff
+        header X-Robots-Tag "noindex, nofollow"
+        file_server
+    }
+    handle {
+        reverse_proxy web:8000
+    }
+    # Access logs are intentionally disabled: clinical paths can contain identifiers.
+}

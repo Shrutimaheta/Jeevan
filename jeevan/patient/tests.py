@@ -263,7 +263,7 @@ class PatientSecurityTests(TestCase):
         resp = client.get(reverse('patient:document_download', args=[document.id]))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp['Content-Type'], 'application/pdf')
-        self.assertIn(b'%PDF', resp.content)
+        self.assertIn(b'%PDF', b''.join(resp.streaming_content))
         
         # 3. Other Patient denied access
         client.force_login(self.other_user)
@@ -284,6 +284,7 @@ class PatientSecurityTests(TestCase):
         resp = client.get(reverse('patient:document_download', args=[document.id]))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp['Content-Type'], 'application/pdf')
+        b''.join(resp.streaming_content)
 
     def test_secure_password_reset_flow(self):
         client = Client()
@@ -311,7 +312,9 @@ class PatientSecurityTests(TestCase):
             'recovery_method': 'email',
             'email': 'pat1@example.com'
         })
-        self.assertEqual(resp_throttle.status_code, 200)
+        self.assertEqual(resp_throttle.status_code, 302)
+        self.assertEqual(resp.url, resp_dummy.url)
+        self.assertEqual(resp.url, resp_throttle.url)
         
         # 4. Test OTP attempts limit
         session = client.session

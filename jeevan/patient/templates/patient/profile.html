@@ -378,6 +378,7 @@
             100% { transform: rotate(360deg); }
     }
 </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body class="min-h-screen bg-hrm-bg overflow-x-hidden">
 
@@ -390,7 +391,7 @@
                         <div class="logo-container">
                             <i class="fas fa-heartbeat"></i>
             </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                     </a>
                     </div>
                 <div class="col-md-6">
@@ -400,10 +401,9 @@
                     </div>
                 <div class="col-md-3">
                     <div class="d-flex align-items-center justify-content-end gap-3">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                </div>
+                        <a class="notification-bell" href="{% url 'patient:consent_requests' %}" aria-label="Review consent requests">
+                            <i class="fas fa-bell" aria-hidden="true"></i>
+                        </a>
                         <div class="dropdown">
                             <button class="user-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                 {% if patient.profile_photo %}
@@ -417,9 +417,9 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'patient:patient_dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-question-circle me-2"></i>Help & Support</a></li>
+                                <li><a class="dropdown-item" href="{% url 'patient:patient_profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'patient:change_password' %}"><i class="fas fa-cog me-2"></i>Change Password</a></li>
+                                <li><a class="dropdown-item" href="{% url 'patient:help_support' %}"><i class="fas fa-question-circle me-2"></i>Help & Support</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="{% url 'patient:patient_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                             </ul>
@@ -493,11 +493,11 @@
                                 </div>
                                 <div>
                                     <p class="text-gray-600 text-sm">Contact Number</p>
-                                    <p class="font-semibold text-gray-900 text-base">{{ patient.contact_number|default:"Not provided" }}</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ patient.user.contact_number|default:"Not provided" }}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-600 text-sm">Email Address</p>
-                                    <p class="font-semibold text-gray-900 text-base">{{ patient.email|default:"Not provided" }}</p>
+                                    <p class="font-semibold text-gray-900 text-base">{{ patient.user.email|default:"Not provided" }}</p>
                                 </div>
                                 
                         </div>
@@ -510,6 +510,12 @@
                     <!-- Patient Profile Tab -->
                     <div id="profile-tab" class="tab-panel p-8">
                     <form method="post" enctype="multipart/form-data">
+                        {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <p>Please correct the following fields:</p>
+                            {{ form.errors }}
+                        </div>
+                        {% endif %}
                         {% csrf_token %}
                             
                             <!-- Information Blocks Grid -->
@@ -542,9 +548,8 @@
                                         </select>
             </div>
                                     <div>
-                                        <p class="text-base font-medium text-gray-700">Date of Birth</p>
-                                        <input type="date" name="{{ form.dob.name }}" value="{{ form.dob.value|default:'' }}" 
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
+                                        <label for="{{ form.date_of_birth.id_for_label }}" class="text-base font-medium text-gray-700">Date of Birth</label>
+                                        {{ form.date_of_birth }}
         </div>
                 </div>
                                 <div>
@@ -678,9 +683,9 @@
                             <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Medical History</h3>
                             <p class="text-gray-600 mb-6">View your complete medical history and records</p>
-                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                            <a href="{% url 'records:record_list' patient.id %}" class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
                                 View Medical Records
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -690,13 +695,14 @@
                             <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Appointments</h3>
                             <p class="text-gray-600 mb-6">Manage your upcoming and past appointments</p>
-                            <button class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3" onclick="bookAppointment()">
+                            <a href="{% url 'appointments:appointment_create' %}" class="group bg-white rounded-2xl shadow-soft hover:shadow-elev transition p-4 flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">📅</div>
                                 <div class="text-left">
                                     <div class="font-semibold text-slate-800">Book Appointment</div>
                                     <div class="text-xs text-slate-500">Find specialist & slot</div>
                                 </div>
-                            </button>
+                            </a>
+<a class="inline-block mt-4 text-primary-blue" href="{% url 'appointments:appointment_list' %}">View all appointments</a>
                 </div>
             </div>
 
@@ -706,9 +712,9 @@
                             <i class="fas fa-prescription-bottle-alt text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Prescriptions</h3>
                             <p class="text-gray-600 mb-6">View and manage your prescriptions</p>
-                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                            <a href="{% url 'patient:prescription_list' %}" class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
                                 View Prescriptions
-                            </button>
+                            </a>
                 </div>
                     </div>
                     
@@ -718,9 +724,9 @@
                             <i class="fas fa-file-medical text-6xl text-gray-300 mb-4"></i>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Reports & Documents</h3>
                             <p class="text-gray-600 mb-6">Access your medical reports and documents</p>
-                            <button class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
+                            <a href="{% url 'patient:document_upload' %}" class="px-6 py-2 bg-primary-blue hover:bg-primary-dark-blue text-white rounded-lg transition-colors duration-200">
                                 Upload Documents
-                            </button>
+                            </a>
                         </div>
                         </div>
                     </div>
@@ -750,79 +756,6 @@
         {% endfor %}
     </div>
 {% endif %}
-
-    <!-- Hospital Selection Modal -->
-    <div class="modal fade" id="hospitalSelectionModal" tabindex="-1" aria-labelledby="hospitalSelectionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="hospitalSelectionModalLabel">📅 Book Your Appointment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Selection Method Tabs -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="btn-group w-100" role="group" aria-label="Selection method">
-                                <button type="button" class="btn btn-outline-primary active" id="hospitalTab" onclick="switchSelectionMethod('hospital')">
-                                    🏥 Browse by Hospital
-                                </button>
-                                <button type="button" class="btn btn-outline-primary" id="specializationTab" onclick="switchSelectionMethod('specialization')">
-                                    🩺 Browse by Specialization
-                                </button>
-                                <button type="button" class="btn btn-outline-primary" id="locationTab" onclick="switchSelectionMethod('location')">
-                                    📍 Browse by Location
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Hospital Selection Content -->
-                    <div id="hospitalSelectionContent" class="selection-content">
-                        <div class="row g-4">
-                            <!-- Hospitals will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Specialization Selection Content -->
-                    <div id="specializationSelectionContent" class="selection-content" style="display: none;">
-                        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
-                            <!-- Specializations will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Location Selection Content -->
-                    <div id="locationSelectionContent" class="selection-content" style="display: none;">
-                        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
-                            <!-- Locations will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hospital Details Modal -->
-    <div class="modal fade" id="hospitalDetailsModal" tabindex="-1" aria-labelledby="hospitalDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="hospitalDetailsModalLabel">Hospital Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="hospitalDetailsContent">
-                    <!-- Hospital details will be loaded here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="bookAppointmentBtn">Book Appointment</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -859,14 +792,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             });
-
-            // Notification functionality
-            const notificationBell = document.querySelector('.notification-bell');
-            if (notificationBell) {
-                notificationBell.addEventListener('click', function() {
-                    showNotification('You have 3 new notifications', 'info');
-                });
-            }
 
             // Photo upload functionality
     const photoInput = document.getElementById('{{ form.profile_photo.id_for_label }}');
@@ -916,7 +841,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     photoUploadBtn.disabled = false;
                     
                             // Auto-save the photo by submitting the form
-                            savePhotoToDatabase();
+                            showNotification('Photo selected. Click Save Changes to upload it.', 'info');
                 };
                 reader.readAsDataURL(file);
             }
@@ -934,51 +859,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     .find(row => row.startsWith('csrftoken='))
                     ?.split('=')[1];
                 return cookieValue;
-            }
-
-            // Function to save photo to database
-            function savePhotoToDatabase() {
-                const form = document.querySelector('form');
-                const formData = new FormData(form);
-                
-                // Get CSRF token
-                const csrfToken = getCSRFToken();
-                if (!csrfToken) {
-                    showNotification('CSRF token not found. Please refresh the page.', 'error');
-                    return;
-                }
-                
-                // Show saving notification
-                showNotification('Saving photo...', 'info');
-                
-                // Dispatch custom event to indicate this is a photo upload
-                const photoUploadEvent = new CustomEvent('submit', {
-                    detail: { isPhotoUpload: true }
-                });
-                form.dispatchEvent(photoUploadEvent);
-                
-                fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showNotification('Photo saved successfully!', 'success');
-                        // Reload the page to show the updated photo
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else {
-                        showNotification('Failed to save photo. Please try again.', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error saving photo:', error);
-                    showNotification('Error saving photo. Please try again.', 'error');
-                });
             }
 
             // Enhanced form validation
@@ -1047,61 +927,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Setup functional buttons for all tabs
         function setupFunctionalButtons() {
-            // Medical History Tab Button
-            const medicalHistoryBtn = document.querySelector('#medical-history-tab button');
-            if (medicalHistoryBtn) {
-                medicalHistoryBtn.addEventListener('click', function() {
-                    showNotification('Redirecting to Medical Records...', 'info');
-                    setTimeout(() => {
-                        // Redirect to medical records page or show modal
-                        window.location.href = '/patient/medical-records/';
-                    }, 1000);
-                });
-            }
-
-            // Appointments Tab Button - Now opens modal instead of redirecting
-            const appointmentsBtn = document.querySelector('#appointments-tab button');
-            if (appointmentsBtn) {
-                appointmentsBtn.addEventListener('click', function() {
-                    // The modal will be opened by Bootstrap's data-bs-toggle attribute
-                    showNotification('Opening Appointment Booking...', 'info');
-                });
-            }
-
-            // Prescriptions Tab Button
-            const prescriptionsBtn = document.querySelector('#prescriptions-tab button');
-            if (prescriptionsBtn) {
-                prescriptionsBtn.addEventListener('click', function() {
-                    showNotification('Loading Prescriptions...', 'info');
-                    setTimeout(() => {
-                        window.location.href = '/patient/prescriptions/';
-                    }, 1000);
-                });
-            }
-
-            // Reports & Documents Tab Button
-            const reportsBtn = document.querySelector('#reports-tab button');
-            if (reportsBtn) {
-                reportsBtn.addEventListener('click', function() {
-                    showNotification('Opening Document Upload...', 'info');
-                    setTimeout(() => {
-                        window.location.href = '/patient/documents/';
-                    }, 1000);
-                });
-            }
-
-            // Cancel Button
-            const cancelBtn = document.querySelector('a[href*="patient_dashboard"]');
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    showNotification('Returning to Dashboard...', 'info');
-                    setTimeout(() => {
-                        window.location.href = this.href;
-                    }, 1000);
-                });
-            }
-
             // Save Changes Button
             const saveBtn = document.querySelector('button[type="submit"]');
             if (saveBtn) {
@@ -1127,27 +952,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            // Edit Icons functionality
-            const editIcons = document.querySelectorAll('.edit-icon button');
-            editIcons.forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const card = this.closest('.hrm-card');
-                    const inputs = card.querySelectorAll('input, select, textarea');
-                    
-                    // Toggle edit mode
-                    inputs.forEach(input => {
-                        if (input.disabled) {
-                            input.disabled = false;
-                            input.classList.add('border-primary-blue');
-                        } else {
-                            input.disabled = true;
-                            input.classList.remove('border-primary-blue');
-                        }
-                    });
-
-                    // Show feedback
-                    const cardTitle = card.querySelector('h3').textContent;
-                    showNotification(`${cardTitle} edit mode toggled`, 'info');
+            // Edit controls focus their section without disabling fields needed for save.
+            document.querySelectorAll('.edit-icon button').forEach(icon => {
+                const card = icon.closest('.hrm-card');
+                const title = card?.querySelector('h3')?.textContent || 'profile section';
+                icon.setAttribute('aria-label', `Edit ${title}`);
+                icon.addEventListener('click', () => {
+                    const first = Array.from(card.querySelectorAll('input, select, textarea'))
+                        .find(input => input.type !== 'hidden' && input.type !== 'file');
+                    if (first) first.focus();
                 });
             });
         }
@@ -1251,558 +1064,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Notification System (from profile_dashboard.html)
-const NotificationSystem = {
-    // Show toast notification
-    showToast: (message, type = 'info') => {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'polite');
-        toast.textContent = message;
-        
-        // Style the toast
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            max-width: 300px;
-            word-wrap: break-word;
-        `;
-        
-        // Set background color based on type
-        switch(type) {
-            case 'success':
-                toast.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                break;
-            case 'error':
-                toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-                break;
-            case 'warning':
-                toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-                break;
-            case 'info':
-            default:
-                toast.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
-                break;
-        }
-        
-        // Add to DOM
-        document.body.appendChild(toast);
-        
-        // Animate in
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 300);
-        }, 3000);
-    }
-};
-
-// Hospital data from Django template (same as profile_dashboard.html)
-const hospitals = [
-    {% for hospital in hospitals %}
-    {
-        id: {{ hospital.id }},
-        name: "{{ hospital.name }}",
-        location: "{{ hospital.location }}",
-        email: "{{ hospital.email }}",
-        contact_no: "{{ hospital.contact_no }}",
-        registration_number: "{{ hospital.registration_number }}",
-        logo: "{% if hospital.logo %}{{ hospital.logo.url }}{% else %}{% endif %}",
-        specializations: [
-            {% for spec in hospital.specialization.all %}
-            "{{ spec.sname }}"{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        doctors: [
-            {% for doctor in hospital.doctor_set.all %}
-            {
-                id: {{ doctor.id }},
-                name: "{{ doctor.full_name }}",
-                contact: "{{ doctor.contact_number }}",
-                gender: "{{ doctor.gender }}",
-                specializations: [
-                    {% for spec in doctor.specialization.all %}
-                    "{{ spec.sname }}"{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ]
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ]
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-];
-
-// Debug: Log hospitals data
-console.log('Hospitals loaded:', hospitals);
-
-// Quick Actions Functions (exact copy from profile_dashboard.html)
-function bookAppointment() {
-    console.log('bookAppointment called');
-    NotificationSystem.showToast('Opening hospital selection...', 'info');
-    setTimeout(() => {
-        showHospitalSelection();
-    }, 500);
-}
-
-function showHospitalSelection() {
-    console.log('showHospitalSelection called');
-    NotificationSystem.showToast('Opening hospital selection...', 'info');
-    setTimeout(() => {
-        const modal = new bootstrap.Modal(document.getElementById('hospitalSelectionModal'));
-        
-        // Load hospital, specialization, and location content
-        loadHospitalContent();
-        loadSpecializationContent();
-        loadLocationContent();
-        
-        // Show hospital content by default
-        switchSelectionMethod('hospital');
-        
-        modal.show();
-    }, 500);
-}
-
-function switchSelectionMethod(method) {
-    // Update tab buttons
-    document.getElementById('hospitalTab').classList.toggle('active', method === 'hospital');
-    document.getElementById('specializationTab').classList.toggle('active', method === 'specialization');
-    document.getElementById('locationTab').classList.toggle('active', method === 'location');
-    
-    // Show/hide content
-    document.getElementById('hospitalSelectionContent').style.display = method === 'hospital' ? 'block' : 'none';
-    document.getElementById('specializationSelectionContent').style.display = method === 'specialization' ? 'block' : 'none';
-    document.getElementById('locationSelectionContent').style.display = method === 'location' ? 'block' : 'none';
-    
-    // Load content if needed
-    if (method === 'location') {
-        loadLocationContent();
-    }
-}
-
-function loadHospitalContent() {
-    console.log('loadHospitalContent called, hospitals:', hospitals);
-    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
-    
-    if (hospitals.length > 0) {
-        const hospitalsHtml = hospitals.map(hospital => `
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start mb-3">
-                            <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
-                                🏥
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
-                                <p class="card-text text-muted small mb-2">${hospital.location}</p>
-                                <p class="card-text text-muted small mb-0">
-                                    <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="hospital-specializations mb-3">
-                            ${hospital.specializations.slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
-                            ${hospital.specializations.length > 2 ? `<span class="badge bg-secondary" style="font-size: 0.7rem;">+${hospital.specializations.length - 2}</span>` : ''}
-                        </div>
-                        <div class="hospital-contact mb-3">
-                            <small class="text-muted">
-                                <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
-                            </small>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">${hospital.doctors.length} doctors available</small>
-                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
-                                Book Appointment
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        hospitalsList.innerHTML = hospitalsHtml;
-    } else {
-        hospitalsList.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏥</div>
-                <h5 class="text-muted">No hospitals available</h5>
-                <p class="text-muted">Please check back later or contact support.</p>
-            </div>
-        `;
-    }
-}
-
-function loadSpecializationContent() {
-    const specializationsList = document.querySelector('#specializationSelectionContent .row');
-    
-    // Get all unique specializations
-    const allSpecializations = new Set();
-    hospitals.forEach(hospital => {
-        hospital.specializations.forEach(spec => allSpecializations.add(spec));
-    });
-    
-    const specializationsArray = Array.from(allSpecializations);
-    
-    if (specializationsArray.length > 0) {
-        const specializationsHtml = specializationsArray.map(specialization => `
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 specialization-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectSpecialization('${specialization}')">
-                    <div class="card-body text-center">
-                        <div class="specialization-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
-                            🩺
-                        </div>
-                        <h6 class="card-title mb-2" style="font-weight: 600; color: #1f2937;">${specialization}</h6>
-                        <p class="card-text text-muted small mb-3">Find specialists in this field</p>
-                        <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); selectSpecialization('${specialization}')">
-                            Find Specialists
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        specializationsList.innerHTML = specializationsHtml;
-    } else {
-        specializationsList.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🩺</div>
-                <h5 class="text-muted">No specializations available</h5>
-                <p class="text-muted">Please check back later or contact support.</p>
-            </div>
-        `;
-    }
-}
-
-function loadLocationContent() {
-    const locationsList = document.querySelector('#locationSelectionContent .row');
-    
-    // Get unique locations from hospitals
-    const uniqueLocations = [...new Set(hospitals.map(hospital => hospital.location))].filter(location => location);
-    
-    if (uniqueLocations.length > 0) {
-        const locationsHtml = uniqueLocations.map(location => {
-            // Count hospitals in this location
-            const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
-            
-            return `
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100 location-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectLocation('${location}')">
-                        <div class="card-body text-center">
-                            <div class="location-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
-                                📍
-                            </div>
-                            <h6 class="card-title mb-2" style="font-weight: 600; color: #1f2937;">${location}</h6>
-                            <p class="card-text text-muted small mb-3">${hospitalsInLocation.length} hospital${hospitalsInLocation.length !== 1 ? 's' : ''} available</p>
-                            <div class="location-specializations mb-3">
-                                ${hospitalsInLocation.slice(0, 3).map(hospital => 
-                                    hospital.specializations.slice(0, 2).map(spec => 
-                                        `<span class="badge bg-light text-dark me-1" style="font-size: 0.6rem;">${spec}</span>`
-                                    ).join('')
-                                ).join('')}
-                                ${hospitalsInLocation.length > 3 ? `<span class="badge bg-secondary" style="font-size: 0.6rem;">+more</span>` : ''}
-                            </div>
-                            <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); selectLocation('${location}')">
-                                View Hospitals
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        locationsList.innerHTML = locationsHtml;
-    } else {
-        locationsList.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📍</div>
-                <h5 class="text-muted">No locations available</h5>
-                <p class="text-muted">Please check back later or contact support.</p>
-            </div>
-        `;
-    }
-}
-
-function selectLocation(location) {
-    // Filter hospitals in this location
-    const hospitalsInLocation = hospitals.filter(hospital => hospital.location === location);
-    
-    if (hospitalsInLocation.length === 0) {
-        NotificationSystem.showToast('No hospitals found in this location', 'info');
-        return;
-    }
-    
-    // Show hospitals in this location
-    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
-    const hospitalsHtml = hospitalsInLocation.map(hospital => `
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
-                <div class="card-body">
-                    <div class="d-flex align-items-start mb-3">
-                        <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
-                            🏥
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
-                            <p class="card-text text-muted small mb-2">${hospital.location}</p>
-                            <p class="card-text text-muted small mb-0">
-                                <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="hospital-specializations mb-3">
-                        <span class="badge bg-warning me-1" style="font-size: 0.7rem;">${location}</span>
-                        ${hospital.specializations.slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
-                    </div>
-                    <div class="hospital-contact mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">${hospital.doctors.length} doctors available</small>
-                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
-                            Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    hospitalsList.innerHTML = hospitalsHtml;
-    
-    // Switch to hospital view
-    switchSelectionMethod('hospital');
-}
-
-function selectHospital(hospitalId) {
-    const hospital = hospitals.find(h => h.id === hospitalId);
-    if (!hospital) return;
-    
-    // Redirect to hospital doctors page
-    NotificationSystem.showToast(`Loading doctors at ${hospital.name}...`, 'info');
-    setTimeout(() => {
-        window.location.href = `/hospitals/${hospitalId}/doctors/`;
-    }, 500);
-}
-
-function selectSpecialization(specialization) {
-    // Filter hospitals that have this specialization
-    const hospitalsWithSpecialization = hospitals.filter(hospital => 
-        hospital.specializations.includes(specialization)
-    );
-    
-    if (hospitalsWithSpecialization.length === 0) {
-        NotificationSystem.showToast('No hospitals found for this specialization', 'info');
-        return;
-    }
-    
-    // Show hospitals with this specialization
-    const hospitalsList = document.querySelector('#hospitalSelectionContent .row');
-    const hospitalsHtml = hospitalsWithSpecialization.map(hospital => `
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 hospital-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectHospital(${hospital.id})">
-                <div class="card-body">
-                    <div class="d-flex align-items-start mb-3">
-                        <div class="hospital-icon me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
-                            🏥
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1" style="font-weight: 600; color: #1f2937;">${hospital.name}</h6>
-                            <p class="card-text text-muted small mb-2">${hospital.location}</p>
-                            <p class="card-text text-muted small mb-0">
-                                <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="hospital-specializations mb-3">
-                        <span class="badge bg-success me-1" style="font-size: 0.7rem;">${specialization}</span>
-                        ${hospital.specializations.filter(spec => spec !== specialization).slice(0, 2).map(spec => `<span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">${spec}</span>`).join('')}
-                    </div>
-                    <div class="hospital-contact mb-3">
-                        <small class="text-muted">
-                            <i class="fas fa-phone me-1"></i> ${hospital.contact_no}
-                        </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">${hospital.doctors.length} doctors available</small>
-                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selectHospital(${hospital.id})">
-                            Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    hospitalsList.innerHTML = hospitalsHtml;
-    
-    // Switch to hospital view
-    switchSelectionMethod('hospital');
-}
-
-function showHospitalDetails(hospitalId) {
-    const hospital = hospitals.find(h => h.id === hospitalId);
-    if (!hospital) return;
-
-    const modal = new bootstrap.Modal(document.getElementById('hospitalDetailsModal'));
-    const content = document.getElementById('hospitalDetailsContent');
-    const bookBtn = document.getElementById('bookAppointmentBtn');
-
-    // Build hospital details HTML
-    let specializationsHtml = '';
-    if (hospital.specializations.length > 0) {
-        specializationsHtml = `
-            <div class="mb-3">
-                <h6 class="fw-bold">Hospital Specializations:</h6>
-                <div class="d-flex flex-wrap gap-1">
-                    ${hospital.specializations.map(spec => `<span class="badge bg-primary">${spec}</span>`).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    // Build doctors list HTML
-    let doctorsHtml = '';
-    if (hospital.doctors.length > 0) {
-        doctorsHtml = `
-            <div class="mb-4">
-                <h6 class="fw-bold mb-3">Available Doctors (${hospital.doctors.length}):</h6>
-                <div class="row g-3">
-                    ${hospital.doctors.map(doctor => `
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="bookDoctorAppointment(${hospital.id}, ${doctor.id}, '${doctor.name}')">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="doctor-avatar me-3" style="width: 50px; height: 50px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                                            ${doctor.name.charAt(0)}
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 fw-bold">Dr. ${doctor.name}</h6>
-                                            <p class="text-muted small mb-1">${doctor.specializations.join(', ')}</p>
-                                            <p class="text-muted small mb-0">
-                                                <i class="fas fa-phone me-1"></i> ${doctor.contact}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button class="btn btn-success btn-sm w-100" onclick="event.stopPropagation(); bookDoctorAppointment(${hospital.id}, ${doctor.id}, '${doctor.name}')">
-                                            📅 Book Appointment
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    } else {
-        doctorsHtml = `
-            <div class="text-center py-4">
-                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">👨‍⚕️</div>
-                <h6 class="text-muted">No doctors available</h6>
-                <p class="text-muted small">Please contact the hospital directly</p>
-            </div>
-        `;
-    }
-
-    content.innerHTML = `
-        <div class="row">
-            <div class="col-md-4">
-                <div class="text-center mb-4">
-                    ${hospital.logo ? 
-                        `<img src="${hospital.logo}" alt="${hospital.name}" class="img-fluid rounded mb-3" style="width: 120px; height: 120px; object-fit: cover;">` :
-                        `<div class="d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 20px;">
-                            <span style="color: white; font-weight: bold; font-size: 48px;">🏥</span>
-                        </div>`
-                    }
-                    <h4 class="fw-bold">${hospital.name}</h4>
-                    <p class="text-muted">
-                        <i class="fas fa-map-marker-alt me-1"></i> ${hospital.location}
-                    </p>
-                </div>
-                
-                <div class="hospital-info">
-                    <div class="mb-3">
-                        <h6 class="fw-bold">Contact Information:</h6>
-                        <p class="mb-1">
-                            <i class="fas fa-phone me-2"></i> ${hospital.contact_no}
-                        </p>
-                        <p class="mb-1">
-                            <i class="fas fa-envelope me-2"></i> ${hospital.email}
-                        </p>
-                        <p class="mb-0">
-                            <i class="fas fa-id-card me-2"></i> ${hospital.registration_number}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-8">
-                ${specializationsHtml}
-                ${doctorsHtml}
-            </div>
-        </div>
-    `;
-    
-    // Hide the general book appointment button since we have individual doctor buttons
-    bookBtn.style.display = 'none';
-    
-    modal.show();
-}
-
-function bookDoctorAppointment(hospitalId, doctorId, doctorName) {
-    // Close the modal first
-    const modal = bootstrap.Modal.getInstance(document.getElementById('hospitalDetailsModal'));
-    modal.hide();
-    
-    // Show confirmation using NotificationSystem (same as profile_dashboard.html)
-    NotificationSystem.showToast(`Redirecting to book appointment with Dr. ${doctorName}...`, 'info');
-    
-    // Redirect to appointment booking with hospital and doctor pre-selected
-    setTimeout(() => {
-        window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
-    }, 1000);
-}
-
-function bookAppointmentWithDoctor(hospitalId, doctorId, doctorName, specialization) {
-    // Close all modals
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-    });
-    
-    // Show confirmation using NotificationSystem (same as profile_dashboard.html)
-    NotificationSystem.showToast(`Redirecting to book appointment with ${doctorName}...`, 'info');
-    
-    // Redirect to appointment booking with hospital and doctor pre-selected
-    setTimeout(() => {
-        window.location.href = `/appointments/create/?hospital=${hospitalId}&doctor=${doctorId}`;
-    }, 1000);
-}
 </script>
 
 </body>

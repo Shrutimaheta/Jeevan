@@ -14,32 +14,32 @@ import AutoBreadcrumb from "../../../components/breadcrumb/AutoBreadcrumb";
       {
         title: "Name",
         dataIndex: "Name",
-        sorter: (a: any, b: any) => a.Name.length - b.Name.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Name.length - b.Name.length,
       },
       {
         title: "Position",
         dataIndex: "Position",
-        sorter: (a: any, b: any) => a.Position.length - b.Position.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Position.length - b.Position.length,
       },
       {
         title: "Office",
         dataIndex: "Office",
-        sorter: (a: any, b: any) => a.Office.length - b.Office.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Office.length - b.Office.length,
       },
       {
         title: "Age",
         dataIndex: "Age",
-        sorter: (a: any, b: any) => a.Age.length - b.Age.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Age.length - b.Age.length,
       },
       {
         title: "Start date",
         dataIndex: "Start_date",
-        sorter: (a: any, b: any) => a.Start_date.length - b.Start_date.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Start_date.length - b.Start_date.length,
       },
       {
         title: "Salary",
         dataIndex: "Salary",
-        sorter: (a: any, b: any) => a.Salary.length - b.Salary.length,
+        sorter: (a: typeof DataTablesData[number], b: typeof DataTablesData[number]) => a.Salary.length - b.Salary.length,
       },
     ];
 

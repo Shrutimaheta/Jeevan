@@ -10,55 +10,55 @@ import CommonFooter from "../../../components/common-footer/commonFooter";
 const UiRangeSlides = () => {
   const [sliderValue, setSliderValue] = useState(0);
 
-  const handleChange = (value: any) => {
-    setSliderValue(value);
+  const handleChange = (value: number | number[]) => {
+    setSliderValue(Array.isArray(value) ? value[0] : value);
   };
   const [sliderValueDefault, setSliderValueDefault] = useState(0);
 
-  const handleChangeDefault = (value: any) => {
-    setSliderValueDefault(value);
+  const handleChangeDefault = (value: number | number[]) => {
+    setSliderValueDefault(Array.isArray(value) ? value[0] : value);
   };
   const [sliderValues, setSliderValues] = useState([200, 800]);
 
-  const handleSliderChange = (values: any) => {
-    setSliderValues(values);
+  const handleSliderChange = (values: number | number[]) => {
+    setSliderValues(Array.isArray(values) ? values : [values]);
   };
 
   const [sliderValuesRange, setSliderValuesRange] = useState([-500, 500]);
 
-  const handleSliderChangeRange = (values: any) => {
-    setSliderValuesRange(values);
+  const handleSliderChangeRange = (values: number | number[]) => {
+    setSliderValuesRange(Array.isArray(values) ? values : [values]);
   };
   const [sliderValuesStep, setSliderValuesStep] = useState([-500, 500]);
 
-  const handleSliderChangeStep = (values: any) => {
-    setSliderValuesStep(values);
+  const handleSliderChangeStep = (values: number | number[]) => {
+    setSliderValuesStep(Array.isArray(values) ? values : [values]);
   };
 
   const [sliderValueCustomValue, setSliderValueCustomValue] = useState([0, 5]);
 
-  const handleSliderChangeCustomValue = (values: any) => {
-    setSliderValueCustomValue(values);
+  const handleSliderChangeCustomValue = (values: number | number[]) => {
+    setSliderValueCustomValue(Array.isArray(values) ? values : [values]);
   };
   const [sliderValueModernSkin, setSliderValueModernSkin] = useState(30);
 
-  const handleSliderChangeModernSkin = (value: any) => {
-    setSliderValueModernSkin(value);
+  const handleSliderChangeModernSkin = (value: number | number[]) => {
+    setSliderValueModernSkin(Array.isArray(value) ? value[0] : value);
   };
   const [sliderValueSharpeSkin] = useState(30);
 
-  const handleSliderChangeSharpeSkin = (value: any) => {
-    setSliderValue(value);
+  const handleSliderChangeSharpeSkin = (value: number | number[]) => {
+    setSliderValue(Array.isArray(value) ? value[0] : value);
   };
   const [sliderValueRoundSkin, setSliderValueRoundSkin] = useState(30);
 
-  const handleSliderChangeRoundSkin = (value: any) => {
-    setSliderValueRoundSkin(value);
+  const handleSliderChangeRoundSkin = (value: number | number[]) => {
+    setSliderValueRoundSkin(Array.isArray(value) ? value[0] : value);
   };
   const [sliderValueSquareSkin, setSliderValueSquareSkin] = useState(30);
 
-  const handleSliderChangeSquareSkin = (value: any) => {
-    setSliderValueSquareSkin(value);
+  const handleSliderChangeSquareSkin = (value: number | number[]) => {
+    setSliderValueSquareSkin(Array.isArray(value) ? value[0] : value);
   };
 
   return (

@@ -26,18 +26,18 @@ const CalendarModal = ({
   // Initialize modals when component mounts
   useEffect(() => {
     // Ensure Bootstrap is available
-    if (typeof window !== 'undefined' && (window as any).bootstrap) {
+    if (typeof window !== 'undefined' && window.bootstrap) {
       const eventModal = document.getElementById("event_modal");
       const addModal = document.getElementById("add_new");
       
       if (eventModal) {
-        // @ts-ignore
-        new (window as any).bootstrap.Modal(eventModal);
+
+        new window.bootstrap.Modal(eventModal);
       }
       
       if (addModal) {
-        // @ts-ignore
-        new (window as any).bootstrap.Modal(addModal);
+
+        new window.bootstrap.Modal(addModal);
       }
     }
   }, []);
@@ -50,7 +50,7 @@ const CalendarModal = ({
     // Close the modal using Bootstrap hide
     const modal = document.getElementById("event_modal");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.hide();
       
@@ -75,7 +75,7 @@ const CalendarModal = ({
     // Close the modal using Bootstrap hide
     const modal = document.getElementById("event_modal");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.hide();
       
@@ -100,7 +100,7 @@ const CalendarModal = ({
       // Close the modal using Bootstrap hide
       const modal = document.getElementById("add_new");
       if (modal) {
-        // @ts-ignore
+
         const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
         bsModal.hide();
         
@@ -127,7 +127,7 @@ const CalendarModal = ({
     // Close the modal using Bootstrap hide
     const modal = document.getElementById("add_new");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.hide();
       

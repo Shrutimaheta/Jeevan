@@ -13,15 +13,13 @@ def log_audit_event(user, action, target_id, details=None):
     user_id = user.id if user and user.is_authenticated else "N/A"
     role = getattr(user, 'role', 'N/A') if user and user.is_authenticated else "N/A"
     
-    audit_logger.info(
-        "AUDIT: User %s (ID: %s, Role: %s) performed %s on target ID: %s. Details: %s",
-        username,
-        user_id,
-        role,
-        action,
-        target_id,
-        details or "None"
-    )
+    from care.models import AuditEvent
+    import json
+    event = AuditEvent.objects.create(actor_id=user.id if user and user.is_authenticated else None,
+        role=str(role), action=str(action)[:80], target=str(target_id)[:100], details=details or '')
+    audit_logger.info(json.dumps({'event_id': event.pk, 'actor_id': event.actor_id,
+        'role': event.role, 'action': event.action, 'target': event.target}))
+
 
 def role_required(allowed_roles, redirect_to=None):
     """
@@ -53,12 +51,19 @@ def role_required(allowed_roles, redirect_to=None):
                 return redirect('universal_login')
 
             user_role = getattr(request.user, 'role', None)
+            if not request.user.is_active:
+                raise PermissionDenied('This account is inactive.')
             if user_role not in allowed_roles:
                 if is_ajax:
                     return JsonResponse({'success': False, 'message': 'You do not have permission to perform this action.'}, status=403)
                 if redirect_to:
                     return redirect(redirect_to)
                 raise PermissionDenied("You do not have permission to access this page.")
+
+            if user_role in ('doctor', 'nurse', 'receptionist'):
+                profile = getattr(request.user, user_role, None)
+                if profile is None or not profile.is_active:
+                    raise PermissionDenied('Your staff profile is inactive or unavailable.')
                 
             return view_func(request, *args, **kwargs)
         return _wrapped_view
@@ -70,30 +75,19 @@ doctor_required = role_required('doctor')
 receptionist_required = role_required('receptionist')
 nurse_required = role_required('nurse')
 
-from django.core.cache import cache
 def rate_limit(key_prefix, limit=5, period=60, is_api=False):
-    """
-    Simple rate limiting decorator using Django's cache framework.
-    """
+    """Fixed-window limits backed by atomic shared database counters."""
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            if not request.user.is_authenticated:
-                user_ident = request.META.get('REMOTE_ADDR', 'anon')
-            else:
-                user_ident = str(request.user.id)
-                
-            cache_key = f"rl:{key_prefix}:{user_ident}"
-            request_count = cache.get(cache_key, 0)
-            
-            if request_count >= limit:
-                if is_api or request.path.startswith('/api/') or request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': 'Rate limit exceeded. Please try again later.'}, status=429)
-                from django.contrib import messages
-                messages.error(request, 'Rate limit exceeded. Please try again later.')
-                return redirect(request.META.get('HTTP_REFERER', 'home'))
-                
-            cache.set(cache_key, request_count + 1, period)
+            if request.method in ('GET', 'HEAD', 'OPTIONS'):
+                return view_func(request, *args, **kwargs)
+            from .throttling import allow_request, client_ip
+            ident = str(request.user.pk) if request.user.is_authenticated else client_ip(request)
+            if not allow_request(f'{key_prefix}:{ident}', limit, period):
+                response = JsonResponse({'success': False, 'error': 'Too many requests. Please try again shortly.'}, status=429)
+                response['Retry-After'] = str(period)
+                return response
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator

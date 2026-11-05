@@ -24,9 +24,13 @@
             {% endfor %}
         </div>
         <div class="d-flex gap-2 mt-auto">
-            <a href="/login/?next={% url 'appointments:appointment_create' %}?hospital={{ hospital.id }}" class="btn btn-primary-custom btn-sm flex-fill" onclick="if (window.twOpenBooking) { event.preventDefault(); window.twOpenBooking(); }">
+            {% if request.user.is_authenticated and request.user.role != 'patient' %}
+            <a href="{% url 'universal_login' %}?next={% url 'appointments:appointment_create' %}?hospital={{ hospital.id }}" class="btn btn-primary-custom btn-sm flex-fill">Patient Sign In</a>
+            {% else %}
+            <a href="{% url 'appointments:appointment_create' %}?hospital={{ hospital.id }}" class="btn btn-primary-custom btn-sm flex-fill" >
                 <i class="fas fa-calendar-plus me-1"></i>Book Appointment
             </a>
+            {% endif %}
             <a href="/hospitals/{{ hospital.id }}/doctors/" class="btn btn-primary-custom btn-sm flex-fill">
                 <i class="fas fa-user-md me-1"></i>View Doctors
             </a>

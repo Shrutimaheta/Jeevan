@@ -1,0 +1,121 @@
+name: jeevan-production
+x-app: &app
+  image: jeevan:${JEEVAN_IMAGE_TAG:?Set source revision image tag}
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  environment: &app-env
+    JEEVAN_ENV: production
+    JEEVAN_DEMO_MODE: 'false'
+    JEEVAN_DOMAIN: ${JEEVAN_DOMAIN:?Set real domain}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set random secret}
+    DJANGO_ALLOWED_HOSTS: ${JEEVAN_DOMAIN:?Set real domain}
+    DJANGO_CSRF_TRUSTED_ORIGINS: https://${JEEVAN_DOMAIN:?Set real domain}
+    EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+    EMAIL_HOST: ${EMAIL_HOST:?Set SMTP host}
+    EMAIL_PORT: ${EMAIL_PORT:-587}
+    EMAIL_USE_TLS: ${EMAIL_USE_TLS:-true}
+    EMAIL_HOST_USER: ${EMAIL_HOST_USER:?Set SMTP user}
+    EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:?Set SMTP password}
+    DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:?Set verified sender}
+    SESSION_COOKIE_AGE: ${SESSION_COOKIE_AGE:-3600}
+    TELECONSULTATION_ENABLED: 'false'
+    DB_ENGINE: django.db.backends.postgresql
+    DATABASE_URL: ''
+    DB_HOST: db
+    DB_PORT: '5432'
+    DB_NAME: ${DB_NAME:?Set DB_NAME}
+    DB_USER: ${DB_USER:?Set runtime DB_USER}
+    DB_PASSWORD: ${DB_PASSWORD:?Set runtime DB_PASSWORD}
+    MEDIA_ROOT: /app/media
+    PRIVATE_MEDIA_ROOT: /app/private_media
+    JEEVAN_PERSISTENT_STORAGE: 'true'
+    JEEVAN_TRUSTED_PROXY_NETWORKS: ${JEEVAN_NETWORK_PREFIX:-172.29.40}.3/32
+  volumes:
+    - media:/app/media
+    - private_media:/app/private_media
+    - staticfiles:/app/staticfiles
+  networks: [clinic]
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: {max-size: '10m', max-file: '5'}
+services:
+  db:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?Set DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set separate admin password}
+      DB_USER: ${DB_USER:?Set runtime DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD:?Set runtime DB_PASSWORD}
+      DB_MIGRATION_USER: ${DB_MIGRATION_USER:?Set migration user}
+      DB_MIGRATION_PASSWORD: ${DB_MIGRATION_PASSWORD:?Set migration password}
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-jeevan.sh:ro
+    networks: [clinic]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: {max-size: '10m', max-file: '5'}
+  release:
+    <<: *app
+    command: [release]
+    restart: 'no'
+    environment:
+      <<: *app-env
+      DB_USER: ${DB_MIGRATION_USER:?Set migration user}
+      DB_PASSWORD: ${DB_MIGRATION_PASSWORD:?Set migration password}
+      JEEVAN_RUNTIME_DB_USER: ${DB_USER:?Set runtime DB_USER}
+    depends_on:
+      db: {condition: service_healthy}
+  web:
+    <<: *app
+    restart: unless-stopped
+    depends_on:
+      db: {condition: service_healthy}
+      release: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python, -c, "import os,urllib.request; r=urllib.request.Request('http://127.0.0.1:8000/health/ready/',headers={'Host':os.environ['JEEVAN_DOMAIN'],'X-Forwarded-Proto':'https'}); assert urllib.request.urlopen(r,timeout=5).status==200"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      JEEVAN_DOMAIN: ${JEEVAN_DOMAIN:?Set real domain}
+      ACME_EMAIL: ${ACME_EMAIL:?Set certificate contact email}
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - media:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      clinic:
+        ipv4_address: ${JEEVAN_NETWORK_PREFIX:-172.29.40}.3
+    depends_on:
+      web: {condition: service_healthy}
+    logging:
+      driver: json-file
+      options: {max-size: '10m', max-file: '5'}
+networks:
+  clinic:
+    ipam:
+      config: [{subnet: '${JEEVAN_NETWORK_PREFIX:-172.29.40}.0/24'}]
+volumes:
+  database:
+  media:
+  private_media:
+  staticfiles:
+  caddy_data:
+  caddy_config:

@@ -9,21 +9,34 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect
 from urllib.parse import urlencode
+from django.utils.http import url_has_allowed_host_and_scheme
 import json
 from jeevan.decorators import rate_limit
+from django.views.decorators.http import require_http_methods
 
-@rate_limit(key_prefix="login", limit=5, period=60)
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def universal_login(request):
     """Universal login view for all user types"""
     # Hide next query parameter in the address bar by storing it in the session
     if request.method == 'GET' and 'next' in request.GET:
         next_url = request.GET.get('next')
-        if next_url:
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
             request.session['next_url'] = next_url
+        else:
+            request.session.pop('next_url', None)
         return redirect('universal_login')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
+        from .throttling import allow_request, client_ip
+        ident = str(request.user.pk) if request.user.is_authenticated else client_ip(request)
+        if not allow_request(f'login:{ident}', 5, 60):
+            messages.error(request, 'Too many sign-in attempts. Wait one minute before trying again.')
+            response = render(request, 'universal_auth/login.html', status=429)
+            response['Retry-After'] = '60'
+            return response
+        username = request.POST.get('username', '').strip()
         password = request.POST.get('password')
         role = request.POST.get('role', 'patient')  # Default to patient if no role selected
         
@@ -36,28 +49,37 @@ def universal_login(request):
                 try:
                     from django.contrib.auth import get_user_model
                     User = get_user_model()
-                    user_obj = User.objects.get(email=username)
+                    user_obj = User.objects.get(email__iexact=username)
                     user = authenticate(request, username=user_obj.username, password=password)
-                except User.DoesNotExist:
+                except (User.DoesNotExist, User.MultipleObjectsReturned):
                     pass
             
             if user is not None:
                 # Validate role using user.role (except for admin)
                 has_role = (role == 'admin' and user.is_superuser) or (getattr(user, 'role', None) == role)
                 if has_role:
+                    profile_name = {'patient': 'patient_profile', 'doctor': 'doctor',
+                                    'nurse': 'nurse', 'receptionist': 'receptionist',
+                                    'care_coordinator': 'carecoordinator'}.get(role)
+                    profile = getattr(user, profile_name, None) if profile_name else None
+                    if role != 'admin' and (profile is None or not getattr(profile, 'is_active', True)):
+                        messages.error(request, 'Your account profile is unavailable. Contact your clinic administrator.')
+                        return render(request, 'universal_auth/login.html')
+                    # Capture before login() updates last_login through Django's signal.
+                    first_patient_login = role == 'patient' and user.last_login is None
                     login(request, user)
+                    request.session['patient_first_login'] = first_patient_login
 
                     # Retrieve and redirect to stored next_url if exists
                     next_url = request.session.pop('next_url', None) or request.POST.get('next')
-                    if next_url:
+                    if next_url and url_has_allowed_host_and_scheme(
+                        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+                    ):
                         messages.success(request, 'Logged in successfully!')
                         return redirect(next_url)
 
                     # Get the user's full name based on role and redirect
                     if role == 'patient':
-                        patient_obj = getattr(user, 'patient', None) or getattr(user, 'patient_profile', None)
-                        full_name = getattr(patient_obj, 'full_name', None) or getattr(user, 'full_name', None) or user.get_username()
-                        messages.success(request, f'Welcome back, {full_name}!')
                         return redirect('patient:profile_dashboard')
                     elif role == 'doctor':
                         if hasattr(user, 'doctor'):
@@ -80,6 +102,8 @@ def universal_login(request):
                         else:
                             messages.success(request, 'Welcome back!')
                         return redirect('nurse:dashboard')
+                    elif role == 'care_coordinator':
+                        return redirect('coordinator_dashboard')
                     elif role == 'admin' and user.is_superuser:
                         messages.success(request, 'Welcome back, Admin!')
                         return redirect('/admin/')
@@ -113,7 +137,7 @@ def index(request):
     specializations = Specialization.objects.all()
     
     # Get featured doctors (you can modify this query as needed)
-    featured_doctors = Doctor.objects.select_related('hospital').prefetch_related('specialization')[:6]
+    featured_doctors = Doctor.objects.filter(is_active=True).select_related('hospital').prefetch_related('specialization')[:6]
     
     # Get search parameters
     search_query = request.GET.get('search', '')
@@ -131,6 +155,8 @@ def index(request):
         )
     
     if specialization_filter:
+        if not specialization_filter.isascii() or not specialization_filter.isdigit() or len(specialization_filter) > 9:
+            return HttpResponse('Invalid specialization filter.', status=400)
         hospitals = hospitals.filter(specialization__id=specialization_filter)
     
     if location_filter:
@@ -138,9 +164,13 @@ def index(request):
 
     if min_rating:
         try:
-            hospitals = hospitals.filter(rating__gte=float(min_rating))
+            import math
+            rating = float(min_rating)
+            if not math.isfinite(rating) or not 0 <= rating <= 5:
+                raise ValueError()
+            hospitals = hospitals.filter(rating__gte=rating)
         except ValueError:
-            pass
+            return HttpResponse('Invalid rating filter.', status=400)
 
     if insurance == '1':
         hospitals = hospitals.filter(accepts_insurance=True)
@@ -178,14 +208,20 @@ def htmx_filter_hospitals(request):
     if search_query:
         hospitals = hospitals.filter(Q(name__icontains=search_query) | Q(location__icontains=search_query))
     if specialization_filter:
+        if not specialization_filter.isascii() or not specialization_filter.isdigit() or len(specialization_filter) > 9:
+            return HttpResponse('Invalid specialization filter.', status=400)
         hospitals = hospitals.filter(specialization__id=specialization_filter)
     if location_filter:
         hospitals = hospitals.filter(location__icontains=location_filter)
     if min_rating:
         try:
-            hospitals = hospitals.filter(rating__gte=float(min_rating))
+            import math
+            rating = float(min_rating)
+            if not math.isfinite(rating) or not 0 <= rating <= 5:
+                raise ValueError()
+            hospitals = hospitals.filter(rating__gte=rating)
         except ValueError:
-            pass
+            return HttpResponse('Invalid rating filter.', status=400)
     if insurance == '1':
         hospitals = hospitals.filter(accepts_insurance=True)
 
@@ -198,27 +234,27 @@ def htmx_filter_doctors(request):
     search_query = request.GET.get('search', '')
     specialization_filter = request.GET.get('specialization', '')
     min_rating = request.GET.get('min_rating')
-    available_today = request.GET.get('available_today')
     insurance = request.GET.get('insurance')
 
     if search_query:
         doctors = doctors.filter(Q(full_name__icontains=search_query) | Q(specialization__sname__icontains=search_query) | Q(hospital__name__icontains=search_query))
     if specialization_filter:
+        if not specialization_filter.isascii() or not specialization_filter.isdigit() or len(specialization_filter) > 9:
+            return HttpResponse('Invalid specialization filter.', status=400)
         doctors = doctors.filter(specialization__id=specialization_filter)
     if min_rating:
         try:
-            doctors = doctors.filter(rating__gte=float(min_rating))
+            import math
+            rating = float(min_rating)
+            if not math.isfinite(rating) or not 0 <= rating <= 5:
+                raise ValueError()
+            doctors = doctors.filter(rating__gte=rating)
         except ValueError:
-            pass
+            return HttpResponse('Invalid rating filter.', status=400)
     if insurance == '1':
         doctors = doctors.filter(accepts_insurance=True)
 
-    # Available today: has any appointment slots free today - simplifying: no accepted appointment at date today for now
-    if available_today == '1':
-        from django.utils import timezone
-        today = timezone.localdate()
-        # Doctor considered available if they have fewer than X accepted appointments today (simplified)
-        doctors = doctors.exclude(appointments__appointment_date=today, appointments__status='accepted')
+    doctors = doctors.distinct()
 
     html = render_to_string('partials/doctor_list.html', {'doctors': doctors}, request=request)
     return HttpResponse(html)
@@ -241,7 +277,7 @@ def hospital_doctors(request, hospital_id):
     """View to show all doctors in a specific hospital"""
     try:
         hospital = Hospital.objects.get(id=hospital_id)
-        doctors = Doctor.objects.filter(hospital=hospital).select_related('hospital').prefetch_related('specialization')
+        doctors = Doctor.objects.filter(hospital=hospital, is_active=True).select_related('hospital').prefetch_related('specialization')
         
         # Get search parameters
         search_query = request.GET.get('search', '')
@@ -255,6 +291,8 @@ def hospital_doctors(request, hospital_id):
             )
         
         if specialization_filter:
+            if not specialization_filter.isascii() or not specialization_filter.isdigit() or len(specialization_filter) > 9:
+                return HttpResponse('Invalid specialization filter.', status=400)
             doctors = doctors.filter(specialization__id=specialization_filter)
         
         # Get all specializations for filtering
@@ -270,9 +308,17 @@ def hospital_doctors(request, hospital_id):
             except:
                 patient = None
         
+        from django.urls import reverse
+        dashboards = {'patient': 'patient:profile_dashboard', 'doctor': 'doctor:dashboard',
+                      'nurse': 'nurse:dashboard', 'receptionist': 'receptionist:dashboard',
+                      'care_coordinator': 'coordinator_dashboard'}
+        dashboard_name = dashboards.get(getattr(request.user, 'role', ''))
+        dashboard_url = reverse(dashboard_name) if dashboard_name else '/'
+
         context = {
             'hospital': hospital,
-            'doctors': doctors,
+            'dashboard_url': dashboard_url,
+            'doctors': doctors.distinct(),
             'specializations': specializations,
             'search_query': search_query,
             'specialization_filter': specialization_filter,
@@ -282,7 +328,7 @@ def hospital_doctors(request, hospital_id):
         
         return render(request, 'hospital_doctors.html', context)
     except Hospital.DoesNotExist:
-        return render(request, '404.html', {'message': 'Hospital not found'})
+        return render(request, '404.html', {'message': 'Hospital not found'}, status=404)
 
 def redirect_book_to_create(request):
     """Temporary redirect: /appointments/book/ -> /appointments/create/ (preserve query params)"""
@@ -347,8 +393,8 @@ def book_appointment(request):
     
     # Handle POST request (form submission)
     if request.method == 'POST':
-        print("POST request received for appointment booking")
-        print("POST data:", request.POST)
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
         
         form = AppointmentForm(request.POST, patient=patient)
         
@@ -360,7 +406,7 @@ def book_appointment(request):
                 form.fields['doctor'].widget.attrs['disabled'] = False
         
         if form.is_valid():
-            print("Form is valid, creating appointment")
+            pass  # Sensitive request data is not logged.
             appointment = form.save(commit=False)
             appointment.patient = patient
             
@@ -383,12 +429,12 @@ def book_appointment(request):
                 appointment.abha_id = f"P{date_str}{sequence}"
             
             appointment.save()
-            print(f"Appointment created successfully: {appointment.id}")
-            messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
+            pass  # Sensitive request data is not logged.
+            messages.success(request, 'Appointment requested successfully. Check My Appointments for confirmation from your clinic.')
             return redirect('appointments:appointment_list')
         else:
-            print("Form is invalid")
-            print("Form errors:", form.errors)
+            pass  # Sensitive request data is not logged.
+            pass  # Sensitive request data is not logged.
             # Add error messages to the request
             for field, errors in form.errors.items():
                 for error in errors:
@@ -411,41 +457,40 @@ def book_appointment(request):
 
 
 @csrf_exempt
+@require_http_methods(['POST'])
+@rate_limit(key_prefix='public_chat', limit=30, period=60, is_api=True)
 def dialogflow_webhook(request):
-    if request.method != 'POST':
-        return JsonResponse({"error": "Invalid method"}, status=405)
+    """General navigation only; this endpoint does not dispatch care or staffed support."""
     try:
         payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+        if not isinstance(payload, dict):
+            raise ValueError()
+        result = payload.get('queryResult', {})
+        if not isinstance(result, dict):
+            raise ValueError()
+        intent_data, params = result.get('intent', {}), result.get('parameters', {})
+        if not isinstance(intent_data, dict) or not isinstance(params, dict):
+            raise ValueError()
+        intent = intent_data.get('displayName', '')
+        if not isinstance(intent, str):
+            raise ValueError()
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        return JsonResponse({'error': 'Invalid chat request.'}, status=400)
 
-    query_text = (
-        payload.get('queryResult', {})
-        .get('queryText', '')
-    )
-    intent = (
-        payload.get('queryResult', {})
-        .get('intent', {})
-        .get('displayName', '')
-    )
-    params = payload.get('queryResult', {}).get('parameters', {})
-
-    # Basic intent routing
     if intent == 'Appointment.Query':
-        hospital = params.get('hospital') or ''
-        spec = params.get('specialization') or ''
-        reply = f"You can book an appointment here: /appointments/create/" \
-                f"{'?hospital='+str(hospital) if hospital else ''}"
-        return JsonResponse({"fulfillmentText": reply})
-
+        hospital = params.get('hospital')
+        target = '/appointments/create/'
+        if hospital not in (None, ''):
+            if isinstance(hospital, bool) or not str(hospital).isascii() or not str(hospital).isdigit() or len(str(hospital)) > 9:
+                return JsonResponse({'error': 'Invalid hospital selection.'}, status=400)
+            target += '?' + urlencode({'hospital': hospital})
+        return JsonResponse({'fulfillmentText': 'Request an appointment here: ' + target + '. Your clinic must confirm it.'})
     if intent == 'FAQ.General':
-        return JsonResponse({"fulfillmentText": "You can find FAQs on our site. For anything else, ask me!"})
-
+        return JsonResponse({'fulfillmentText': 'Patient help is available after sign-in at /patient/help/. Contact your selected clinic for service details.'})
     if intent == 'Escalation.Human':
-        return JsonResponse({"fulfillmentText": "I’m connecting you to our support team. Please wait a moment."})
+        return JsonResponse({'fulfillmentText': 'Live support is unavailable here. Contact your selected clinic directly; no message has been forwarded.'})
+    return JsonResponse({'fulfillmentText': 'Use the hospital and doctor search on the home page. This chat does not provide medical advice or emergency assistance.'})
 
-    # Default fallback
-    return JsonResponse({"fulfillmentText": "Sorry, I didn't get that. Could you rephrase?"})
 
 def test_logo(request):
     return render(request, 'test_logo.html')
@@ -455,15 +500,14 @@ def emergency_guide(request):
     return render(request, 'emergency/emergency_guide.html')
 
 def emergency_nearest_hospitals(request):
-    """Find nearest emergency hospitals"""
-    from care.models import Hospital
-    
+    """Business directory only: no live proximity, capacity or dispatch service."""
     hospitals = Hospital.objects.all().order_by('name')
-    
-    context = {
-        'hospitals': hospitals,
-    }
-    return render(request, 'emergency/nearest_hospitals.html', context)
+    search_query = request.GET.get('search', '').strip()[:200]
+    if search_query:
+        hospitals = hospitals.filter(Q(name__icontains=search_query) | Q(location__icontains=search_query))
+    return render(request, 'emergency/nearest_hospitals.html', {
+        'hospitals': hospitals, 'search_query': search_query,
+    })
 
 
 from django.views.decorators.csrf import csrf_protect
@@ -569,8 +613,8 @@ def book_appointment(request):
 
     if request.method == 'POST':
 
-        print(f"POST request received. CSRF token in headers: {request.META.get('HTTP_X_CSRFTOKEN')}")
-        print(f"CSRF token in POST data: {request.POST.get('csrfmiddlewaretoken')}")
+        pass  # Sensitive request data is not logged.
+        pass  # Sensitive request data is not logged.
         
         form = AppointmentForm(request.POST, patient=patient)
 
@@ -636,7 +680,7 @@ def book_appointment(request):
 
             appointment.save()
 
-            messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
+            messages.success(request, 'Appointment requested successfully. Check My Appointments for confirmation from your clinic.')
 
             return redirect('appointments:appointment_list')
 
@@ -644,9 +688,9 @@ def book_appointment(request):
 
             # Debug: Print form errors
 
-            print("Form errors:", form.errors)
+            pass  # Sensitive request data is not logged.
 
-            print("Form data:", form.data)
+            pass  # Sensitive request data is not logged.
 
     else:
 
@@ -682,77 +726,6 @@ def book_appointment(request):
 
 
 
-@csrf_exempt
-
-def dialogflow_webhook(request):
-
-    if request.method != 'POST':
-
-        return JsonResponse({"error": "Invalid method"}, status=405)
-
-    try:
-
-        payload = json.loads(request.body.decode('utf-8'))
-
-    except Exception:
-
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-
-
-    query_text = (
-
-        payload.get('queryResult', {})
-
-        .get('queryText', '')
-
-    )
-
-    intent = (
-
-        payload.get('queryResult', {})
-
-        .get('intent', {})
-
-        .get('displayName', '')
-
-    )
-
-    params = payload.get('queryResult', {}).get('parameters', {})
-
-
-
-    # Basic intent routing
-
-    if intent == 'Appointment.Query':
-
-        hospital = params.get('hospital') or ''
-
-        spec = params.get('specialization') or ''
-
-        reply = f"You can book an appointment here: /appointments/create/{'?hospital='+str(hospital) if hospital else ''}"
-
-        return JsonResponse({"fulfillmentText": reply})
-
-
-
-    if intent == 'FAQ.General':
-
-        return JsonResponse({"fulfillmentText": "You can find FAQs on our site. For anything else, ask me!"})
-
-
-
-    if intent == 'Escalation.Human':
-
-        return JsonResponse({"fulfillmentText": "I’m connecting you to our support team. Please wait a moment."})
-
-
-
-    # Default fallback
-
-    return JsonResponse({"fulfillmentText": "Sorry, I didn't get that. Could you rephrase?"})
-
-
 
 def test_logo(request):
 
@@ -765,25 +738,3 @@ def emergency_guide(request):
     """Comprehensive emergency guide with tips and information"""
 
     return render(request, 'emergency/emergency_guide.html')
-
-
-
-def emergency_nearest_hospitals(request):
-
-    """Find nearest emergency hospitals"""
-
-    from care.models import Hospital
-
-    
-
-    hospitals = Hospital.objects.all().order_by('name')
-
-    
-
-    context = {
-
-        'hospitals': hospitals,
-
-    }
-
-    return render(request, 'emergency/nearest_hospitals.html', context)

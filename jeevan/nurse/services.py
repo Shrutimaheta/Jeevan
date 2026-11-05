@@ -10,7 +10,7 @@ def check_nurse_patient_association(nurse, patient):
     """
     A nurse must only interact with patients who are associated with the nurse's hospital.
     """
-    return patient.associated_hospitals.filter(id=nurse.hospital.id).exists()
+    return nurse.is_active and nurse.user.is_active and patient.associated_hospitals.filter(id=nurse.hospital.id).exists()
 
 def create_clinical_note(patient_id, nurse, note_text, actor):
     """
@@ -112,28 +112,11 @@ def log_patient_vitals(patient_id, nurse, blood_pressure_systolic, blood_pressur
         if not check_nurse_patient_association(nurse, patient):
             raise PermissionDenied("You do not have permission to log vitals for this patient.")
             
-        # Instantiate and validate ranges/constraints dynamically via Django's validation framework
-        vital_sign = VitalSign(
-            patient=patient,
+        from patient.services import record_vitals
+        vital_sign = record_vitals(patient=patient, actor=actor,
             blood_pressure_systolic=blood_pressure_systolic,
             blood_pressure_diastolic=blood_pressure_diastolic,
-            heart_rate=heart_rate,
-            temperature=temperature,
-            oxygen_saturation=oxygen_saturation,
-            weight=weight,
-            notes=notes
-        )
-        
-        # This will raise ValidationError if values are outside model MinValue/MaxValue ranges
-        vital_sign.full_clean()
-        vital_sign.save()
-        
-        # Enforce audit logging
-        log_audit_event(
-            user=actor,
-            action="LOG_PATIENT_VITALS",
-            target_id=vital_sign.id,
-            details=f"Vitals recorded by Nurse ID: {nurse.id} for Patient ID: {patient.id}"
-        )
-        
+            heart_rate=heart_rate, temperature=temperature,
+            oxygen_saturation=oxygen_saturation, weight=weight, notes=notes)
+
         return vital_sign

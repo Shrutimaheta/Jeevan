@@ -167,6 +167,7 @@
             color: var(--primary-color);
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <div class="container-fluid py-4">
@@ -282,6 +283,9 @@
                                 </span>
                             </div>
                             
+                            {% if consent.status == 'approved' %}
+                            <button type="button" class="btn btn-outline-danger" onclick="handleConsentAction({{ consent.id }}, 'reject')">Revoke access</button>
+                            {% endif %}
                             {% if consent.reason %}
                                 <div class="reason-box">
                                     <div class="d-flex align-items-start">

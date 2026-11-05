@@ -56,7 +56,7 @@ const ChartTwo: React.FC = () => {
         series: number[][];
         seriesIndex: number;
         dataPointIndex: number;
-        w: any;
+        w: unknown;
       }) => {
         const value = series[seriesIndex][dataPointIndex];
         return `<div style="padding:5px 10px; font-size:12px; background:#fff; border:1px solid #ccc; border-radius:4px;">

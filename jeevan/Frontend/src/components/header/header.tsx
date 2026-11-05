@@ -1,3 +1,4 @@
+import type { RootState } from '../../core/redux/store';
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import ImageWithBasePath from "../image-with-base-path";
@@ -32,11 +33,10 @@ const unloadRTLStylesheet = () => {
 const Header = () => {
   const location = useLocation();
   const dispatch = useDispatch();
-  const themeSettings = useSelector((state: any) => state.theme.themeSettings);
-  const hiddenLayout = useSelector((state: any) => state.sidebarSlice.hiddenLayout);
+  const themeSettings = useSelector((state: RootState) => state.theme.themeSettings);
 
   const mobileSidebar = useSelector(
-    (state: any) => state.sidebarSlice.mobileSidebar
+    (state: RootState) => state.sidebarSlice.mobileSidebar
   );
 
   // Check if current page is a layout page
@@ -83,23 +83,12 @@ const Header = () => {
   );
 
   // Extract themeSettings dependencies for useEffect
-  const themeDeps = [
-    themeSettings["data-bs-theme"],
-    themeSettings["dir"],
-    themeSettings["data-layout"],
-    themeSettings["data-sidebar"],
-    themeSettings["data-color"],
-    themeSettings["data-topbar"],
-    themeSettings["data-size"],
-    themeSettings["data-width"],
-    themeSettings["data-sidebarbg"],
-  ];
   useEffect(() => {
     const htmlElement = document.documentElement as HTMLElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
       htmlElement.setAttribute(key as string, String(value));
     });
-  }, themeDeps);
+  }, [themeSettings]);
 
   const [searchValue, setSearchValue] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -118,7 +107,7 @@ const Header = () => {
       // In other modes, use mobile sidebar toggle
       toggleMobileSidebar();
     }
-  }, [dispatch, toggleMobileSidebar, themeSettings, hiddenLayout]);
+  }, [dispatch, toggleMobileSidebar, themeSettings]);
   const handleSearchInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSearchValue(e.target.value);
@@ -556,7 +545,7 @@ const Header = () => {
               <div className="header-item d-flex me-2">
                 <button
                   className={`topbar-link btn topbar-link ${
-                    themeSettings["mode"] === "dark" ? "active" : ""
+                    themeSettings["data-bs-theme"] === "dark" ? "active" : ""
                   }`}
                   id="dark-mode-toggle"
                   type="button"
@@ -567,7 +556,7 @@ const Header = () => {
                 </button>
                 <button
                   className={`topbar-link btn topbar-link ${
-                    themeSettings["mode"] === "light" ? "active" : ""
+                    themeSettings["data-bs-theme"] === "light" ? "active" : ""
                   }`}
                   id="light-mode-toggle"
                   type="button"

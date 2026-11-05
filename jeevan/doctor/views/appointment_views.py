@@ -26,11 +26,15 @@ def doctor_dashboard(request):
         response['Expires'] = '0'
         return response
     
-    today = date.today()
+    today = timezone.localdate()
     Appointment.mark_expired_appointments()
     
     all_appointments = Appointment.objects.select_related('patient').filter(doctor=doctor)
-    accepted_count = all_appointments.filter(status='accepted').count()
+    from django.db.models import Q
+    now = timezone.localtime()
+    accepted_count = all_appointments.filter(status='accepted').filter(
+        Q(appointment_date__gt=today) | Q(appointment_date=today, appointment_time__gte=now.time())
+    ).count()
     pending_count = all_appointments.filter(status='pending').count()
     rejected_count = all_appointments.filter(status='rejected').count()
     completed_count = all_appointments.filter(status='completed').count()
@@ -264,10 +268,11 @@ def doctor_calendar(request):
             'doctor': doctor,
             'appointments': appointments,
             'appointments_json': json.dumps(appointments_data),
-            'current_month': date.today(),
+            'appointments_data': appointments_data,
+            'current_month': timezone.localdate(),
         }
         return render(request, 'doctor/calendar.html', context)
         
     except Exception as e:
         messages.error(request, f'Error loading calendar: {str(e)}')
-        return render(request, 'doctor/calendar.html', {'doctor': doctor, 'appointments': [], 'appointments_json': '[]'})
+        return render(request, 'doctor/calendar.html', {'doctor': doctor, 'appointments': [], 'appointments_json': '[]', 'appointments_data': []})

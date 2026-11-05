@@ -1,5 +1,7 @@
+from django.utils import timezone
+from datetime import timedelta
 import re
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.contrib.auth import get_user_model
@@ -15,6 +17,7 @@ from teleconsultation.services import create_teleconsultation
 
 User = get_user_model()
 
+@override_settings(TELECONSULTATION_ENABLED=True, TELECONSULTATION_ORIGIN='https://meet.example.org')
 class TeleconsultationTests(TestCase, JeevanTestClientMixin):
     def setUp(self):
         self.client = Client()
@@ -39,7 +42,7 @@ class TeleconsultationTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor,
             patient=self.patient,
             hospital=self.hospital,
-            appointment_date="2026-07-06",
+            appointment_date=timezone.localdate() + timedelta(days=1),
             appointment_time="12:00:00",
             status="accepted"
         )
@@ -60,7 +63,7 @@ class TeleconsultationTests(TestCase, JeevanTestClientMixin):
         
         # 2. Assert secure random ID and password (not sequential)
         self.assertTrue(len(session.meeting_id) >= 16)
-        self.assertTrue(len(session.meeting_password) >= 16)
+        self.assertIsNone(session.meeting_password)
 
     def test_start_teleconsultation_access_controls(self):
         session = create_teleconsultation(
@@ -72,7 +75,7 @@ class TeleconsultationTests(TestCase, JeevanTestClientMixin):
         
         # 1. Doctor joining transitions status and redirects
         self.login_user(self.client, "teledoc")
-        response = self.client.get(start_url)
+        response = self.client.post(start_url)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, session.meeting_link)
         
@@ -82,12 +85,12 @@ class TeleconsultationTests(TestCase, JeevanTestClientMixin):
         
         # 2. Patient joining redirects
         self.login_user(self.client, "telepat")
-        response2 = self.client.get(start_url)
+        response2 = self.client.post(start_url)
         self.assertEqual(response2.status_code, 302)
         
         # 3. Unrelated user joining is forbidden
         self.login_user(self.client, "otheruser")
-        response3 = self.client.get(start_url)
+        response3 = self.client.post(start_url)
         self.assertEqual(response3.status_code, 403)
 
     def test_get_teleconsultation_details(self):

@@ -322,6 +322,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Sidebar -->
@@ -369,7 +370,7 @@
         <div class="topbar">
             <h2>
                 <i class="fas fa-heartbeat"></i>
-                Patient Management System (Receptionist Portal)
+                Jeevan (Receptionist Portal)
             </h2>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
@@ -399,6 +400,7 @@
             <!-- Registration Form -->
             <div class="form-container">
                 <form method="post" novalidate>
+                    {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
                     {% csrf_token %}
                     
                     <!-- Patient Registration Form -->

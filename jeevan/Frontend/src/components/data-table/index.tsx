@@ -43,7 +43,7 @@ const Datatable: React.FC<DatatableProps> = ({
     setSelectedRowKeys(newSelectedRowKeys);
   }, []);
 
-  const rowSelection: TableRowSelection<any> = useMemo(() => ({
+  const rowSelection: TableRowSelection<DatatableProps["dataSource"][number]> = useMemo(() => ({
     selectedRowKeys,
     onChange: onSelectChange,
   }), [selectedRowKeys, onSelectChange]);

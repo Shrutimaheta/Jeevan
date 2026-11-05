@@ -6,7 +6,7 @@ export const storage = {
       return null;
     }
   },
-  set: (key: string, value: any) => {
+  set: (key: string, value: unknown) => {
     localStorage.setItem(key, JSON.stringify(value));
   },
   remove: (key: string) => localStorage.removeItem(key),

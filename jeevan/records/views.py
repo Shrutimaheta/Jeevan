@@ -34,9 +34,6 @@ def verify_record_access(user, patient, record=None):
     elif user.role == 'doctor':
         try:
             doctor = Doctor.objects.get(user=user)
-            # If a specific record is checked, the creator doctor always has access
-            if record and record.doctor == doctor:
-                return True
             return check_doctor_patient_access(doctor, patient)
         except Doctor.DoesNotExist:
             return False
@@ -136,8 +133,8 @@ def download_record_file(request, record_id):
     if not record.report_file:
         raise Http404("No report file attached to this record.")
         
-    file_path = record.report_file.path
-    if not os.path.exists(file_path):
+    storage = record.report_file.storage
+    if not storage.exists(record.report_file.name):
         raise Http404("File does not exist on storage.")
         
     log_audit_event(
@@ -147,7 +144,8 @@ def download_record_file(request, record_id):
         details=f"Streamed report file of Medical Record ID: {record.id}"
     )
     
-    content_type, _ = mimetypes.guess_type(file_path)
-    response = FileResponse(open(file_path, 'rb'), content_type=content_type or 'application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+    content_type, _ = mimetypes.guess_type(record.report_file.name)
+    response = FileResponse(record.report_file.open('rb'), as_attachment=True,
+                            filename=os.path.basename(record.report_file.name),
+                            content_type=content_type or 'application/octet-stream')
     return response

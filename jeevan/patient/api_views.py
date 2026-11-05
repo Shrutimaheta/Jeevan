@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+from django.core.exceptions import ValidationError, PermissionDenied
+from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -6,6 +7,15 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
+import logging
+
+
+def json_object(body):
+    data = json.loads(body)
+    if not isinstance(data, dict):
+        raise ValueError("Expected a JSON object.")
+    return data
+
 from django.db.models.functions import TruncDate, TruncMonth
 from django.db.models import Avg
 from django.core.paginator import Paginator
@@ -120,11 +130,16 @@ def vital_signs_api(request):
             'period': period,
             'count': len(data)
         })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 from jeevan.decorators import rate_limit
@@ -136,10 +151,11 @@ def add_vital_sign_api(request):
     """Add new vital sign reading"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
-        data = json.loads(request.body)
+        data = json_object(request.body)
         
-        vital_sign = VitalSign.objects.create(
-            patient=patient,
+        from .services import record_vitals
+        vital_sign = record_vitals(
+            patient=patient, actor=request.user,
             blood_pressure_systolic=data.get('blood_pressure_systolic'),
             blood_pressure_diastolic=data.get('blood_pressure_diastolic'),
             heart_rate=data.get('heart_rate'),
@@ -149,17 +165,26 @@ def add_vital_sign_api(request):
             notes=data.get('notes', '')
         )
         
+
         return JsonResponse({
             'success': True,
             'message': 'Vital signs recorded successfully',
             'id': vital_sign.id
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except (ValidationError, ValueError, TypeError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid vital signs.',
+                             'errors': getattr(exc, 'message_dict', {'input': [str(exc)]})}, status=400)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -206,11 +231,16 @@ def wellness_log_api(request):
             'count': len(data)
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -219,35 +249,11 @@ def log_wellness_api(request):
     """Log daily wellness data"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
-        data = json.loads(request.body)
+        data = json_object(request.body)
         
-        # Get or create wellness log for today
-        today = timezone.now().date()
-        wellness_log, created = WellnessLog.objects.get_or_create(
-            patient=patient,
-            date=today,
-            defaults={
-                'water_intake_glasses': data.get('water_intake_glasses', 0),
-                'sleep_hours': data.get('sleep_hours', 0),
-                'steps_count': data.get('steps_count', 0),
-                'mood_score': data.get('mood_score', 3),
-                'exercise_minutes': data.get('exercise_minutes', 0),
-                'stress_level': data.get('stress_level', 1),
-                'notes': data.get('notes', '')
-            }
-        )
-        
-        if not created:
-            # Update existing log
-            wellness_log.water_intake_glasses = data.get('water_intake_glasses', wellness_log.water_intake_glasses)
-            wellness_log.sleep_hours = data.get('sleep_hours', wellness_log.sleep_hours)
-            wellness_log.steps_count = data.get('steps_count', wellness_log.steps_count)
-            wellness_log.mood_score = data.get('mood_score', wellness_log.mood_score)
-            wellness_log.exercise_minutes = data.get('exercise_minutes', wellness_log.exercise_minutes)
-            wellness_log.stress_level = data.get('stress_level', wellness_log.stress_level)
-            wellness_log.notes = data.get('notes', wellness_log.notes)
-            wellness_log.save()
-        
+        from .services import record_wellness
+        wellness_log, created = record_wellness(patient, data)
+
         return JsonResponse({
             'success': True,
             'message': 'Wellness data logged successfully',
@@ -255,11 +261,16 @@ def log_wellness_api(request):
             'id': wellness_log.id
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -278,14 +289,9 @@ def medications_api(request):
         
         data = []
         for med in medications:
-            # Calculate adherence rate
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
-            taken_days = MedicationLog.objects.filter(
-                medication=med,
-                taken_date__gte=med.prescribed_date
-            ).values('taken_date').distinct().count()
-            adherence_rate = (taken_days / total_days * 100) if total_days > 0 else 0
-            
+            from .services import medication_logging_rate
+            adherence_rate = medication_logging_rate(med)
+
             data.append({
                 'id': med.id,
                 'name': med.name,
@@ -296,7 +302,9 @@ def medications_api(request):
                 'is_active': med.is_active,
                 'instructions': med.instructions,
                 'side_effects': med.side_effects,
-                'adherence_rate': round(adherence_rate, 1)
+                'adherence_rate': adherence_rate,
+                'metric_label': 'Self-reported medication logging',
+                'metric_description': 'Percentage of elapsed days with at least one log; not dose adherence.'
             })
         
         return JsonResponse({
@@ -305,11 +313,16 @@ def medications_api(request):
             'count': len(data)
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -318,18 +331,10 @@ def log_medication_api(request):
     """Log medication taken with daily idempotence"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
-        data = json.loads(request.body)
+        data = json_object(request.body)
         
-        medication = get_object_or_404(Medication, id=data.get('medication_id'), patient=patient)
-        
-        today = timezone.localdate()
-        medication_log, created = MedicationLog.objects.get_or_create(
-            medication=medication,
-            taken_date=today,
-            defaults={
-                'notes': data.get('notes', '')
-            }
-        )
+        from .services import record_medication_day
+        medication_log, created = record_medication_day(patient, data.get('medication_id'), data.get('notes', ''))
         
         return JsonResponse({
             'success': True,
@@ -338,11 +343,16 @@ def log_medication_api(request):
             'already_logged': not created
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -395,11 +405,16 @@ def health_trends_api(request):
             'period': period
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -455,50 +470,48 @@ def vital_signs_chart_api(request):
             'data': data
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
 @require_http_methods(["GET"])
 def medication_adherence_api(request):
-    """Get medication adherence percentage"""
+    """Compatibility endpoint for self-reported medication logging days."""
     try:
         patient = get_object_or_404(Patient, user=request.user)
         
-        medications = Medication.objects.filter(patient=patient, is_active=True)
-        total_adherence = 0
-        medication_count = 0
-        
-        for med in medications:
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
-            if total_days > 0:
-                taken_days = MedicationLog.objects.filter(
-                    medication=med,
-                    taken_date__gte=med.prescribed_date
-                ).values('taken_date').distinct().count()
-                adherence_rate = (taken_days / total_days * 100)
-                total_adherence += adherence_rate
-                medication_count += 1
-        
-        overall_adherence = (total_adherence / medication_count) if medication_count > 0 else 0
-        
+        from .services import medication_logging_summary
+        overall_adherence, medication_count = medication_logging_summary(patient)
+
         return JsonResponse({
             'success': True,
             'data': {
-                'overall_adherence': round(overall_adherence, 1),
+                'overall_adherence': overall_adherence,
+                'metric_label': 'Self-reported medication logging',
+                'metric_description': 'Percentage of elapsed days with at least one log; not proof of taking every prescribed dose.',
                 'medication_count': medication_count
             }
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -543,11 +556,16 @@ def notifications_api(request):
             'current_page': page_obj.number,
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)
 
 
 @login_required
@@ -556,7 +574,7 @@ def mark_notification_read_api(request):
     """Mark notification as read"""
     try:
         patient = get_object_or_404(Patient, user=request.user)
-        data = json.loads(request.body)
+        data = json_object(request.body)
         notification_id = data.get('notification_id')
         
         notification = get_object_or_404(Notification, id=notification_id, patient=patient)
@@ -569,8 +587,13 @@ def mark_notification_read_api(request):
             'message': 'Notification marked as read'
         })
     
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+    except Http404:
+        return JsonResponse({'success': False, 'error': 'Not found.'}, status=404)
+    except PermissionDenied:
+        return JsonResponse({'success': False, 'error': 'Access denied.'}, status=403)
+    except (ValidationError, ValueError, TypeError, OverflowError) as exc:
+        return JsonResponse({'success': False, 'error': 'Invalid input.',
+                             'errors': getattr(exc, 'message_dict', {})}, status=400)
+    except Exception:
+        logging.getLogger(__name__).exception('Patient API request failed')
+        return JsonResponse({'success': False, 'error': 'Unable to complete the request.'}, status=500)

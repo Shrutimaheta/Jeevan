@@ -1,3 +1,5 @@
+from django.utils import timezone
+from datetime import timedelta
 import io
 from datetime import date
 from django.test import TestCase, Client
@@ -44,10 +46,12 @@ class MedicalRecordsTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor_a,
             patient=self.patient_a,
             hospital=self.hospital,
-            appointment_date=date.today(),
+            appointment_date=timezone.localdate() + timedelta(days=1),
             appointment_time="10:00:00",
             status="accepted"
         )
+
+        Consent.objects.create(doctor=self.doctor_a, patient=self.patient_a, status='approved')
 
     def test_create_record_service_authorized(self):
         # Create standard text file upload
@@ -161,13 +165,9 @@ class MedicalRecordsTests(TestCase, JeevanTestClientMixin):
             response = self.client.post(url, {'summary': 'Checkup summary'})
             self.assertEqual(response.status_code, 302) # successful redirect
             
-        # 6th call should be rate limited and redirect with error
         response = self.client.post(url, {'summary': 'Checkup summary'})
-        self.assertEqual(response.status_code, 302)
-        # Follow redirect or check messages
-        # Cache key should prevent it
-        cache_key = f"rl:create_record:{self.doctor_user_a.id}"
-        self.assertEqual(cache.get(cache_key), 5)
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response['Retry-After'], '60')
 
     def test_fhir_and_snomed_interoperability(self):
         from records.services import create_medical_record

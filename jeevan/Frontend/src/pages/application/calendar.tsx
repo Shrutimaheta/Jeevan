@@ -1,3 +1,5 @@
+import type { EventClickArg, EventDropArg } from '@fullcalendar/core';
+import type { DateClickArg, DropArg } from '@fullcalendar/interaction';
 import CommonFooter from "../../components/common-footer/commonFooter";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -75,7 +77,7 @@ const useCalendar = () => {
     // Show the Add Event modal
     const modal = document.getElementById("add_new");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.show();
     }
@@ -124,13 +126,13 @@ const useCalendar = () => {
     onCloseModal();
   };
 
-  const onEventClick = (info: any) => {
+  const onEventClick = (info: EventClickArg) => {
     setEventData({
       id: info.event.id,
       title: info.event.title,
       start: info.event.startStr,
       className: info.event.classNames?.includes('calendar-event-') ? 
-        info.event.classNames.split(' ').find((cls: string) => cls.startsWith('calendar-event-')) : 
+        info.event.classNames.find((cls: string) => cls.startsWith('calendar-event-')) :
         "calendar-event-meeting",
     });
     setIsEditable(false);
@@ -139,14 +141,14 @@ const useCalendar = () => {
     // Show the Bootstrap modal
     const modal = document.getElementById("event_modal");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.show();
     }
   };
 
 
-  const onDateClick = (info: any) => {
+  const onDateClick = (info: DateClickArg) => {
     setEventData({
       title: "",
       start: info.dateStr,
@@ -158,13 +160,13 @@ const useCalendar = () => {
     // Show the Add Event modal
     const modal = document.getElementById("add_new");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.show();
     }
   };
 
-  const onDrop = (info: any) => {
+  const onDrop = (info: DropArg) => {
     const title = info.draggedEl.getAttribute('data-title') || info.draggedEl.innerText;
     
     // Find the className that starts with 'calendar-event-' to determine the color
@@ -191,7 +193,7 @@ const useCalendar = () => {
     setEvents([...events, newEvent]);
   };
 
-  const onEventDrop = (info: any) => {
+  const onEventDrop = (info: EventDropArg) => {
     setEvents(
       events.map((event) =>
         event.id === info.event.id
@@ -264,7 +266,7 @@ const Calendar = () => {
       // Close the modal using Bootstrap hide
       const modal = document.getElementById("add_new");
       if (modal) {
-        // @ts-ignore
+
         const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
         bsModal.hide();
         
@@ -286,7 +288,7 @@ const Calendar = () => {
     // Close the modal using Bootstrap hide
     const modal = document.getElementById("add_new");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.hide();
       
@@ -310,7 +312,7 @@ const Calendar = () => {
     if (externalEventsEle.current) {
       draggableInstance.current = new Draggable(externalEventsEle.current, {
         itemSelector: '.external-event',
-        eventData: function (eventEl: any) {
+        eventData: function (eventEl: HTMLElement) {
           return {
             title: eventEl.getAttribute('data-title') || eventEl.innerText,
             classNames: eventEl.getAttribute('data-class'),
@@ -534,7 +536,7 @@ const Calendar = () => {
           // Close the modal after deleting
           const modal = document.getElementById("event_modal");
           if (modal) {
-            // @ts-ignore
+
             const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
             bsModal.hide();
             
@@ -555,7 +557,7 @@ const Calendar = () => {
           // Close the modal
           const modal = document.getElementById("event_modal");
           if (modal) {
-            // @ts-ignore
+
             const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
             bsModal.hide();
             

@@ -16,7 +16,7 @@ const LABELS: Record<string, string> = {
 function findSidebarPath(pathname: string) {
   let result: { label: string; href?: string }[] = [];
 
-  function recurse(items: any[], path: { label: string; href?: string }[]): boolean {
+  function recurse(items: { label: string; link?: string; submenuItems?: {label: string; link?: string}[] }[], path: { label: string; href?: string }[]): boolean {
     for (const item of items) {
       const newPath = [...path, { label: item.label, href: item.link !== "#" ? item.link : undefined }];
       if (item.link && item.link !== "#" && item.link === pathname) {

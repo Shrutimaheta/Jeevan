@@ -1,10 +1,11 @@
+import type { ApexOptions } from 'apexcharts';
 import { useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import AutoBreadcrumb from "../../../components/breadcrumb/AutoBreadcrumb";
 import CommonFooter from "../../../components/common-footer/commonFooter";
 
 const ChartApex = () => {
-  const [sline] = useState<any>({
+  const [sline] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "line",
@@ -52,7 +53,7 @@ const ChartApex = () => {
       ],
     },
   });
-  const [sLineArea] = useState<any>({
+  const [sLineArea] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "area",
@@ -99,7 +100,7 @@ const ChartApex = () => {
       },
     },
   });
-  const [sCol] = useState<any>({
+  const [sCol] = useState<ApexOptions>({
     chart: {
       height: 290,
       type: "bar",
@@ -112,7 +113,6 @@ const ChartApex = () => {
         horizontal: false,
         columnWidth: "80%",
         borderRadius: 5,
-        endingShape: "rounded", // This rounds the top edges of the bars
       },
     },
     colors: ["#1F6DB2", "#0D7858", "#09800F"],
@@ -178,13 +178,13 @@ const ChartApex = () => {
     },
     tooltip: {
       y: {
-        formatter: function (val: string) {
+        formatter: function (val: number) {
           return "" + val + "%";
         },
       },
     },
   });
-  const [sColStacked] = useState<any>({
+  const [sColStacked] = useState<ApexOptions>({
     chart: {
       height: 290,
       type: "bar",
@@ -248,7 +248,7 @@ const ChartApex = () => {
       opacity: 1,
     },
   });
-  const [sBar] = useState<any>({
+  const [sBar] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "bar",
@@ -285,7 +285,7 @@ const ChartApex = () => {
       ],
     },
   });
-  const [options] = useState<any>({
+  const [options] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "line",
@@ -343,7 +343,7 @@ const ChartApex = () => {
       },
     ],
   });
-  const [donutChart] = useState<any>({
+  const [donutChart] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "donut",
@@ -367,7 +367,7 @@ const ChartApex = () => {
       },
     ],
   });
-  const [radialChart] = useState<any>({
+  const [radialChart] = useState<ApexOptions>({
     chart: {
       height: 350,
       type: "radialBar",
@@ -389,7 +389,7 @@ const ChartApex = () => {
             show: true,
             label: "Total",
             formatter: function () {
-              return 249;
+              return "249";
             },
           },
         },

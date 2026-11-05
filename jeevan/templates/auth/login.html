@@ -32,6 +32,7 @@
     .role-nurse { background: #fff3e0; color: #f57c00; }
     .role-admin { background: #ffebee; color: #d32f2f; }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Premium Background with Animated Elements -->
@@ -55,7 +56,7 @@
                 <div class="brand-section">
                     <div class="logo-container">
                         <div class="logo-wrapper">
-                            <img src="/media/patient_photos/logo.jpg" alt="Healthcare Management System Logo" class="premium-logo" loading="lazy">
+                            <img src="{% static 'images/clinic-mark.svg' %}" alt="Healthcare Management System Logo" class="premium-logo" loading="lazy">
                             <div class="logo-glow"></div>
                         </div>
                         <div class="brand-info">

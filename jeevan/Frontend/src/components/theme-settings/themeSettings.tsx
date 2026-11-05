@@ -6,7 +6,7 @@ const ThemeSettings = () => {
   const { themeSettings, handleUpdateTheme, handleResetTheme } = useThemeSettings();
 
   useEffect(() => {
-    const htmlElement: any = document.documentElement;
+    const htmlElement = document.documentElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
       htmlElement.setAttribute(key, value);
     });

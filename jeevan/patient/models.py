@@ -90,7 +90,10 @@ class PatientDocument(models.Model):
     def file_size(self):
         """Return file size in human readable format"""
         if self.file:
-            size = self.file.size
+            try:
+                size = self.file.size
+            except (OSError, ValueError):
+                return 'Unavailable'
             for unit in ['B', 'KB', 'MB', 'GB']:
                 if size < 1024.0:
                     return f"{size:.1f} {unit}"
@@ -274,7 +277,7 @@ class MedicationLog(models.Model):
     """Track when medications are taken for adherence monitoring"""
     medication = models.ForeignKey(Medication, on_delete=models.CASCADE, related_name='logs')
     taken_at = models.DateTimeField(auto_now_add=True)
-    taken_date = models.DateField(auto_now_add=True)
+    taken_date = models.DateField(default=timezone.localdate, editable=False)
     notes = models.TextField(blank=True, help_text="Notes about taking medication")
     
     class Meta:

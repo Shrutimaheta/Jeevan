@@ -1,3 +1,4 @@
+import type { RootState } from '../core/redux/store';
 import { Outlet, useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -13,9 +14,9 @@ import Header from "../components/header/header";
 const Feature = () => {
   const location = useLocation();
   const dispatch = useDispatch();
-  const themeSettings = useSelector((state: any) => state.theme.themeSettings);
+  const themeSettings = useSelector((state: RootState) => state.theme.themeSettings);
   const { miniSidebar, mobileSidebar, expandMenu, hiddenLayout } = useSelector(
-    (state: any) => state.sidebarSlice
+    (state: RootState) => state.sidebarSlice
   );
   
   // Ref for the main wrapper to detect clicks outside sidebar
@@ -141,7 +142,7 @@ const Feature = () => {
   }, [mobileSidebar, dispatch]);
 
   useEffect(() => {
-    // @ts-ignore
+
     if (window.bootstrap) {
       // Clean up any existing tooltips
       const oldTooltips = document.querySelectorAll('.tooltip');
@@ -149,7 +150,7 @@ const Feature = () => {
       // Initialize new tooltips
       const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       const tooltipInstances = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        // @ts-ignore
+
         return new window.bootstrap.Tooltip(tooltipTriggerEl);
       });
       // Cleanup on unmount

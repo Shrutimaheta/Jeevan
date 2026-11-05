@@ -13,7 +13,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-dotenv.load_dotenv(BASE_DIR.parent / '.env', override=True)
+dotenv.load_dotenv(BASE_DIR.parent / '.env', override=False)
 ENVIRONMENT = os.getenv("JEEVAN_ENV", "development").strip().lower()
 IS_PRODUCTION = ENVIRONMENT == "production"
 
@@ -54,6 +54,8 @@ def required_env(name):
 
 if IS_PRODUCTION:
     SECRET_KEY = required_env("DJANGO_SECRET_KEY")
+    if len(SECRET_KEY) < 50 or len(set(SECRET_KEY)) < 5 or SECRET_KEY.startswith('django-insecure-'):
+        raise ImproperlyConfigured('Production requires a new random DJANGO_SECRET_KEY of at least 50 characters.')
     DEBUG = False
     ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
     hosting_hostname = (
@@ -68,11 +70,13 @@ if IS_PRODUCTION:
         raise ImproperlyConfigured(
             "DJANGO_ALLOWED_HOSTS must contain at least one production host."
         )
+    if '*' in ALLOWED_HOSTS:
+        raise ImproperlyConfigured('Production requires explicit allowed hosts; wildcard * is not permitted.')
 else:
     # This value is deliberately development-only and must never be reused in production.
     SECRET_KEY = os.getenv(
         "DJANGO_SECRET_KEY", "django-insecure-jeevan-development-only"
-    )
+    ) or "django-insecure-jeevan-development-only"
     DEBUG = True
     ALLOWED_HOSTS = env_list(
         "DJANGO_ALLOWED_HOSTS", ("localhost", "127.0.0.1", "0.0.0.0")
@@ -106,6 +110,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "jeevan.middleware.PrivateResponseMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -132,8 +137,8 @@ ASGI_APPLICATION = "jeevan.asgi.application"
 
 
 database_url = os.getenv("DATABASE_URL", "").strip()
-db_engine = os.getenv("DB_ENGINE", "django.db.backends.postgresql").strip()
-if IS_PRODUCTION and "sqlite" in db_engine:
+db_engine = os.getenv("DB_ENGINE", "django.db.backends.postgresql" if IS_PRODUCTION else "django.db.backends.sqlite3").strip()
+if IS_PRODUCTION and not database_url and "sqlite" in db_engine:
     raise ImproperlyConfigured("SQLite is disabled in production. You must configure and use PostgreSQL.")
 
 if database_url:
@@ -197,10 +202,67 @@ STORAGES = {
 }
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', str(BASE_DIR / 'media')))
+PRIVATE_MEDIA_ROOT = Path(os.getenv('PRIVATE_MEDIA_ROOT', str(BASE_DIR / 'private_media')))
+STORAGES['private'] = {
+    'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    'OPTIONS': {'location': PRIVATE_MEDIA_ROOT},
+}
+DEMO_MODE = env_bool('JEEVAN_DEMO_MODE', False)
+RENDER_PROFILE = os.getenv('JEEVAN_RENDER_PROFILE', '').strip().lower()
+if RENDER_PROFILE not in ('', 'preview', 'production'):
+    raise ImproperlyConfigured('JEEVAN_RENDER_PROFILE must be preview or production.')
+IS_RENDER_PREVIEW = RENDER_PROFILE == 'preview'
+if RENDER_PROFILE and not IS_PRODUCTION:
+    raise ImproperlyConfigured('Render profiles require JEEVAN_ENV=production.')
+PREVIEW_ACCESS_TOKEN = os.getenv('PREVIEW_ACCESS_TOKEN', '')
+if IS_RENDER_PREVIEW:
+    if not DEMO_MODE or DATABASES['default']['NAME'] != 'jeevan_qa':
+        raise ImproperlyConfigured('Render preview requires demo mode and the disposable jeevan_qa database.')
+    if len(PREVIEW_ACCESS_TOKEN) < 32 or len(os.getenv('PREVIEW_ACCOUNT_PASSWORD', '')) < 12:
+        raise ImproperlyConfigured('Generate PREVIEW_ACCESS_TOKEN and PREVIEW_ACCOUNT_PASSWORD for the protected preview.')
+if RENDER_PROFILE == 'production':
+    if DEMO_MODE or DATABASES['default']['NAME'] == 'jeevan_qa':
+        raise ImproperlyConfigured('Real-user Render deployments cannot use preview mode or the preview database.')
+    if not all(path.resolve().is_relative_to(Path('/var/data').resolve()) for path in (MEDIA_ROOT, PRIVATE_MEDIA_ROOT)):
+        raise ImproperlyConfigured('Render production uploads must be under the persistent /var/data mount.')
+TELECONSULTATION_ENABLED = env_bool('TELECONSULTATION_ENABLED', False)
+TELECONSULTATION_ORIGIN = os.getenv('TELECONSULTATION_ORIGIN', '').rstrip('/')
+if IS_PRODUCTION and not DEMO_MODE:
+    if not os.getenv('PRIVATE_MEDIA_ROOT') or not os.getenv('MEDIA_ROOT'):
+        raise ImproperlyConfigured('Real-user deployments require MEDIA_ROOT and PRIVATE_MEDIA_ROOT on persistent volumes.')
+    if not env_bool('JEEVAN_PERSISTENT_STORAGE', False):
+        raise ImproperlyConfigured('Verify durable volumes and set JEEVAN_PERSISTENT_STORAGE=true.')
+    if not MEDIA_ROOT.is_absolute() or not PRIVATE_MEDIA_ROOT.is_absolute():
+        raise ImproperlyConfigured('Production media directories must be absolute paths.')
+    if any(PRIVATE_MEDIA_ROOT.resolve().is_relative_to(directory.resolve())
+           for directory in (MEDIA_ROOT, STATIC_ROOT, BASE_DIR / 'static', BASE_DIR / 'jeevan' / 'static')):
+        raise ImproperlyConfigured('Private medical files must not be placed under public media or static directories.')
+    if os.getenv('VERCEL') == '1':
+        raise ImproperlyConfigured('Local-file storage cannot host real patient files on Vercel. Use a persistent host.')
+if TELECONSULTATION_ENABLED:
+    from urllib.parse import urlsplit
+    meeting_origin = urlsplit(TELECONSULTATION_ORIGIN)
+    if meeting_origin.scheme != 'https' or not meeting_origin.netloc or meeting_origin.path:
+        raise ImproperlyConfigured('TELECONSULTATION_ORIGIN must be an HTTPS origin.')
+    if not env_bool('TELECONSULTATION_ADMISSION_VERIFIED', False):
+        raise ImproperlyConfigured('Verify meeting admission controls before enabling teleconsultations.')
+if not IS_PRODUCTION:
+    STORAGES['staticfiles']['BACKEND'] = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Bound bulk exports by original file bytes, including highly compressible files.
+REPORT_EXPORT_PATIENT_LIMIT = 50
+REPORT_EXPORT_FILE_LIMIT = 500
+REPORT_EXPORT_BYTE_LIMIT = 100 * 1024 * 1024
+TRUSTED_PROXY_NETWORKS = env_list('JEEVAN_TRUSTED_PROXY_NETWORKS')
+try:
+    from ipaddress import ip_network
+    for network in TRUSTED_PROXY_NETWORKS:
+        ip_network(network)
+except ValueError as exc:
+    raise ImproperlyConfigured('JEEVAN_TRUSTED_PROXY_NETWORKS must contain valid IP networks.') from exc
 AUTH_USER_MODEL = "care.CustomUser"
 
 LOGIN_URL = "/login/"
@@ -212,7 +274,7 @@ if IS_PRODUCTION:
     EMAIL_BACKEND = os.getenv(
         "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
     )
-    if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
+    if EMAIL_BACKEND in ("django.core.mail.backends.console.EmailBackend", "django.core.mail.backends.dummy.EmailBackend"):
         EMAIL_HOST = ""
         EMAIL_HOST_USER = ""
         EMAIL_HOST_PASSWORD = ""
@@ -228,11 +290,30 @@ else:
     EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 
+if IS_PRODUCTION and not DEMO_MODE and EMAIL_BACKEND != 'django.core.mail.backends.smtp.EmailBackend':
+    raise ImproperlyConfigured('Real-user deployments require an SMTP email backend.')
+if IS_RENDER_PREVIEW and EMAIL_BACKEND != 'django.core.mail.backends.dummy.EmailBackend':
+    raise ImproperlyConfigured('Render preview must disable email delivery with the dummy backend.')
+if IS_PRODUCTION and DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
+    raise ImproperlyConfigured('Production requires PostgreSQL, including DATABASE_URL.')
+
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '10'))
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "JeevanCare <noreply@localhost>"
 )
+if IS_PRODUCTION and not DEMO_MODE:
+    from email.utils import parseaddr
+    from django.core.validators import validate_email
+    from django.core.exceptions import ValidationError
+    sender_address = parseaddr(DEFAULT_FROM_EMAIL)[1]
+    try:
+        validate_email(sender_address)
+        if sender_address.rsplit('@', 1)[-1].lower() == 'localhost':
+            raise ValidationError('A deliverable sender is required.')
+    except ValidationError as exc:
+        raise ImproperlyConfigured('Set DEFAULT_FROM_EMAIL to a valid production sender address.') from exc
 
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -248,6 +329,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_AGE = 3600
 CSRF_USE_SESSIONS = False
+CSRF_FAILURE_VIEW = 'jeevan.security_views.csrf_failure'
 CSRF_TRUSTED_ORIGINS = env_list(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
     ("http://localhost:8000", "http://127.0.0.1:8000") if not IS_PRODUCTION else (),
@@ -266,6 +348,9 @@ SECURE_HSTS_SECONDS = (
 SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
 SECURE_HSTS_PRELOAD = IS_PRODUCTION
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if IS_PRODUCTION else None
+if RENDER_PROFILE:
+    SECURE_REDIRECT_EXEMPT = [r'^health/(live|ready)/$']
+    MIDDLEWARE.insert(1, 'jeevan.render_hosting.RenderPreviewMiddleware')
 
 # Logging configuration
 LOG_DIR = BASE_DIR / "logs"
@@ -318,6 +403,12 @@ LOGGING = {
         },
     },
 }
+
+if IS_PRODUCTION:
+    LOGGING['loggers']['django']['handlers'] = ['console']
+    LOGGING['loggers']['jeevan.audit']['handlers'] = ['console']
+    LOGGING['handlers'].pop('file', None)
+    LOGGING['handlers'].pop('audit_file', None)
 
 # REST Framework & Swagger Documentation Settings
 REST_FRAMEWORK = {

@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!deploy/.env.production.example
 
 # Python
 __pycache__/
@@ -52,3 +53,24 @@ npm-ls.json
 Thumbs.db
 *.swp
 *.swo
+
+# Local review tooling and generated verification output
+.review-deps/
+.review-venv/
+.audit-deps/
+.qa/
+qa_emails/
+.review-requirements.txt
+.implementation-audit-requirements.txt
+implementation-*.txt
+implementation-*.json
+implementation-*.py
+review-*.txt
+readiness-*.txt
+readiness-*.json
+implement_*.py
+frontend_types.py
+frontend_finish.py
+finish_backend.py
+final_adjustments.py
+review_probes.py

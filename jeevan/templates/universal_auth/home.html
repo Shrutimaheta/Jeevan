@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Management System - Multi-Specialist Hospital Network</title>
+    <title>Jeevan - Multi-Specialist Hospital Network</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -869,8 +870,8 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            opacity: 0;
-            transform: translateY(50px);
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hospital-card.animate {
@@ -974,8 +975,8 @@
             min-height: 280px;
             display: flex;
             flex-direction: column;
-            opacity: 0;
-            transform: translateY(50px);
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .doctor-card.animate {
@@ -1216,10 +1217,10 @@
         }
 
         @keyframes emergencyPulse {
-            0%, 100% { 
+            0%, 100% {
                 box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
             }
-            50% { 
+            50% {
                 box-shadow: 0 4px 25px rgba(239, 68, 68, 0.5), 0 0 0 4px rgba(239, 68, 68, 0.1);
             }
         }
@@ -1490,79 +1491,79 @@
                 min-height: 65px;
                 padding: 8px 0;
             }
-            
+
             .navbar-brand {
                 font-size: 1.3rem !important;
                 padding: 6px 0;
             }
-            
+
             .navbar-brand i {
                 font-size: 1.1rem;
                 margin-right: 8px;
             }
-            
+
             .nav-link {
                 padding: 8px 16px !important;
                 font-size: 0.9rem;
                 margin: 2px 0;
                 border-radius: 18px;
             }
-            
+
             .btn-login-custom {
                 padding: 8px 20px !important;
                 font-size: 0.9rem;
                 border-radius: 20px;
             }
-            
+
             .hero-section {
                 padding: 20px 0 30px;
                 min-height: auto;
                 padding-top: 40px;
             }
-            
+
             .hero-title {
                 font-size: 2.2rem;
                 line-height: 1.3;
             }
-            
+
             .hero-description {
                 font-size: 1.1rem;
                 margin-bottom: 2rem;
             }
-            
+
             .hero-illustration {
                 height: 400px;
                 margin-top: 0rem;
             }
-            
+
             .hero-image-background {
                 height: 350px;
             }
-            
+
             .search-container {
                 padding: 20px;
                 margin-bottom: 1.5rem;
             }
-            
+
             .search-input-group {
                 margin-bottom: 1rem;
             }
-            
+
             .search-btn {
                 padding: 14px 24px;
                 font-size: 0.95rem;
             }
-            
+
             .quick-options {
                 gap: 12px;
                 margin-top: 0.8rem;
             }
-            
+
             .option-item {
                 padding: 12px 16px;
                 font-size: 0.9rem;
             }
-            
+
             .search-section {
                 margin-top: -20px;
                 padding: 20px;
@@ -1661,15 +1662,17 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
+<link rel="stylesheet" href="{% static 'css/home-footer.css' %}">
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="#" style="color: var(--primary-color);">
-                    <i class="fas fa-hospital me-2"></i>Patient Management System
+            <a class="navbar-brand fw-bold fs-3" href="/" style="color: var(--primary-color);">
+                    <i class="fas fa-hospital me-2"></i>Jeevan
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -1703,7 +1706,7 @@
                 <div class="col-lg-6 hero-content">
                     <div class="hero-badge mb-2">
                         <span class="badge-icon">🏥</span>
-                        <span class="badge-text">Trusted Healthcare Network</span>
+                        <span class="badge-text">Your Clinic Network</span>
                     </div>
                     <h1 class="display-3 fw-bold mb-4 hero-title">
                         We take care of your <span class="text-highlight">health</span>
@@ -1717,7 +1720,7 @@
                                 <i class="fas fa-user-md"></i>
                                 <span>Find Doctor</span>
                             </a>
-                            <a href="/login/?next=/appointments/create/" class="option-item">
+                            <a href="/appointments/create/" class="option-item">
                                 <i class="fas fa-hospital"></i>
                                 <span>Book Appointment</span>
                             </a>
@@ -1725,9 +1728,9 @@
                                 <i class="fas fa-ambulance"></i>
                                 <span>Emergency Care</span>
                             </button>
-                            <a href="#" class="option-item" onclick="showCallNowNumber()">
+                            <a href="#hospitals" class="option-item">
                                 <i class="fas fa-phone"></i>
-                                <span>Call Now</span>
+                                <span>Clinic Contacts</span>
                             </a>
                         </div>
                     </div>
@@ -1743,7 +1746,7 @@
     <!-- Features Section -->
     <section id="about" class="py-5">
         <div class="container">
-            <h2 class="section-title text-center">Why Choose Patient Management System?</h2>
+            <h2 class="section-title text-center">Why Choose Jeevan?</h2>
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="text-center">
@@ -1751,7 +1754,7 @@
                             <i class="fas fa-shield-alt"></i>
                 </div>
                         <h5 class="fw-bold">Trusted Healthcare</h5>
-                        <p class="text-muted">Verified hospitals and certified doctors ensure quality care for you and your family.</p>
+                        <p class="text-muted">Browse clinic and doctor profiles, then confirm credentials and services directly with your selected clinic.</p>
                 </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
@@ -1759,7 +1762,7 @@
                         <div class="feature-icon">
                             <i class="fas fa-clock"></i>
                 </div>
-                        <h5 class="fw-bold">24/7 Availability</h5>
+                        <h5 class="fw-bold">Online Appointment Requests</h5>
                         <p class="text-muted">Book appointments anytime, anywhere with our round-the-clock booking system.</p>
                     </div>
                 </div>
@@ -1782,19 +1785,19 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Small Stats Section -->
             <div class="row text-center mt-4">
                 <div class="col-md-3 col-6 mb-3">
                     <div class="small-stats-card">
                         <div class="small-stats-number">{{ hospitals.count }}</div>
-                        <p class="small-stats-text">Partner Hospitals</p>
+                        <p class="small-stats-text">Listed Hospitals</p>
                     </div>
                 </div>
                 <div class="col-md-3 col-6 mb-3">
                     <div class="small-stats-card">
                         <div class="small-stats-number">{{ featured_doctors.count }}</div>
-                        <p class="small-stats-text">Expert Doctors</p>
+                        <p class="small-stats-text">Listed Doctors</p>
                     </div>
                 </div>
                 <div class="col-md-3 col-6 mb-3">
@@ -1805,8 +1808,8 @@
                 </div>
                 <div class="col-md-3 col-6 mb-3">
                     <div class="small-stats-card">
-                        <div class="small-stats-number">24/7</div>
-                        <p class="small-stats-text">Emergency Care</p>
+                        <div class="small-stats-number">Online</div>
+                        <p class="small-stats-text">Appointment Requests</p>
                     </div>
                 </div>
             </div>
@@ -1814,15 +1817,15 @@
     </section>
 
 
-    <!-- Our Partner Hospitals Section -->
+    <!-- Our Listed Hospitals Section -->
     <section id="hospitals" style="background: white; padding: 0; margin-top: -10px;">
         <div class="container">
             <div class="text-center mb-3">
-            <h2 class="section-title">Our Partner Hospitals</h2>
-                <p class="lead text-muted" style="margin-top: -10px;">Trusted healthcare partners across the region</p>
+            <h2 class="section-title">Our Listed Hospitals</h2>
+                <p class="lead text-muted" style="margin-top: -10px;">Explore the hospitals registered on Jeevan</p>
                 <div class="row justify-content-center">
                     <div class="col-md-8">
-                        <p class="text-muted">We've partnered with leading hospitals and healthcare providers to bring you the best medical care. Each partner is carefully selected for their commitment to quality, patient safety, and medical excellence.</p>
+                        <p class="text-muted">Browse hospital information and available specialties. Confirm credentials, services and appointment availability directly with your selected clinic.</p>
                     </div>
                 </div>
             </div>
@@ -1840,18 +1843,18 @@
                 <div class="search-hero-content">
                     <h2 class="search-hero-title">Find your perfect healthcare match</h2>
                     <p class="search-hero-subtitle">Hospitals that care, near you</p>
-                    
+
                     <!-- Search Form -->
                     <div class="search-form-container">
-                        <form method="GET" id="hospital-search-form" class="filter-form" hx-get="/htmx/hospitals/" hx-target="#hospital-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+                        <form method="GET" id="hospital-search-form" class="filter-form" hx-get="/htmx/hospitals/" hx-target="#hospital-list" hx-trigger="submit, change, keyup delay:300ms" hx-push-url="false">
                             <!-- Search Input -->
                             <div class="filter-group full-width">
-                                <label class="filter-label">
+                                <label class="filter-label" for="hospital-search">
                                     <i class="fas fa-search me-2"></i>Search Hospitals
                                 </label>
                                 <div class="search-input-wrapper">
-                                    <input type="text" class="form-control search-input" name="search" 
-                                           placeholder="Hospital name or location..." 
+                                    <input type="text" class="form-control search-input" name="search"
+                                           placeholder="Hospital name or location..."
                                            value="{{ search_query }}" id="hospital-search">
                                     <i class="fas fa-search search-icon"></i>
                 </div>
@@ -1859,10 +1862,10 @@
 
                             <!-- Specialization Filter -->
                             <div class="filter-group half-width">
-                                <label class="filter-label">
+                                <label class="filter-label" for="hospital-specialization">
                                     <i class="fas fa-stethoscope me-2"></i>Specialization
                                 </label>
-                                <select class="form-select filter-select" name="specialization">
+                                <select class="form-select filter-select" name="specialization" id="hospital-specialization">
                         <option value="">All Specializations</option>
                         {% for spec in specializations %}
                         <option value="{{ spec.id }}" {% if specialization_filter == spec.id|stringformat:"s" %}selected{% endif %}>
@@ -1874,13 +1877,13 @@
 
                             <!-- Location Filter -->
                             <div class="filter-group half-width">
-                                <label class="filter-label">
+                                <label class="filter-label" for="hospital-location">
                                     <i class="fas fa-map-marker-alt me-2"></i>Location
                                 </label>
                                 <div class="location-input-wrapper">
-                                    <input type="text" class="form-control location-input" name="location" 
-                                           placeholder="City or area..." value="{{ location_filter }}">
-                                    <button type="button" class="btn btn-location" id="use-location-btn" title="Use my current location">
+                                    <input type="text" class="form-control location-input" name="location"
+                                           placeholder="City or area..." value="{{ location_filter }}" id="hospital-location" aria-describedby="location-help">
+                                    <button type="button" class="btn btn-location" id="use-location-btn" title="Use my current location" aria-label="Use my current location">
                                         <i class="fas fa-crosshairs"></i>
                                     </button>
                                 </div>
@@ -1888,10 +1891,10 @@
 
                             <!-- Rating Filter -->
                             <div class="filter-group half-width">
-                                <label class="filter-label">
+                                <label class="filter-label" for="hospital-min-rating">
                                     <i class="fas fa-star me-2"></i>Minimum Rating
                                 </label>
-                                <select class="form-select filter-select" name="min_rating">
+                                <select class="form-select filter-select" name="min_rating" id="hospital-min-rating">
                                     <option value="">Any Rating</option>
                                     <option value="4" {% if min_rating == '4' %}selected{% endif %}>4+ Stars</option>
                                     <option value="3" {% if min_rating == '3' %}selected{% endif %}>3+ Stars</option>
@@ -1913,10 +1916,10 @@
                             <!-- Availability Filter -->
                             <div class="filter-group half-width">
                                 <div class="checkbox-wrapper">
-                                    <input type="checkbox" class="filter-checkbox" id="availability-filter" name="available_today" value="1" {% if available_today == '1' %}checked{% endif %}>
+                                    <input type="checkbox" class="filter-checkbox" id="availability-filter" disabled title="Confirm availability with your clinic">
                                     <label for="availability-filter" class="checkbox-label">
                                         <span class="checkbox-custom"></span>
-                                        <span class="checkbox-text">Available Today</span>
+                                        <span class="checkbox-text">Confirm availability with clinic</span>
                                     </label>
                 </div>
                             </div>
@@ -1927,8 +1930,10 @@
                                     <i class="fas fa-search me-2"></i>Find Hospitals
                     </button>
                 </div>
-            </form>
-            
+            <p class="full-width small text-muted" id="location-help">Enter your city, or use location with your permission. Location lookup shares coordinates with BigDataCloud.</p>
+                            <p class="full-width small" id="hospital-search-status" role="status" aria-live="polite"></p>
+                        </form>
+
             <!-- Results Summary -->
             <div class="results-summary mt-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -1945,7 +1950,7 @@
                     </div>
                 </div>
                     </div>
-        
+
 
     </section>
 
@@ -1957,18 +1962,18 @@
                 <p class="lead text-muted" style="margin-top: -8px;">Meet our expert medical professionals</p>
                 <div class="row justify-content-center">
                     <div class="col-md-8">
-                        <p class="text-muted">Our network includes highly qualified doctors across various specialties. Each doctor is carefully vetted for their expertise, experience, and commitment to patient care.</p>
+                        <p class="text-muted">Browse listed doctors and specialties. Confirm qualifications and appointment availability directly with your selected clinic.</p>
                     </div>
                 </div>
             </div>
-            <form class="row g-3 mb-3" hx-get="/htmx/doctors/" hx-target="#doctor-list" hx-trigger="change, keyup delay:300ms" hx-push-url="false">
+            <form method="get" action="/htmx/doctors/" class="row g-3 mb-3" hx-get="/htmx/doctors/" hx-target="#doctor-list" hx-trigger="submit, change, keyup delay:300ms" hx-push-url="false">
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Search Doctors</label>
-                    <input type="text" class="form-control" name="search" placeholder="Doctor or hospital...">
+                    <label class="form-label fw-semibold" for="doctor-search">Search Doctors</label>
+                    <input type="text" class="form-control" name="search" id="doctor-search" placeholder="Doctor or hospital...">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">Specialization</label>
-                    <select class="form-select" name="specialization">
+                    <label class="form-label fw-semibold" for="doctor-specialization">Specialization</label>
+                    <select class="form-select" name="specialization" id="doctor-specialization">
                         <option value="">All</option>
                         {% for spec in specializations %}
                         <option value="{{ spec.id }}">{{ spec.sname }}</option>
@@ -1976,8 +1981,8 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold">Min Rating</label>
-                    <select class="form-select" name="min_rating">
+                    <label class="form-label fw-semibold" for="doctor-min-rating">Min Rating</label>
+                    <select class="form-select" name="min_rating" id="doctor-min-rating">
                         <option value="">Any</option>
                         <option value="4">4+</option>
                         <option value="3">3+</option>
@@ -1986,8 +1991,8 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-end gap-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="1" id="available_today" name="available_today">
-                        <label class="form-check-label" for="available_today">Available Today</label>
+                        <input class="form-check-input" type="checkbox" value="1" id="available_today" disabled title="Confirm availability with your clinic">
+                        <label class="form-check-label" for="available_today">Confirm availability with clinic</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" value="1" id="insurance_doc" name="insurance">
@@ -2001,455 +2006,58 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer id="contact" class="footer">
+    <footer id="contact" class="home-footer" aria-label="Jeevan information and support">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5 class="fw-bold mb-3">
-                        <i class="fas fa-hospital me-2"></i>Patient Management System
-                    </h5>
-                    <p class="text-muted">Connecting patients with quality healthcare across our network of multi-specialist hospitals.</p>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="text-muted"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-muted"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
-                    </div>
+            <div class="home-footer__grid">
+                <div>
+                    <a class="home-footer__brand" href="/">Jeevan</a>
+                    <p>Appointments, patient documents and clinic communication in one place.</p>
+                    <p>For emergencies, contact your local emergency service. This website does not monitor emergency requests.</p>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="fw-bold mb-3">Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#hospitals">Hospitals</a></li>
-                        <li><a href="#doctors">Doctors</a></li>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
+                <div>
+                    <h2>Explore</h2>
+                    <ul><li><a href="#hospitals">Find a hospital</a></li><li><a href="#doctors">Find a doctor</a></li><li><a href="#about">About Jeevan</a></li></ul>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="fw-bold mb-3">Services</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Book Appointment</a></li>
-                        <li><a href="#">Emergency Care</a></li>
-                        <li><a href="#">Teleconsultation</a></li>
-                        <li><a href="#">Health Records</a></li>
-                    </ul>
+                <div>
+                    <h2>Your account</h2>
+                    <ul><li><a href="{% url 'universal_login' %}">Sign in</a></li><li><a href="{% url 'patient:patient_register' %}">Patient registration</a></li><li><a href="{% url 'patient:forgot_password' %}">Recover account</a></li><li><a href="{% url 'appointments:appointment_create' %}">Request an appointment</a></li></ul>
                 </div>
-                <div class="col-lg-4 mb-4">
-                    <h6 class="fw-bold mb-3">Contact Info</h6>
-                    <p class="text-muted mb-2">
-                        <i class="fas fa-phone me-2"></i>+91 98765 43210
-                    </p>
-                    <p class="text-muted mb-2">
-                        <i class="fas fa-envelope me-2"></i>info@jeevan.com
-                    </p>
-                    <p class="text-muted">
-                        <i class="fas fa-map-marker-alt me-2"></i>123 Healthcare Street, Medical City
-                    </p>
+                <div>
+                    <h2>Contact your clinic</h2>
+                    <p>Choose your hospital to find its phone number, email and address. Confirm appointment availability directly with the clinic.</p>
+                    <a class="home-footer__contact" href="#hospitals">Find clinic contact</a>
                 </div>
             </div>
-            <hr class="my-4" style="border-color: #374151;">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="text-muted mb-0">&copy; 2024 Patient Management System. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="#" class="text-muted me-3">Privacy Policy</a>
-                    <a href="#" class="text-muted">Terms of Service</a>
-                </div>
+            <div class="home-footer__bottom">
+                <p>&copy; {% now "Y" %} Jeevan. All rights reserved.</p>
+                <p>Contact your clinic for its privacy policy and service terms. Video visits depend on clinic availability.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Emergency Modal -->
-    <div class="modal fade emergency-modal" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
-                    <h5 class="modal-title" id="emergencyModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
-                        <i class="fas fa-ambulance me-2"></i>Emergency Care
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="emergency-options">
-                        <a href="#" class="emergency-option" onclick="showEmergencyNumber()">
-                            <div class="emergency-option-icon">
-                                <i class="fas fa-phone"></i>
-                            </div>
-                            <div class="emergency-option-content">
-                                <h6 class="emergency-option-title">Call Ambulance</h6>
-                                <p class="emergency-option-desc">Immediate emergency response</p>
-                            </div>
-                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
-                        </a>
-
-                        <a href="#" class="emergency-option" onclick="showAmbulanceBooking()">
-                            <div class="emergency-option-icon">
-                                <i class="fas fa-ambulance"></i>
-                            </div>
-                            <div class="emergency-option-content">
-                                <h6 class="emergency-option-title">Book Ambulance</h6>
-                                <p class="emergency-option-desc">Schedule emergency transport</p>
-                            </div>
-                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
-                        </a>
-
-                        <a href="#" class="emergency-option" onclick="showEmergencyAppointment()">
-                            <div class="emergency-option-icon">
-                                <i class="fas fa-user-md"></i>
-                            </div>
-                            <div class="emergency-option-content">
-                                <h6 class="emergency-option-title">Emergency Appointment</h6>
-                                <p class="emergency-option-desc">Book urgent doctor consultation</p>
-                            </div>
-                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
-                        </a>
-
-                        <a href="/emergency/nearest-hospitals/" class="emergency-option">
-                            <div class="emergency-option-icon">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                            <div class="emergency-option-content">
-                                <h6 class="emergency-option-title">Nearest Emergency Hospital</h6>
-                                <p class="emergency-option-desc">Find closest emergency facility</p>
-                            </div>
-                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
-                        </a>
-
-                        <a href="/emergency/guide/" class="emergency-option">
-                            <div class="emergency-option-icon">
-                                <i class="fas fa-clipboard-list"></i>
-                            </div>
-                            <div class="emergency-option-content">
-                                <h6 class="emergency-option-title">Emergency Guide</h6>
-                                <p class="emergency-option-desc">Quick checklist for emergencies</p>
-                            </div>
-                            <i class="fas fa-chevron-right emergency-option-arrow"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Ambulance Booking Modal -->
-    <div class="modal fade" id="ambulanceBookingModal" tabindex="-1" aria-labelledby="ambulanceBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
-                <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
-                    <h5 class="modal-title" id="ambulanceBookingModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
-                        <i class="fas fa-ambulance me-2"></i>Book Emergency Ambulance
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
-                </div>
-                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
-                                <div style="text-align: center; margin-bottom: 25px;">
-                                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: white; font-size: 1.8rem;">
-                                        <i class="fas fa-ambulance"></i>
-                                    </div>
-                                    <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 10px;">Emergency Ambulance Service</h4>
-                                    <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Fast, reliable emergency transport</p>
-                                </div>
-                                
-                                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
-                                    <h6 style="color: var(--text-dark); font-weight: 600; margin-bottom: 15px;">
-                                        <i class="fas fa-info-circle me-2" style="color: #f59e0b;"></i>Service Information
-                                    </h6>
-                                    <ul style="margin: 0; padding-left: 20px; color: var(--text-dark); font-size: 0.9rem; line-height: 1.6;">
-                                        <li>24/7 Emergency Response</li>
-                                        <li>Advanced Life Support (ALS)</li>
-                                        <li>GPS Tracking & ETA Updates</li>
-                                        <li>Medical Equipment Onboard</li>
-                                        <li>Direct Hospital Coordination</li>
-                                    </ul>
-                                </div>
-
-                                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                                        <i class="fas fa-clock" style="color: #f59e0b; margin-right: 8px;"></i>
-                                        <strong style="color: var(--text-dark);">Average Response Time: 8-12 minutes</strong>
-                                    </div>
-                                    <p style="color: var(--text-dark); font-size: 0.85rem; margin: 0; line-height: 1.4;">
-                                        Our emergency ambulances are strategically positioned for rapid response across the city.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
-                                <h5 style="color: var(--text-dark); font-weight: 700; margin-bottom: 20px; text-align: center;">
-                                    <i class="fas fa-calendar-plus me-2" style="color: #f59e0b;"></i>Quick Booking
-                                </h5>
-                                
-                                <form id="ambulanceBookingForm">
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Patient Name *</label>
-                                        <input type="text" class="form-control" id="patientName" placeholder="Enter patient name" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Contact Number *</label>
-                                        <input type="tel" class="form-control" id="contactNumber" placeholder="Enter contact number" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Pickup Location *</label>
-                                        <textarea class="form-control" id="pickupLocation" rows="2" placeholder="Enter detailed pickup address" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Emergency Type *</label>
-                                        <select class="form-select" id="emergencyType" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                            <option value="">Select emergency type</option>
-                                            <option value="cardiac">Cardiac Emergency</option>
-                                            <option value="trauma">Trauma/Accident</option>
-                                            <option value="stroke">Stroke</option>
-                                            <option value="respiratory">Respiratory Emergency</option>
-                                            <option value="other">Other Medical Emergency</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Additional Notes</label>
-                                        <textarea class="form-control" id="additionalNotes" rows="2" placeholder="Any additional information (optional)" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
-                                    </div>
-                                    
-                                    <div style="display: flex; gap: 15px; margin-top: 25px;">
-                                        <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
-                                            <i class="fas fa-ambulance me-2"></i>Book Ambulance
-                                        </button>
-                                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                            <i class="fas fa-times me-2"></i>Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Emergency Appointment Modal -->
-    <div class="modal fade" id="emergencyAppointmentModal" tabindex="-1" aria-labelledby="emergencyAppointmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
-                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
-                    <h5 class="modal-title" id="emergencyAppointmentModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
-                        <i class="fas fa-user-md me-2"></i>Emergency Doctor Appointment
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
-                </div>
-                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
-                                <div style="text-align: center; margin-bottom: 25px;">
-                                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; color: white; font-size: 1.8rem;">
-                                        <i class="fas fa-user-md"></i>
-                                    </div>
-                                    <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 10px;">Emergency Medical Consultation</h4>
-                                    <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Immediate medical attention</p>
-                                </div>
-                                
-                                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
-                                    <h6 style="color: var(--text-dark); font-weight: 600; margin-bottom: 15px;">
-                                        <i class="fas fa-info-circle me-2" style="color: #3b82f6;"></i>Emergency Services
-                                    </h6>
-                                    <ul style="margin: 0; padding-left: 20px; color: var(--text-dark); font-size: 0.9rem; line-height: 1.6;">
-                                        <li>Immediate Doctor Consultation</li>
-                                        <li>Emergency Room Access</li>
-                                        <li>Specialist Referral</li>
-                                        <li>Priority Scheduling</li>
-                                        <li>24/7 Medical Support</li>
-                                    </ul>
-                                </div>
-
-                                <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                                        <i class="fas fa-clock" style="color: #3b82f6; margin-right: 8px;"></i>
-                                        <strong style="color: var(--text-dark);">Priority Response: 15-30 minutes</strong>
-                                    </div>
-                                    <p style="color: var(--text-dark); font-size: 0.85rem; margin: 0; line-height: 1.4;">
-                                        Emergency appointments are prioritized and will be scheduled immediately based on medical urgency.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb; height: 100%;">
-                                <h5 style="color: var(--text-dark); font-weight: 700; margin-bottom: 20px; text-align: center;">
-                                    <i class="fas fa-calendar-plus me-2" style="color: #3b82f6;"></i>Emergency Booking
-                                </h5>
-                                
-                                <form id="emergencyAppointmentForm">
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Patient Name *</label>
-                                        <input type="text" class="form-control" id="emergencyPatientName" placeholder="Enter patient name" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Contact Number *</label>
-                                        <input type="tel" class="form-control" id="emergencyContactNumber" placeholder="Enter contact number" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Emergency Type *</label>
-                                        <select class="form-select" id="emergencyMedicalType" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                            <option value="">Select emergency type</option>
-                                            <option value="cardiac">Cardiac Emergency</option>
-                                            <option value="stroke">Stroke Symptoms</option>
-                                            <option value="trauma">Trauma/Injury</option>
-                                            <option value="respiratory">Breathing Difficulty</option>
-                                            <option value="severe_pain">Severe Pain</option>
-                                            <option value="fever">High Fever</option>
-                                            <option value="allergic">Allergic Reaction</option>
-                                            <option value="other">Other Medical Emergency</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Symptoms Description *</label>
-                                        <textarea class="form-control" id="emergencySymptoms" rows="3" placeholder="Describe the symptoms and current condition" required style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Preferred Hospital</label>
-                                        <select class="form-select" id="preferredHospital" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px;">
-                                            <option value="">Any Available Hospital</option>
-                                            <option value="hospital1">City General Hospital</option>
-                                            <option value="hospital2">Metro Medical Center</option>
-                                            <option value="hospital3">Emergency Care Hospital</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label" style="font-weight: 600; color: var(--text-dark);">Additional Information</label>
-                                        <textarea class="form-control" id="emergencyAdditionalInfo" rows="2" placeholder="Any additional medical information (optional)" style="border-radius: 10px; border: 2px solid #e5e7eb; padding: 12px 15px; resize: none;"></textarea>
-                                    </div>
-                                    
-                                    <div style="display: flex; gap: 15px; margin-top: 25px;">
-                                        <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
-                                            <i class="fas fa-user-md me-2"></i>Book Emergency Appointment
-                                        </button>
-                                        <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 15px 20px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                            <i class="fas fa-times me-2"></i>Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Call Now Number Modal -->
-    <div class="modal fade" id="callNowModal" tabindex="-1" aria-labelledby="callNowModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
-                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
-                    <h5 class="modal-title" id="callNowModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
-                        <i class="fas fa-phone me-2"></i>Emergency Contact Center
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
-                </div>
-                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
-                    <div class="text-center">
-                        <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb;">
-                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem;">
-                                <i class="fas fa-headset"></i>
-                            </div>
-                            <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 15px;">24/7 Emergency Hotline</h4>
-                            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
-                                <h2 style="color: #3b82f6; font-weight: 800; margin: 0; font-size: 2.5rem;">+91-1800-123-4567</h2>
-                                <p style="color: var(--text-light); margin: 5px 0 0 0; font-size: 1.1rem;">Toll-Free Emergency Number</p>
-                            </div>
-                            <p style="color: var(--text-dark); font-size: 1rem; line-height: 1.6; margin-bottom: 25px;">
-                                Call our 24/7 emergency hotline for immediate assistance with medical emergencies, ambulance dispatch, hospital information, and emergency guidance. Our trained operators are available round-the-clock to help you.
-                            </p>
-                            <div style="display: flex; gap: 15px; justify-content: center;">
-                                <a href="tel:+91-1800-123-4567" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
-                                    <i class="fas fa-phone me-2"></i>Call Now
-                                </a>
-                                <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                    <i class="fas fa-times me-2"></i>Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Emergency Number Message Box -->
-    <div class="modal fade" id="emergencyNumberModal" tabindex="-1" aria-labelledby="emergencyNumberModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);">
-                <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 20px 20px 0 0; padding: 25px 30px;">
-                    <h5 class="modal-title" id="emergencyNumberModalLabel" style="font-size: 1.5rem; font-weight: 700; margin: 0;">
-                        <i class="fas fa-ambulance me-2"></i>Emergency Ambulance Service
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1); opacity: 0.8;"></button>
-                </div>
-                <div class="modal-body" style="padding: 30px; background: #f8fafc;">
-                    <div class="text-center">
-                        <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border: 2px solid #e5e7eb;">
-                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem;">
-                                <i class="fas fa-phone"></i>
-                            </div>
-                            <h4 style="color: var(--text-dark); font-weight: 700; margin-bottom: 15px;">Emergency Ambulance</h4>
-                            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e5e7eb;">
-                                <h2 style="color: #3b82f6; font-weight: 800; margin: 0; font-size: 2.5rem;">108</h2>
-                                <p style="color: var(--text-light); margin: 5px 0 0 0; font-size: 1.1rem;">National Emergency Number</p>
-                            </div>
-                            <p style="color: var(--text-dark); font-size: 1rem; line-height: 1.6; margin-bottom: 25px;">
-                                Call this number for immediate medical emergency response. Our emergency services are available 24/7 to provide rapid ambulance dispatch to your location.
-                            </p>
-                            <div style="display: flex; gap: 15px; justify-content: center;">
-                                <a href="tel:108" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
-                                    <i class="fas fa-phone me-2"></i>Call Now
-                                </a>
-                                <button type="button" class="btn" data-bs-dismiss="modal" style="background: #6b7280; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;">
-                                    <i class="fas fa-times me-2"></i>Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loginModalLabel">Login to Jeevan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0">
-                    {% include 'universal_auth/login.html' %}
-                </div>
-            </div>
-        </div>
+    <div class="modal fade" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyNoticeTitle" aria-hidden="true">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title fs-5" id="emergencyNoticeTitle">Emergency services unavailable</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body"><p>Jeevan does not dispatch ambulances or monitor emergency requests. Appointment requests are not emergency care.</p>
+            <p>For an emergency, contact your local emergency service or go to the nearest emergency department. Do not wait for a response through this website.</p></div>
+        </div></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script>
         // Navbar scroll effect
+        document.querySelectorAll('#navbarNav .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.matchMedia('(max-width: 991px)').matches) {
+                    const menu = document.getElementById('navbarNav');
+                    const closeMenu = () => bootstrap.Collapse.getOrCreateInstance(menu, {toggle: false}).hide();
+                    if (menu.classList.contains('collapsing')) menu.addEventListener('shown.bs.collapse', closeMenu, {once: true});
+                    else closeMenu();
+                }
+            });
+        });
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar-custom');
             if (window.scrollY > 50) {
@@ -2463,7 +2071,9 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+                const fragment = this.getAttribute('href');
+                if (!fragment || fragment === '#') return;
+                const target = document.querySelector(fragment);
                 if (target) {
                     target.scrollIntoView({
                         behavior: 'smooth',
@@ -2473,46 +2083,9 @@
             });
         });
 
-        // Enhanced scroll animation
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate');
-                }
-            });
-        }, observerOptions);
-
-        // Observe all cards for animation with staggered effect
-        document.querySelectorAll('.hospital-card, .doctor-card, .stats-card').forEach((card, index) => {
-            // Add delay for staggered animation
-            card.style.transitionDelay = `${index * 0.1}s`;
-            observer.observe(card);
-        });
-
-        // Additional animation for sections
-        const sectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
-
-        // Animate sections
-        document.querySelectorAll('section').forEach(section => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(30px)';
-            section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-            sectionObserver.observe(section);
+        // Keep page content visible immediately; scrolling must not reveal blank sections.
+        document.querySelectorAll('.hospital-card, .doctor-card, .stats-card').forEach(card => {
+            card.classList.add('animate');
         });
 
         // Smooth scrolling for anchor links
@@ -2521,7 +2094,9 @@
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
+                    const fragment = this.getAttribute('href');
+                if (!fragment || fragment === '#') return;
+                const target = document.querySelector(fragment);
                     if (target) {
                         target.scrollIntoView({
                             behavior: 'smooth',
@@ -2543,211 +2118,6 @@
             });
         });
 
-        // Emergency Number Display Function
-        function showEmergencyNumber() {
-            // Close the main emergency modal first
-            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
-            if (emergencyModal) {
-                emergencyModal.hide();
-            }
-            
-            // Show the emergency number modal after a short delay
-            setTimeout(() => {
-                const emergencyNumberModal = new bootstrap.Modal(document.getElementById('emergencyNumberModal'));
-                emergencyNumberModal.show();
-            }, 300);
-        }
-
-        // Ambulance Booking Display Function
-        function showAmbulanceBooking() {
-            // Close the main emergency modal first
-            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
-            if (emergencyModal) {
-                emergencyModal.hide();
-            }
-            
-            // Show the ambulance booking modal after a short delay
-            setTimeout(() => {
-                const ambulanceBookingModal = new bootstrap.Modal(document.getElementById('ambulanceBookingModal'));
-                ambulanceBookingModal.show();
-            }, 300);
-        }
-
-        // Call Now Number Display Function
-        function showCallNowNumber() {
-            // Show the call now modal directly
-            const callNowModal = new bootstrap.Modal(document.getElementById('callNowModal'));
-            callNowModal.show();
-        }
-
-        // Emergency Appointment Display Function
-        function showEmergencyAppointment() {
-            // Close the main emergency modal first
-            const emergencyModal = bootstrap.Modal.getInstance(document.getElementById('emergencyModal'));
-            if (emergencyModal) {
-                emergencyModal.hide();
-            }
-            
-            // Show the emergency appointment modal after a short delay
-            setTimeout(() => {
-                const emergencyAppointmentModal = new bootstrap.Modal(document.getElementById('emergencyAppointmentModal'));
-                emergencyAppointmentModal.show();
-            }, 300);
-        }
-
-        // Ambulance Booking Form Handler
-        document.addEventListener('DOMContentLoaded', function() {
-            const ambulanceBookingForm = document.getElementById('ambulanceBookingForm');
-            if (ambulanceBookingForm) {
-                ambulanceBookingForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get form data
-                    const formData = {
-                        patientName: document.getElementById('patientName').value,
-                        contactNumber: document.getElementById('contactNumber').value,
-                        pickupLocation: document.getElementById('pickupLocation').value,
-                        emergencyType: document.getElementById('emergencyType').value,
-                        additionalNotes: document.getElementById('additionalNotes').value
-                    };
-                    
-                    // Validate required fields
-                    if (!formData.patientName || !formData.contactNumber || !formData.pickupLocation || !formData.emergencyType) {
-                        alert('Please fill in all required fields.');
-                        return;
-                    }
-                    
-                    // Show booking confirmation
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Booking...';
-                    submitBtn.disabled = true;
-                    
-                    // Simulate booking process
-                    setTimeout(() => {
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('ambulanceBookingModal'));
-                        modal.hide();
-                        
-                        // Show success message
-                        alert(`Ambulance booking confirmed!\n\nPatient: ${formData.patientName}\nContact: ${formData.contactNumber}\nLocation: ${formData.pickupLocation}\nEmergency Type: ${formData.emergencyType}\n\nOur team will contact you shortly with ETA updates.`);
-                        
-                        // Reset form
-                        this.reset();
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 2000);
-                });
-            }
-
-            // Emergency Appointment Form Handler
-            const emergencyAppointmentForm = document.getElementById('emergencyAppointmentForm');
-            if (emergencyAppointmentForm) {
-                emergencyAppointmentForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get form data
-                    const formData = {
-                        patientName: document.getElementById('emergencyPatientName').value,
-                        contactNumber: document.getElementById('emergencyContactNumber').value,
-                        emergencyType: document.getElementById('emergencyMedicalType').value,
-                        symptoms: document.getElementById('emergencySymptoms').value,
-                        preferredHospital: document.getElementById('preferredHospital').value,
-                        additionalInfo: document.getElementById('emergencyAdditionalInfo').value
-                    };
-                    
-                    // Validate required fields
-                    if (!formData.patientName || !formData.contactNumber || !formData.emergencyType || !formData.symptoms) {
-                        alert('Please fill in all required fields.');
-                        return;
-                    }
-                    
-                    // Show booking confirmation
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Booking...';
-                    submitBtn.disabled = true;
-                    
-                    // Simulate booking process
-                    setTimeout(() => {
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('emergencyAppointmentModal'));
-                        modal.hide();
-                        
-                        // Show success message
-                        alert(`Emergency appointment confirmed!\n\nPatient: ${formData.patientName}\nContact: ${formData.contactNumber}\nEmergency Type: ${formData.emergencyType}\nSymptoms: ${formData.symptoms}\n\nA doctor will contact you within 15-30 minutes. Please stay accessible.`);
-                        
-                        // Reset form
-                        this.reset();
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 2000);
-                });
-            }
-        });
-
-        // Emergency Modal Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const emergencyModal = document.getElementById('emergencyModal');
-            const emergencyOptions = document.querySelectorAll('.emergency-option');
-            const floatingEmergencyBtn = document.querySelector('.floating-emergency-btn');
-            
-            // Add visual feedback for emergency options
-            emergencyOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Add emergency-specific styling
-                    this.style.background = 'var(--danger-color)';
-                    this.style.color = 'white';
-                    
-                    // Show emergency alert for critical options
-                    if (this.href.includes('tel:')) {
-                        // Add emergency alert styling
-                        this.style.animation = 'pulse 0.5s ease-in-out';
-                        setTimeout(() => {
-                            this.style.animation = '';
-                        }, 500);
-                    }
-                });
-            });
-
-            // Floating button pulse animation
-            if (floatingEmergencyBtn) {
-                floatingEmergencyBtn.addEventListener('mouseenter', function() {
-                    this.style.animation = 'none';
-                    setTimeout(() => {
-                        this.style.animation = 'emergencyPulse 2s infinite';
-                    }, 100);
-                });
-            }
-
-            // Emergency modal accessibility
-            if (emergencyModal) {
-                emergencyModal.addEventListener('shown.bs.modal', function() {
-                    // Focus on first emergency option for keyboard navigation
-                    const firstOption = this.querySelector('.emergency-option');
-                    if (firstOption) {
-                        firstOption.focus();
-                    }
-                });
-
-                // Add keyboard navigation
-                emergencyModal.addEventListener('keydown', function(e) {
-                    const options = Array.from(this.querySelectorAll('.emergency-option'));
-                    const currentIndex = options.indexOf(document.activeElement);
-                    
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const nextIndex = (currentIndex + 1) % options.length;
-                        options[nextIndex].focus();
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const prevIndex = currentIndex === 0 ? options.length - 1 : currentIndex - 1;
-                        options[prevIndex].focus();
-                    }
-                });
-            }
-        });
-
         // Enhanced Search Functionality
         document.addEventListener('DOMContentLoaded', function() {
             // Sticky Filter Bar
@@ -2761,6 +2131,7 @@
 
             // Show/hide sticky filter bar on scroll
             window.addEventListener('scroll', function() {
+                if (!stickyFilterBar) return;
                 if (window.scrollY > 200) {
                     stickyFilterBar.classList.add('visible');
                 } else {
@@ -2782,70 +2153,49 @@
                 form.dispatchEvent(new Event('change'));
             });
 
-            // Location services
+            const searchStatus = document.getElementById('hospital-search-status');
+            const setStatus = message => { if (searchStatus) searchStatus.textContent = message; };
             const useLocationBtn = document.getElementById('use-location-btn');
             if (useLocationBtn) {
                 useLocationBtn.addEventListener('click', function() {
-                    if (navigator.geolocation) {
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                        navigator.geolocation.getCurrentPosition(
-                            function(position) {
-                                const lat = position.coords.latitude;
-                                const lng = position.coords.longitude;
-                                
-                                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        const locationInput = document.querySelector('input[name="location"]');
-                                        if (locationInput) {
-                                            locationInput.value = `${data.city}, ${data.principalSubdivision}, ${data.countryName}`;
-                                        }
-                                        useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
-                                    })
-                                    .catch(error => {
-                                        console.error('Error getting location:', error);
-                                        useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
-                                        alert('Unable to get your location. Please enter manually.');
-                                    });
-                            },
-                            function(error) {
-                                console.error('Geolocation error:', error);
-                                useLocationBtn.innerHTML = '<i class="fas fa-crosshairs"></i>';
-                                alert('Location access denied. Please enter your location manually.');
-                            }
-                        );
-                    } else {
-                        alert('Geolocation is not supported by this browser.');
-                    }
+                    if (!navigator.geolocation) { setStatus('Location is unavailable. Enter your city manually.'); return; }
+                    if (!window.confirm('Use your location? Your coordinates will be sent to BigDataCloud to identify your city. You can enter a city manually instead.')) return;
+                    useLocationBtn.disabled = true;
+                    setStatus('Finding your city…');
+                    const finish = message => { useLocationBtn.disabled = false; setStatus(message); };
+                    navigator.geolocation.getCurrentPosition(async position => {
+                        const controller = new AbortController();
+                        const timeout = setTimeout(() => controller.abort(), 10000);
+                        try {
+                            const params = new URLSearchParams({latitude: position.coords.latitude, longitude: position.coords.longitude, localityLanguage: 'en'});
+                            const response = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?' + params, {signal: controller.signal});
+                            if (!response.ok) throw new Error('Location lookup failed');
+                            const data = await response.json();
+                            const city = data.city || data.locality || data.principalSubdivision;
+                            if (!city) throw new Error('No city returned');
+                            document.getElementById('hospital-location').value = city;
+                            finish('City found. Searching hospitals…');
+                            searchForm.dispatchEvent(new Event('change', {bubbles: true}));
+                        } catch (_error) { finish('Unable to find your city. Please enter it manually.'); }
+                        finally { clearTimeout(timeout); }
+                    }, () => finish('Location unavailable or permission denied. Enter your city manually.'), {timeout: 10000, maximumAge: 300000});
                 });
             }
 
-            // Form submission with loading states
-            searchForm.addEventListener('htmx:beforeRequest', function() {
-                loadingState.style.display = 'flex';
-                emptyState.style.display = 'none';
-                hospitalList.style.display = 'none';
+            searchForm.addEventListener('htmx:beforeRequest', () => {
+                searchForm.setAttribute('aria-busy', 'true');
+                setStatus('Searching hospitals…');
             });
-
-            searchForm.addEventListener('htmx:afterRequest', function(event) {
-                loadingState.style.display = 'none';
-                
-                // Check if results are empty
-                const hasResults = hospitalList.querySelector('.hospital-card, .row > div');
-                if (!hasResults) {
-                    emptyState.style.display = 'flex';
-                    hospitalList.style.display = 'none';
-                } else {
-                    emptyState.style.display = 'none';
-                    hospitalList.style.display = 'block';
-                }
+            searchForm.addEventListener('htmx:afterRequest', event => {
+                searchForm.removeAttribute('aria-busy');
+                setStatus(event.detail.successful ? '' : 'Search could not be completed. Please retry or adjust your filters.');
             });
 
             // Update result count
             function updateResultCount() {
                 const hospitalCards = document.querySelectorAll('.hospital-card');
                 const count = hospitalCards.length;
-                
+
                 if (count === 0) {
                     resultCount.textContent = 'No hospitals found';
                 } else if (count === 1) {
@@ -2893,7 +2243,7 @@
                         group.style.transform = 'translateX(4px)';
                         group.style.transition = 'transform 0.2s ease';
                     });
-                    
+
                     input.addEventListener('blur', function() {
                         group.style.transform = 'translateX(0)';
                     });
@@ -2933,7 +2283,7 @@
                     this.style.transform = 'translateY(-2px)';
                     this.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.12)';
                 });
-                
+
                 filterCard.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0)';
                     this.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.08)';
@@ -2947,95 +2297,13 @@
                     this.parentElement.style.transform = 'scale(1.02)';
                     this.parentElement.style.transition = 'transform 0.2s ease';
                 });
-                
+
                 input.addEventListener('blur', function() {
                     this.parentElement.style.transform = 'scale(1)';
                 });
             });
         });
 
-    </script>
-    <!-- Live Chat Widget -->
-    <div id="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-        <div id="chat-button" style="width: 60px; height: 60px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;">
-            <i class="fas fa-comments" style="color: white; font-size: 24px;"></i>
-        </div>
-        <div id="chat-box" style="position: absolute; bottom: 70px; right: 0; width: 350px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: none; border: 1px solid #e5e7eb;">
-            <div style="background: #007bff; color: white; padding: 16px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                <h6 style="margin: 0; font-weight: 600;">Live Chat Support</h6>
-                <button id="close-chat" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">&times;</button>
-            </div>
-            <div style="padding: 16px; height: 280px; overflow-y: auto;">
-                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                    <strong>Welcome to Patient Management System!</strong><br>
-                    <small>How can we help you today?</small>
-                </div>
-                <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px;">
-                    <strong>Quick Options:</strong><br>
-                    • Book an appointment<br>
-                    • Find a doctor<br>
-                    • Hospital information<br>
-                    • Emergency contact
-                </div>
-            </div>
-            <div style="padding: 16px; border-top: 1px solid #e5e7eb;">
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none;">
-                    <button id="send-message" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Send</button>
-                </div>
-                <div style="margin-top: 8px; text-align: center;">
-                    <small style="color: #6b7280;">Or call us: <strong>+91 98765 43210</strong></small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatButton = document.getElementById('chat-button');
-            const chatBox = document.getElementById('chat-box');
-            const closeChat = document.getElementById('close-chat');
-            const sendButton = document.getElementById('send-message');
-            const chatInput = document.getElementById('chat-input');
-
-            chatButton.addEventListener('click', function() {
-                chatBox.style.display = chatBox.style.display === 'none' ? 'block' : 'none';
-            });
-
-            closeChat.addEventListener('click', function() {
-                chatBox.style.display = 'none';
-            });
-
-            sendButton.addEventListener('click', function() {
-                const message = chatInput.value.trim();
-                if (message) {
-                    // Add user message to chat
-                    const chatArea = chatBox.querySelector('div[style*="height: 280px"]');
-                    const userMessage = document.createElement('div');
-                    userMessage.style.cssText = 'background: #007bff; color: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; margin-left: 20px; text-align: right;';
-                    userMessage.innerHTML = '<strong>You:</strong> ' + message;
-                    chatArea.appendChild(userMessage);
-                    
-                    // Auto response
-                    setTimeout(() => {
-                        const botMessage = document.createElement('div');
-                        botMessage.style.cssText = 'background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;';
-                        botMessage.innerHTML = '<strong>Support:</strong> Thank you for your message! Our team will get back to you shortly. For immediate assistance, please call +91 98765 43210';
-                        chatArea.appendChild(botMessage);
-                        chatArea.scrollTop = chatArea.scrollHeight;
-                    }, 1000);
-                    
-                    chatInput.value = '';
-                    chatArea.scrollTop = chatArea.scrollHeight;
-                }
-            });
-
-            chatInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendButton.click();
-                }
-            });
-        });
     </script>
 </body>
 </html>

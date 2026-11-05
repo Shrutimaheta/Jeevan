@@ -1,7 +1,5 @@
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
+from django.core.files.storage import storages
 
-private_storage = FileSystemStorage(
-    location=settings.PRIVATE_MEDIA_ROOT,
-    base_url=None
-)
+def private_storage():
+    """Serializable factory: never freeze a machine's path in migrations."""
+    return storages['private']

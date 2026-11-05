@@ -75,7 +75,7 @@ describe('Feature Layout - Theme Reset Logic', () => {
     jest.clearAllMocks();
   });
 
-  const renderWithProviders = (store: any) => {
+  const renderWithProviders = (store: ReturnType<typeof createTestStore>) => {
     return render(
       <Provider store={store}>
         <BrowserRouter>
@@ -148,11 +148,11 @@ describe('Feature Layout - Theme Reset Logic', () => {
     
     // First navigate to a layout page
     mockUseLocation.mockReturnValue({ pathname: '/layout-mini' });
-    renderWithProviders(store);
+    const view = renderWithProviders(store);
     
-    // Then navigate to a normal page
+    // Then navigate to a normal page, preserving the mounted layout instance.
     mockUseLocation.mockReturnValue({ pathname: '/dashboard' });
-    renderWithProviders(store);
+    view.rerender(<Provider store={store}><BrowserRouter><Feature /></BrowserRouter></Provider>);
     
     const state = store.getState();
     expect(state.theme.themeSettings['data-layout']).toBe('default');

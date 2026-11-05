@@ -12,22 +12,9 @@ def check_doctor_patient_access(doctor, patient):
     Helper to check if a doctor has a valid relationship with a patient
     either through active consent or an appointment.
     """
-    # Active approved consent
-    active_consent = Consent.objects.filter(
-        doctor=doctor,
-        patient=patient,
-        status='approved'
-    )
-    # Check expiry
-    for consent in active_consent:
-        if consent.is_approved():
-            return True
-            
-    # Or if doctor has any appointment with the patient
-    if Appointment.objects.filter(doctor=doctor, patient=patient).exists():
-        return True
-        
-    return False
+    from patient.access import has_medical_consent
+    return has_medical_consent(doctor, patient)
+
 
 def validate_record_file(file):
     """
@@ -76,10 +63,8 @@ def create_medical_record(appointment_id, doctor, summary, diagnosis='', prescri
             if doctor.user != actor:
                 raise PermissionDenied("Assigned doctor mismatch.")
                 
-        # Access control rule: doctor must have relationship or appointment
-        if appointment.doctor != doctor:
-            if not check_doctor_patient_access(doctor, patient):
-                raise PermissionDenied("You do not have active consent or relationship to create records for this patient.")
+        if appointment.doctor != doctor or appointment.status != 'accepted':
+            raise PermissionDenied("Only the assigned doctor can add a record to an accepted appointment.")
 
         # File security validation
         if report_file:

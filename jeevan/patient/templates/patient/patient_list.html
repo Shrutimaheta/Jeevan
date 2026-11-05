@@ -112,6 +112,7 @@
             background: #229954;
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <div class="container">
@@ -127,25 +128,20 @@
                     <div class="patient-card">
                         <div class="patient-name">{{ patient.full_name }}</div>
                         <div class="patient-info">
-                            <strong>Email:</strong> {{ patient.email }}
+                            <strong>Email:</strong> {{ patient.user.email|default:'Not provided' }}
                         </div>
                         <div class="patient-info">
-                            <strong>Contact:</strong> {{ patient.contact_number }}
+                            <strong>Contact:</strong> {{ patient.user.contact_number|default:'Not provided' }}
                         </div>
                         <div class="patient-info">
                             <strong>Gender:</strong> {{ patient.gender }}
                         </div>
                         <div class="patient-info">
-                            <strong>DOB:</strong> {{ patient.dob }}
+                            <strong>DOB:</strong> {{ patient.date_of_birth|default:'Not provided' }}
                         </div>
                         {% if patient.city %}
                             <div class="patient-info">
                                 <strong>City:</strong> {{ patient.city }}
-                            </div>
-                        {% endif %}
-                        {% if patient.blood_group %}
-                            <div class="patient-info">
-                                <strong>Blood Group:</strong> {{ patient.blood_group }}
                             </div>
                         {% endif %}
                         <a href="{% url 'patient:patient_detail' patient.id %}" class="view-details">View Details</a>
@@ -172,7 +168,7 @@
             {% endif %}
         {% else %}
             <div class="no-patients">
-                <p>No patients found. <a href="/admin/patient/patient/add/">Add a patient</a> to get started.</p>
+                <p>No patients are available for your account. Contact your clinic administrator if a patient should appear here.</p>
             </div>
         {% endif %}
     </div>

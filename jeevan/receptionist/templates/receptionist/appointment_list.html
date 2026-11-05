@@ -534,6 +534,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Modern Header with Integrated Navigation -->
@@ -549,7 +550,7 @@
                         <div class="logo-container">
                                 <i class="fas fa-heartbeat"></i>
                         </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                         </a>
                     </div>
                 </div>
@@ -733,7 +734,7 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold">{{ appointment.patient.full_name }}</div>
-                                                <small class="text-muted">{{ appointment.patient.email }}</small>
+                                                <small class="text-muted">{{ appointment.patient.user.email }}</small>
                                             </div>
                                         </div>
                                     </td>
@@ -775,14 +776,14 @@
                                                     <i class="fas fa-check"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-danger btn-sm" 
-                                                        onclick="showRejectModal({{ appointment.id }}, '{{ appointment.patient.full_name }}')"
+                                                        onclick="showRejectModal({{ appointment.id }}, '{{ appointment.patient.full_name|escapejs }}')"
                                                         title="Reject Appointment">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
                                         {% elif appointment.status == 'rejected' and appointment.rejection_reason %}
                                             <button type="button" class="btn btn-outline-info btn-sm" 
-                                                    onclick="showRejectionReason('{{ appointment.rejection_reason }}')"
+                                                    onclick="showRejectionReason('{{ appointment.rejection_reason|escapejs }}')"
                                                     title="View Rejection Reason">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>

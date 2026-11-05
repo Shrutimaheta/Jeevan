@@ -1,0 +1,64 @@
+# PAID resources. Preparation only; applying this incurs charges.
+# Do not use the free preview database for real patients. See RENDER.md.
+services:
+  - type: web
+    name: jeevan-clinic
+    runtime: python
+    plan: 1c-2g
+    region: singapore
+    buildCommand: bash deploy/render-build.sh
+    startCommand: bash deploy/render-start.sh
+    healthCheckPath: /health/ready/
+    autoDeployTrigger: 'off'
+    disk:
+      name: jeevan-uploads
+      mountPath: /var/data
+      sizeGB: 10
+    envVars:
+      - key: JEEVAN_ENV
+        value: production
+      - key: JEEVAN_RENDER_PROFILE
+        value: production
+      - key: JEEVAN_DEMO_MODE
+        value: 'false'
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      # Enter a restricted runtime-role URL after the operator applies migrations.
+      # Never give the web service the database owner/migration password.
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_CONN_MAX_AGE
+        value: '60'
+      - key: MEDIA_ROOT
+        value: /var/data/public-media
+      - key: PRIVATE_MEDIA_ROOT
+        value: /var/data/private-media
+      - key: JEEVAN_PERSISTENT_STORAGE
+        value: 'true'
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: EMAIL_PORT
+        value: '587'
+      - key: EMAIL_USE_TLS
+        value: 'true'
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: '2'
+      - key: TELECONSULTATION_ENABLED
+        value: 'false'
+databases:
+  - name: jeevan-clinic-postgres
+    plan: 0.5c-1g
+    region: singapore
+    databaseName: jeevan
+    user: jeevan_migrator
+    postgresMajorVersion: '16'
+    diskSizeGB: 15
+    ipAllowList: []

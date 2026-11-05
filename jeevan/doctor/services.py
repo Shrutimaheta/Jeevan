@@ -13,38 +13,24 @@ def request_consent(doctor, patient, reason=''):
     Checks for any existing active consent (pending or approved).
     """
     with transaction.atomic():
-        # Check if there is already an active consent (pending or approved)
-        active_consent = Consent.objects.filter(
-            doctor=doctor,
-            patient=patient,
-            status__in=['pending', 'approved']
-        )
-        if active_consent.exists():
+        # Serialize requests for one patient even when no consent row exists yet.
+        from patient.models import Patient
+        Patient.objects.select_for_update().get(pk=patient.pk)
+        Consent.objects.filter(doctor=doctor, patient=patient, status='approved',
+                               expires_at__lte=timezone.now()).update(status='expired')
+        if Consent.objects.filter(doctor=doctor, patient=patient,
+                                  status__in=['pending', 'approved']).exists():
             raise ValidationError("An active consent request already exists for this patient.")
+        consent = Consent.objects.create(doctor=doctor, patient=patient,
+                                         reason=reason, status='pending')
 
-        consent, created = Consent.objects.get_or_create(
-            doctor=doctor,
-            patient=patient,
-            defaults={
-                'reason': reason,
-                'status': 'pending'
-            }
-        )
-        
-        if not created:
-            consent.reason = reason
-            consent.status = 'pending'
-            consent.responded_at = None
-            consent.requested_at = timezone.now()
-            consent.save()
-        
         # Notify patient
         create_notification(
             patient=patient,
             title="Consent Request",
             message=f"Dr. {doctor.full_name} has requested access to view your medical reports.",
             notification_type='system',
-            action_url=f"/patient/consent/"
+            action_url='/patient/consent-requests/'
         )
         
         return consent
@@ -91,7 +77,7 @@ def reject_consent(consent_id, patient_user, notes=''):
         if consent.patient.user != patient_user:
             raise PermissionDenied("You do not have permission to reject this consent request.")
             
-        if consent.status != 'pending':
+        if consent.status not in ('pending', 'approved'):
             raise ValidationError(f"Cannot reject consent in status: {consent.status}")
 
         consent.status = 'rejected'
@@ -115,7 +101,7 @@ def validate_medications_structure(medications_text):
         if not line:
             continue
         parts = line.split('-')
-        if len(parts) < 4:
+        if len(parts) < 4 or any(not part.strip() for part in parts):
             raise ValidationError(
                 "Each medication line must follow the structure: 'Drug Name - Dose - Frequency - Duration'. "
                 "Example: 'Paracetamol - 500mg - Twice daily - 5 days'"
@@ -127,6 +113,10 @@ def save_prescription(appointment_id, doctor, diagnosis, medications, tests_reco
     Enforces doctor ownership and blocks editing of completed appointments.
     """
     validate_medications_structure(medications)
+    if not doctor.is_active or not doctor.user.is_active or doctor.user.role != 'doctor':
+        raise PermissionDenied('An active doctor account is required to write a prescription.')
+    if not any((value or '').strip() for value in (diagnosis, medications, tests_recommended, advice)):
+        raise ValidationError('Enter clinical notes, a diagnosis, tests, advice or medication details before completing the visit.')
     
     with transaction.atomic():
         try:

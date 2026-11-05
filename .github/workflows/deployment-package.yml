@@ -1,0 +1,68 @@
+name: Deployment package
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      architecture:
+        description: Deployment host architecture
+        type: choice
+        default: amd64
+        options: [amd64, arm64]
+jobs:
+  production-container:
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate disposable configuration
+        run: |
+          python - <<'PY'
+          import os,secrets,pathlib
+          values = dict(JEEVAN_DOMAIN='clinic.example.org', ACME_EMAIL='ops@example.org', JEEVAN_IMAGE_TAG='ci',
+              DJANGO_SECRET_KEY=secrets.token_urlsafe(64), DB_NAME='jeevan', DB_USER='jeevan_runtime',
+              DB_PASSWORD=secrets.token_urlsafe(32), DB_MIGRATION_USER='jeevan_migrator',
+              DB_MIGRATION_PASSWORD=secrets.token_urlsafe(32), POSTGRES_ADMIN_PASSWORD=secrets.token_urlsafe(32),
+              EMAIL_HOST='smtp.example.org', EMAIL_HOST_USER='ci-only', EMAIL_HOST_PASSWORD=secrets.token_urlsafe(32),
+              DEFAULT_FROM_EMAIL='noreply@example.org')
+          pathlib.Path(os.environ['RUNNER_TEMP'],'production.env').write_text(''.join(f'{k}={v}\n' for k,v in values.items()))
+          PY
+      - name: Validate scripts and proxy configuration
+        run: |
+          for file in deploy/*.sh deploy/scripts/*.sh; do bash -n "$file"; done
+          python -m unittest discover -s deploy/tests
+          docker run --rm -e JEEVAN_DOMAIN=clinic.example.org -e ACME_EMAIL=ops@example.org \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Validate Compose, build and start isolated web
+        run: |
+          dc() { docker compose -p jeevan-ci --env-file "$RUNNER_TEMP/production.env" -f deploy/compose.production.yml "$@"; }
+          dc config --quiet
+          dc build
+          dc up -d --wait web
+          dc exec -T web python manage.py check --deploy --fail-level WARNING
+          dc exec -T web python manage.py verify_deployment
+          dc exec -T web python -c 'import os; assert os.getuid() != 0; assert "DB_MIGRATION_PASSWORD" not in os.environ; assert "POSTGRES_ADMIN_PASSWORD" not in os.environ'
+          dc exec -T web python manage.py shell -c 'from django.db import connection; c=connection.cursor(); c.execute("SELECT has_table_privilege(current_user, %s, %s)", ["care_auditevent", "UPDATE"]); assert not c.fetchone()[0]'
+          dc exec -T web python -c 'import pathlib; pathlib.Path("/app/private_media/ci-persistence.bin").write_bytes(b"fictional-ci-probe")'
+          dc restart web
+          dc up -d --wait web
+          dc exec -T web python -c 'import pathlib; p=pathlib.Path("/app/private_media/ci-persistence.bin"); assert p.read_bytes()==b"fictional-ci-probe"; p.unlink()'
+          dc exec -T web python -c 'import os,urllib.request; r=urllib.request.Request("http://127.0.0.1:8000/static/css/clinic-auth.css",headers={"Host":os.environ["JEEVAN_DOMAIN"],"X-Forwarded-Proto":"https"}); assert urllib.request.urlopen(r).status==200'
+      - name: Verify upload recovery with application ownership and dropped capabilities
+        run: |
+          dc() { docker compose -p jeevan-ci --env-file "$RUNNER_TEMP/production.env" -f deploy/compose.production.yml "$@"; }
+          dc exec -T web python -c 'from pathlib import Path; p=Path("/app/private_media/ci-recovery.bin"); p.write_bytes(b"fictional-recovery-probe"); p.chmod(0o600)'
+          dc exec -T web python -c "$(cat deploy/scripts/backup_payload.py)" capture > "$RUNNER_TEMP/uploads.tar"
+          docker run --rm -i --network none --cap-drop ALL --security-opt no-new-privileges \
+            -v jeevan-ci-recovery-media:/app/media -v jeevan-ci-recovery-private:/app/private_media \
+            --entrypoint python jeevan:ci -c "$(cat deploy/scripts/backup_payload.py)" restore < "$RUNNER_TEMP/uploads.tar"
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            -v jeevan-ci-recovery-private:/app/private_media --entrypoint python jeevan:ci \
+            -c 'import os; from pathlib import Path; p=Path("/app/private_media/ci-recovery.bin"); assert p.read_bytes()==b"fictional-recovery-probe"; assert p.stat().st_uid==os.getuid()!=0'
+      - name: Cleanup isolated containers
+        if: always()
+        run: |
+          docker compose -p jeevan-ci --env-file "$RUNNER_TEMP/production.env" -f deploy/compose.production.yml down -v
+          for volume in jeevan-ci-recovery-media jeevan-ci-recovery-private; do
+            if docker volume inspect "$volume" >/dev/null 2>&1; then docker volume rm "$volume"; fi
+          done

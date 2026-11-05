@@ -33,6 +33,7 @@ class Appointment(models.Model):
     symptoms = models.TextField(blank=True, null=True, help_text="Describe your symptoms or reason for appointment")
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES, default='cash')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    rejection_reason = models.TextField(blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -62,34 +63,24 @@ class Appointment(models.Model):
         from django.core.exceptions import ValidationError
         from datetime import time, datetime
         super().clean()
-        if self.doctor and self.hospital and self.doctor.hospital != self.hospital:
+        if self.status not in dict(self.STATUS_CHOICES):
+            raise ValidationError('Invalid appointment status.')
+        if self.payment_mode not in dict(self.PAYMENT_MODE_CHOICES):
+            raise ValidationError('Invalid payment mode.')
+        if self.doctor_id and self.hospital_id and self.doctor.hospital_id != self.hospital_id:
             raise ValidationError("The selected doctor does not belong to the selected hospital.")
             
-        date_val = self.appointment_date
-        if isinstance(date_val, str):
-            try:
-                date_val = datetime.strptime(date_val, "%Y-%m-%d").date()
-            except ValueError:
-                raise ValidationError("Invalid date format.")
-
-        if date_val and date_val < timezone.localdate():
-            raise ValidationError("Appointment date cannot be in the past.")
-            
-        time_val = self.appointment_time
-        if isinstance(time_val, str):
-            try:
-                time_val = datetime.strptime(time_val, "%H:%M:%S").time()
-            except ValueError:
-                try:
-                    time_val = datetime.strptime(time_val, "%H:%M").time()
-                except ValueError:
-                    raise ValidationError("Invalid time format.")
-
-        if time_val:
-            start_time = time(9, 0)
-            end_time = time(18, 0)
-            if time_val < start_time or time_val > end_time:
-                raise ValidationError("Appointments must be scheduled within business hours (9:00 AM - 6:00 PM).")
+        # Booking rules apply only when the date/time/doctor changes. Status
+        # changes must remain possible after the visit has taken place.
+        previous = type(self).objects.filter(pk=self.pk).first() if self.pk else None
+        changed = previous is None or any(
+            str(getattr(previous, field)) != str(getattr(self, field))
+            for field in ('appointment_date', 'appointment_time', 'doctor_id', 'hospital_id')
+        )
+        if changed:
+            from .scheduling import validate_booking_slot
+            self.appointment_date, self.appointment_time = validate_booking_slot(
+                self.appointment_date, self.appointment_time)
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -105,7 +96,7 @@ class Appointment(models.Model):
     @property
     def is_expired(self):
         """Check if appointment date has passed"""
-        today = timezone.now().date()
+        today = timezone.localdate()
         return self.appointment_date < today
     
     def check_and_update_expired_status(self):
@@ -122,7 +113,7 @@ class Appointment(models.Model):
     @classmethod
     def mark_expired_appointments(cls):
         """Class method to mark all expired pending appointments"""
-        today = timezone.now().date()
+        today = timezone.localdate()
         expired_count = cls.objects.filter(
             appointment_date__lt=today,
             status='pending'

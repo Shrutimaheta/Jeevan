@@ -1,8 +1,9 @@
+import type { RootState } from '../../core/redux/store';
 import  { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 const ThemeTest = () => {
-  const themeSettings = useSelector((state: any) => state.theme.themeSettings);
+  const themeSettings = useSelector((state: RootState) => state.theme.themeSettings);
   const [debugInfo, setDebugInfo] = useState({
     dataColor: '',
     primaryVar: '',

@@ -550,7 +550,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
     # Medical Information
     abha_id = forms.CharField(
         max_length=20,
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter 14-digit ABHA ID',
@@ -560,7 +560,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
         }),
         label='ABHA ID',
         validators=[validate_abha_id],
-        help_text='Required. Enter 14-digit ABHA ID.'
+        help_text='Optional reference only. This application does not verify ABHA IDs.'
     )
     
     emergency_number = forms.CharField(
@@ -645,7 +645,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
         
         if hospital:
             from doctor.models import Doctor
-            self.fields['doctor'].queryset = Doctor.objects.filter(hospital=hospital)
+            self.fields['doctor'].queryset = Doctor.objects.filter(hospital=hospital, is_active=True, user__is_active=True)
     
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
@@ -723,14 +723,14 @@ class ReceptionistBookAppointmentForm(forms.Form):
         if email:
             # Check if email already exists in CustomUser
             from care.models import CustomUser
-            if CustomUser.objects.filter(email=email).exists():
+            if CustomUser.objects.filter(email__iexact=email).exists():
                 raise forms.ValidationError("A user with this email already exists.")
         return email
     
     def clean_abha_id(self):
         abha_id = self.cleaned_data.get('abha_id')
         if not abha_id:
-            raise forms.ValidationError("ABHA ID is required. Please enter your 14-digit ABHA ID.")
+            return ''
         
         # Remove all non-digit characters
         digits_only = re.sub(r'\D', '', abha_id)

@@ -1,263 +1,43 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Registration</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-4oVh..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-  :root { --accent:#2c5aa0; --accent-hover:#1e3a8a; --focus:0 0 0 3px rgba(44,90,160,.28); --card-w:400px; --fs-title:clamp(24px,2.7vw,30px); --fs-label:12px; --fs-btn:13.5px; }
-        * { box-sizing:border-box; }
-  body { margin:0; font-family:'Inter',sans-serif; background:linear-gradient(115deg,#e6f3ff,#dbeafe); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:34px 18px; }
-  .card-shell { width:100%; max-width:var(--card-w); background:#fff; border-radius:26px; padding:28px 26px 34px; box-shadow:0 14px 40px -14px rgba(44,90,160,.30),0 4px 16px -8px rgba(44,90,160,.20); position:relative; overflow:hidden; }
-        .card-shell:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 88% 16%,rgba(44,90,160,.18),transparent 60%); pointer-events:none; }
-        .header { display:flex; gap:16px; align-items:center; margin:0 0 20px; }
-  .logo-wrap { width:54px; height:54px; border-radius:20px; background:#f1f9ff; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 16px -6px rgba(44,90,160,.30),0 2px 6px rgba(44,90,160,.16); }
-        .logo-wrap img { width:70%; height:70%; object-fit:contain; }
-        h1 { font-size:var(--fs-title); font-weight:700; letter-spacing:-.5px; margin:0; color:#2c5aa0; }
-  .subtitle { margin:2px 0 0; font-size:12px; color:#2c5aa0; font-weight:500; }
-  form { display:flex; flex-direction:column; gap:14px; }
-  .form-group { display:flex; flex-direction:column; gap:4px; }
-  label { font-size:var(--fs-label); font-weight:600; letter-spacing:.4px; color:#2c5aa0; }
-  .form-control { width:100%; border:1px solid #b6d7ea; border-radius:12px; padding:10px 13px; font-size:13px; background:#fff; transition:border-color .18s, box-shadow .18s; }
-        .form-control:focus { outline:none; border-color:var(--accent); box-shadow:var(--focus); }
-  .btn-primary { background:linear-gradient(135deg,#2c5aa0,#3b82f6 60%,#60a5fa); border:none; color:#fff; font-weight:600; letter-spacing:.45px; padding:11px 16px; border-radius:14px; cursor:pointer; font-size:var(--fs-btn); box-shadow:0 7px 20px -10px rgba(44,90,160,.50),0 3px 9px -4px rgba(44,90,160,.38); transition:transform .18s, box-shadow .18s; }
-        .btn-primary:hover { background:linear-gradient(135deg,#1e3a8a,#2563eb 60%,#3b82f6); transform:translateY(-2px); box-shadow:0 12px 30px -14px rgba(44,90,160,.60),0 4px 14px -6px rgba(44,90,160,.45); }
-        .btn-primary:active { transform:translateY(0); box-shadow:0 6px 18px -8px rgba(44,90,160,.5); }
-  .messages { display:flex; flex-direction:column; gap:6px; margin-bottom:2px; }
-  .msg { font-size:12px; font-weight:500; padding:8px 12px; border-radius:10px; border:1px solid #dbeafe; background:#f0f9ff; color:#2c5aa0; }
-        .error-msg { border-color:#ffb5c1; background:#ffeef1; color:#7d1024; }
-  .alt-link { text-align:center; margin-top:4px; font-size:12.5px; }
-  .alt-link a { color:var(--accent); font-weight:600; text-decoration:none; }
-        .alt-link a:hover { text-decoration:underline; }
-  /* Password visibility toggle styles */
-  .password-input-wrapper { position:relative; display:flex; align-items:center; }
-  .password-input-wrapper input[type="password"],
-  .password-input-wrapper input[type="text"] { padding-right:44px; width:100%; }
-  .password-toggle-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:6px; border-radius:6px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
-  .password-toggle-btn:hover { background:rgba(44,90,160,0.10); }
-  .eye-icon { font-size:16px; }
-  /* Hide native password reveal icons (Edge/IE) so only one eye is visible */
-  input[type="password"]::-ms-reveal,
-  input[type="password"]::-ms-clear { display:none; }
-  @media (max-width:520px){ :root { --card-w:100%; --fs-title:28px; --fs-btn:13.5px; } body { padding:28px 16px; } .card-shell { padding:26px 22px 32px; border-radius:22px; } }
-        @media (max-height:760px){ body { padding:32px 16px; } }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create patient account · Jeevan</title>
+<link rel="stylesheet" href="{% static 'css/clinic-auth.css' %}?v=3">
+{% include 'includes/clinic_ui.html' %}
 </head>
-<body>
-    <div class="card-shell">
-        <div class="header">
-            <div class="logo-wrap">
-                <img src="/media/patient_photos/logo.jpg" alt="Logo" loading="lazy">
-            </div>
-            <div>
-                <h1>Register</h1>
-                <p class="subtitle">Create your patient account</p>
-            </div>
-        </div>
-        <form method="post" novalidate>
-            {% csrf_token %}
-            {% if messages %}
-              <div class="messages">
-                {% for message in messages %}
-                  <div class="msg msg-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-            {% if form.non_field_errors %}
-              <div class="messages">
-                {% for error in form.non_field_errors %}
-                  <div class="msg error-msg">{{ error }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="form-group">
-                <label for="{{ form.username.id_for_label }}">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}<div class="messages"><div class="msg error-msg">{{ form.username.errors.0 }}</div></div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.full_name.id_for_label }}">Full Name</label>
-                {{ form.full_name }}
-                {% if form.full_name.errors %}<div class="messages"><div class="msg error-msg">{{ form.full_name.errors.0 }}</div></div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.email.id_for_label }}">Email</label>
-                {{ form.email }}
-                {% if form.email.errors %}<div class="messages"><div class="msg error-msg">{{ form.email.errors.0 }}</div></div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.contact_number.id_for_label }}">Phone Number</label>
-                {{ form.contact_number }}
-                {% if form.contact_number.errors %}<div class="messages"><div class="msg error-msg">{{ form.contact_number.errors.0 }}</div></div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">Password</label>
-                <div class="password-input-wrapper">
-                    {{ form.password }}
-                    <button type="button" class="password-toggle-btn" id="regPasswordToggle" aria-label="Toggle password visibility">
-                        <span class="eye-icon">🔒</span>
-                    </button>
-                </div>
-                {% if form.password.errors %}<div class="messages"><div class="msg error-msg">{{ form.password.errors.0 }}</div></div>{% endif %}
-            </div>
-            <div class="form-group">
-                <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
-                <div class="password-input-wrapper">
-                    {{ form.confirm_password }}
-                    <button type="button" class="password-toggle-btn" id="regConfirmPasswordToggle" aria-label="Toggle confirm password visibility">
-                        <span class="eye-icon">🔒</span>
-                    </button>
-                </div>
-                {% if form.confirm_password.errors %}<div class="messages"><div class="msg error-msg">{{ form.confirm_password.errors.0 }}</div></div>{% endif %}
-            </div>
-            <button type="submit" class="btn-primary">Create Account</button>
-            <p class="alt-link">Already have an account? <a href="{% url 'patient:patient_login' %}">Login</a></p>
-        </form>
-    </div>
-<script>
-    (function(){
-        var pw = document.getElementById('id_password');
-        var cpw = document.getElementById('id_confirm_password');
-        var t1 = document.getElementById('regPasswordToggle');
-        var t2 = document.getElementById('regConfirmPasswordToggle');
-        if(t1 && pw){
-            t1.addEventListener('click', function(){
-                var icon = t1.querySelector('.eye-icon');
-                if(pw.type === 'password'){
-                    pw.type = 'text';
-                    if(icon) icon.textContent = '🔓';
-                    t1.classList.add('shown');
-                } else {
-                    pw.type = 'password';
-                    if(icon) icon.textContent = '🔒';
-                    t1.classList.remove('shown');
-                }
-            });
-        }
-        if(t2 && cpw){
-            t2.addEventListener('click', function(){
-                var icon = t2.querySelector('.eye-icon');
-                if(cpw.type === 'password'){
-                    cpw.type = 'text';
-                    if(icon) icon.textContent = '🔓';
-                    t2.classList.add('shown');
-                } else {
-                    cpw.type = 'password';
-                    if(icon) icon.textContent = '🔒';
-                    t2.classList.remove('shown');
-                }
-            });
-        }
-        // Client-side validations
-        var form = document.querySelector('form');
-        if(form){
-            var uname = document.getElementById('id_username');
-            var fname = document.getElementById('id_full_name');
-            var email = document.getElementById('id_email');
-            var phone = document.getElementById('id_contact_number');
-
-            function setAttrs(el, attrs){ if(!el) return; for(var k in attrs){ if(attrs.hasOwnProperty(k)){ el.setAttribute(k, attrs[k]); } } }
-            function ensureType(el, type){ if(el && el.getAttribute('type') !== type){ el.setAttribute('type', type); } }
-            function showFieldError(input, message){
-                if(!input) return;
-                var group = input.closest('.form-group') || input.parentElement;
-                if(!group) return;
-                var wrap = group.querySelector('.messages[data-auto="1"]');
-                if(!wrap){
-                    wrap = document.createElement('div');
-                    wrap.className = 'messages';
-                    wrap.setAttribute('data-auto','1');
-                    group.appendChild(wrap);
-                }
-                wrap.innerHTML = '';
-                if(message){
-                    var m = document.createElement('div');
-                    m.className = 'msg error-msg';
-                    m.textContent = message;
-                    wrap.appendChild(m);
-                    input.setAttribute('aria-invalid','true');
-                } else {
-                    input.removeAttribute('aria-invalid');
-                }
-            }
-            function clearFieldError(input){ showFieldError(input, ''); }
-
-            // Username: 4-20 alphanumeric
-            if(uname){
-                setAttrs(uname, { required: 'required', minlength: '4', maxlength: '20', pattern: '^[A-Za-z0-9]{4,20}$', autocomplete: 'username' });
-                uname.addEventListener('input', function(){
-                    if(uname.validity.valid){ clearFieldError(uname); }
-                });
-            }
-            // Full name: letters and spaces, 2-50
-            if(fname){
-                setAttrs(fname, { required: 'required', minlength: '2', maxlength: '50', pattern: '^[A-Za-z][A-Za-z ]{1,49}$', autocomplete: 'name' });
-                fname.addEventListener('input', function(){ if(fname.validity.valid){ clearFieldError(fname); } });
-            }
-            // Email: must be valid email
-            if(email){
-                ensureType(email, 'email');
-                setAttrs(email, { required: 'required', autocomplete: 'email' });
-                email.addEventListener('input', function(){ if(email.validity.valid){ clearFieldError(email); } });
-            }
-            // Phone: 10-15 digits
-            if(phone){
-                ensureType(phone, 'tel');
-                setAttrs(phone, { required: 'required', pattern: '^[0-9]{10,15}$', inputmode: 'numeric', autocomplete: 'tel' });
-                phone.addEventListener('input', function(){ if(phone.validity.valid){ clearFieldError(phone); } });
-            }
-            // Password: min 8, upper, lower, digit, special
-            if(pw){
-                setAttrs(pw, { required: 'required', minlength: '8', pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\-=\\{}\\[\\]|;:\'\",.<>\\/?]).{8,}$', autocomplete: 'new-password' });
-                pw.addEventListener('input', function(){ clearFieldError(pw); if(cpw && cpw.value){ validateConfirm(); } });
-            }
-            // Confirm password: match password
-            function validateConfirm(){
-                if(!cpw) return true;
-                if(!pw) return true;
-                if(cpw.value !== pw.value){
-                    showFieldError(cpw, 'Passwords do not match');
-                    return false;
-                }
-                clearFieldError(cpw);
-                return true;
-            }
-            if(cpw){
-                setAttrs(cpw, { required: 'required', minlength: '8', autocomplete: 'new-password' });
-                cpw.addEventListener('input', function(){ validateConfirm(); });
-            }
-
-            form.addEventListener('submit', function(e){
-                // Normalize spaces and trim common fields before validation
-                [uname, fname, email, phone].forEach(function(el){
-                    if(el && typeof el.value === 'string'){
-                        el.value = el.value.replace(/\s+/g, ' ').trim();
-                    }
-                });
-                var firstInvalid = null;
-                function markIfInvalid(input, message){
-                    if(!input) return;
-                    if(!input.checkValidity()){ showFieldError(input, message); if(!firstInvalid) firstInvalid = input; }
-                }
-                markIfInvalid(uname, 'Username must be 4–20 letters or numbers');
-                markIfInvalid(fname, 'Enter your full name (letters and spaces only)');
-                if(email && !email.checkValidity()){ showFieldError(email, 'Enter a valid email address'); if(!firstInvalid) firstInvalid = email; }
-                if(phone && !phone.checkValidity()){ showFieldError(phone, 'Enter a valid phone number (10–15 digits)'); if(!firstInvalid) firstInvalid = phone; }
-                if(pw && !pw.checkValidity()){ showFieldError(pw, 'Use at least 8 chars with upper, lower, number, symbol'); if(!firstInvalid) firstInvalid = pw; }
-                var confirmOk = validateConfirm();
-                if(!confirmOk && !firstInvalid) firstInvalid = cpw;
-
-                if(firstInvalid){
-                    e.preventDefault();
-                    try { firstInvalid.focus({ preventScroll: false }); firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_) {}
-                }
-            });
-        }
-    })();
-</script>
-</body>
-</html>
+<body class="auth-page">
+<a class="skip-link" href="#registration">Skip to registration</a>
+<div class="auth-shell">
+<aside class="auth-intro" aria-label="About patient accounts">
+<a class="auth-brand" href="{% url 'home' %}"><img src="{% static 'images/clinic-mark.svg' %}?v=2" width="44" height="44" alt=""><span>Jeevan</span></a>
+<div class="auth-intro-copy"><span class="auth-eyebrow">YOUR PATIENT ACCOUNT</span><h1>Your next step towards connected care.</h1><p>Create an account to request appointments and manage documents with your clinic.</p><ul class="auth-benefits"><li>Use your own email and phone number</li><li>Choose a unique, strong password</li><li>Review access before sharing your records</li></ul></div>
+<p class="auth-intro-note">Already registered? Sign in with your existing account. Clinic staff accounts are managed by your administrator.</p>
+</aside>
+<main id="registration" class="auth-form-panel" tabindex="-1">
+<a class="auth-back" href="{% url 'universal_login' %}">← Back to sign in</a>
+<div class="auth-form-heading"><h2>Create your account</h2><p>Register as a patient. All fields are required.</p></div>
+{% if messages %}<div class="auth-messages" aria-live="polite">{% for message in messages %}<div class="auth-message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+{% if form.non_field_errors %}<div class="auth-message error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<form method="post" id="registrationForm">
+{% csrf_token %}
+{% for field in form %}
+<div class="auth-field form-group">
+<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+{% if field.name == 'password' or field.name == 'confirm_password' %}
+<div class="auth-password">{{ field }}<button type="button" class="registration-password-toggle" data-target="{{ field.id_for_label }}" aria-label="Show {{ field.label|lower }}" aria-controls="{{ field.id_for_label }}" aria-pressed="false">Show</button></div>
+{% else %}{{ field }}{% endif %}
+{% if field.name == 'password' %}<small>Use at least 8 characters. Avoid common passwords and personal details.</small>{% endif %}
+{% if field.name == 'contact_number' %}<small>Enter your 10-digit phone number.</small>{% endif %}
+{% if field.errors %}<div class="error-msg" role="alert">{{ field.errors }}</div>{% endif %}
+</div>
+{% endfor %}
+<button type="submit" class="auth-submit" id="registrationSubmit">Create Account</button>
+<p class="auth-status" id="registrationStatus" role="status"></p>
+</form>
+<p class="auth-register">Already have an account? <a href="{% url 'universal_login' %}">Sign in</a></p>
+</main>
+</div>
+<script src="{% static 'js/clinic-registration.js' %}" defer></script>
+</body></html>

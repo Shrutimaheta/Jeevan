@@ -1,3 +1,4 @@
+import type { UploadProps } from 'antd';
 import { message } from "antd";
 import Dragger from "antd/es/upload/Dragger";
 import CommonFooter from "../../../../components/common-footer/commonFooter";
@@ -5,12 +6,12 @@ import AutoBreadcrumb from "../../../../components/breadcrumb/AutoBreadcrumb";
 
 
 const FileUploadPage = () => {
-  const uploadProps = {
+  const uploadProps: UploadProps = {
     name: "file",
     multiple: true,
     showUploadList: true,
     action: "/", // Set your upload endpoint here
-    onChange(info: { file: { name?: any; status?: any; }; fileList: any; }) {
+    onChange(info) {
       const { status } = info.file;
       if (status === "done") {
         message.success(`${info.file.name} file uploaded successfully.`);
@@ -18,7 +19,7 @@ const FileUploadPage = () => {
         message.error(`${info.file.name} file upload failed.`);
       }
     },
-    onDrop(_e: { dataTransfer: { files: any; }; }) {
+    onDrop() {
       // Handle dropped files
     },
   };

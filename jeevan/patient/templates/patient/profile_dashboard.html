@@ -450,7 +450,7 @@
         .font-semibold { font-weight: 600; }
         .font-medium { font-weight: 500; }
         .text-primary-600 { color: #2563eb; }
-        .text-accent-600 { color: #16a34a; }
+        .text-accent-600 { color: #2563eb; }
         .text-orange-600 { color: #ea580c; }
         .text-purple-600 { color: #9333ea; }
         .text-secondary-500 { color: #64748b; }
@@ -461,7 +461,7 @@
         .text-blue-100 { color: #dbeafe; }
         .text-white { color: white; }
         .bg-primary-100 { background-color: #dbeafe; }
-        .bg-accent-100 { background-color: #dcfce7; }
+        .bg-accent-100 { background-color: #dbeafe; }
         .bg-orange-100 { background-color: #fed7aa; }
         .bg-purple-100 { background-color: #e9d5ff; }
         .bg-secondary-100 { background-color: #f1f5f9; }
@@ -532,14 +532,14 @@
         .hover\\:shadow-lg:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
         .hover\\:border-blue-400:hover { border-color: #60a5fa; }
         .hover\\:border-primary-200:hover { border-color: #bfdbfe; }
-        .hover\\:border-accent-200:hover { border-color: #bbf7d0; }
+        .hover\\:border-accent-200:hover { border-color: #bfdbfe; }
         .hover\\:border-purple-200:hover { border-color: #e9d5ff; }
         .hover\\:text-primary-600:hover { color: #2563eb; }
-        .hover\\:text-accent-600:hover { color: #16a34a; }
+        .hover\\:text-accent-600:hover { color: #2563eb; }
         .hover\\:text-orange-600:hover { color: #ea580c; }
         .hover\\:text-purple-600:hover { color: #9333ea; }
         .hover\\:text-primary-700:hover { color: #1d4ed8; }
-        .hover\\:text-accent-700:hover { color: #15803d; }
+        .hover\\:text-accent-700:hover { color: #1d4ed8; }
         .hover\\:text-orange-700:hover { color: #c2410c; }
         .hover\\:text-purple-700:hover { color: #7c3aed; }
         .border { border-width: 1px; }
@@ -591,12 +591,12 @@
         .fw-semibold { font-weight: 600 !important; }
         .text-danger { color: #dc2626 !important; }
         .text-primary-600 { color: #2563eb !important; }
-        .text-accent-600 { color: #16a34a !important; }
+        .text-accent-600 { color: #2563eb !important; }
         .text-purple-600 { color: #9333ea !important; }
         .no-underline { text-decoration: none !important; }
         .no-underline:hover { text-decoration: none !important; }
         .hover\\:text-primary-700:hover { color: #1d4ed8 !important; }
-        .hover\\:text-accent-700:hover { color: #15803d !important; }
+        .hover\\:text-accent-700:hover { color: #1d4ed8 !important; }
         .hover\\:text-purple-700:hover { color: #7c3aed !important; }
         .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
         .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
@@ -817,6 +817,18 @@
             .w-20 { width: 4rem; }
             .h-20 { height: 4rem; }
         }
+
+        @media (max-width: 640px) {
+            .next-appointment-card > .flex { flex-wrap: wrap; gap: 1rem; }
+            .next-appointment-card .ml-6 { margin-left: 0; }
+            .hero-section .glass-effect { padding: 1.25rem; }
+            .hero-section .flex { flex-wrap: wrap; min-width: 0; }
+            .hero-section .profile-photo-container { width: 5rem; height: 5rem; flex-shrink: 0; }
+            .hero-section h1 { font-size: 1.65rem; overflow-wrap: anywhere; }
+            .hero-section p { font-size: 1rem; }
+            .hero-section span { overflow-wrap: anywhere; max-width: 100%; }
+            .hero-section .gap-6 { gap: 1rem; }
+        }
 </style>
 
 <!-- Modern Dashboard with Sophisticated Design -->
@@ -896,16 +908,16 @@
 						900: '#0f172a'
 					},
 					accent: {
-						50: '#f0fdf4',
-						100: '#dcfce7',
-						200: '#bbf7d0',
-						300: '#86efac',
-						400: '#4ade80',
-						500: '#22c55e',
-						600: '#16a34a',
-						700: '#15803d',
-						800: '#166534',
-						900: '#14532d'
+						50: '#eff6ff',
+						100: '#dbeafe',
+						200: '#bfdbfe',
+						300: '#93c5fd',
+						400: '#60a5fa',
+						500: '#3b82f6',
+						600: '#2563eb',
+						700: '#1d4ed8',
+						800: '#1e40af',
+						900: '#1e3a8a'
 					}
 				},
 				boxShadow: {
@@ -1364,8 +1376,10 @@
 		margin-top: auto;
 	}
 </style>
+{% include 'includes/clinic_ui.html' %}
+<link rel="stylesheet" href="{% static 'css/patient-dashboard.css' %}">
 </head>
-<body>
+<body class="patient-dashboard">
 <script>
   try {
     if (window.location && window.location.pathname === '/patient/dashboard/') {
@@ -1382,7 +1396,7 @@
                     <div class="logo-container">
                         <i class="fas fa-heartbeat"></i>
         </div>
-                    <h1 class="logo-text">Patient Management System</h1>
+                    <h1 class="logo-text">Jeevan</h1>
                 </a>
                 </div>
             <div class="col-md-6">
@@ -1499,6 +1513,13 @@
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
 	<div class="main-content-with-sidebar">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {% if messages %}
+        <div aria-live="polite" class="mb-4">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}" {% if message.tags == 'error' %}role="alert"{% endif %}>{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
 		<!-- Welcome Header -->
 		<div class="mb-8 animate-fade-in mt-12 hero-section">
 			<div class="glass-effect rounded-3xl p-10 shadow-glass min-h-[240px] flex items-center">
@@ -1516,7 +1537,7 @@
 						</div>
                         <div>
                             <h1 class="text-4xl font-bold text-header-primary mb-2">
-								Welcome back, {{ patient.full_name|default:"Patient" }}! 👋
+								{% if first_patient_login %}Welcome{% else %}Welcome back{% endif %}, {{ patient.full_name|default:"Patient" }}! 👋
 							</h1>
                             <p class="text-header-secondary text-xl">Here's your health dashboard overview</p>
                             <div class="mt-3 flex items-center gap-4 text-sm" style="color: var(--primary-color);">
@@ -1526,11 +1547,11 @@
 								</span>
 								<span class="flex items-center gap-1">
 									<i class="fas fa-envelope"></i>
-									{{ patient.email|default:"No email" }}
+									{{ patient.user.email|default:"No email" }}
 								</span>
 								<span class="flex items-center gap-1">
 									<i class="fas fa-phone"></i>
-									{{ patient.contact_number|default:"No contact" }}
+									{{ patient.user.contact_number|default:"No contact" }}
 								</span>
 							</div>
 						</div>
@@ -1540,12 +1561,12 @@
 		</div>
 
 		<!-- Quick Stats Overview -->
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+		<div class="dashboard-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 			<div class="card-hover bg-white rounded-2xl p-6 shadow-soft animate-slide-up">
 				<div class="flex items-center justify-between">
 					<div>
 						<p class="text-secondary-500 text-sm font-medium">Upcoming</p>
-						<p class="text-3xl font-bold text-primary-600">{{ accepted_appointments|default:"0" }}</p>
+						<p class="text-3xl font-bold text-primary-600">{{ upcoming_count|default:"0" }}</p>
 						<p class="text-xs text-secondary-400">Appointments</p>
 					</div>
 					<div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
@@ -1559,8 +1580,8 @@
 			<div class="card-hover bg-white rounded-2xl p-6 shadow-soft animate-slide-up" style="animation-delay: 0.1s">
 				<div class="flex items-center justify-between">
 					<div>
-						<p class="text-secondary-500 text-sm font-medium">Active</p>
-						<p class="text-3xl font-bold text-accent-600">{{ prescriptions|length|default:"0" }}</p>
+						<p class="text-secondary-500 text-sm font-medium">Saved</p>
+						<p class="text-3xl font-bold text-accent-600">{{ prescriptions_count|default:"0" }}</p>
 						<p class="text-xs text-secondary-400">Prescriptions</p>
 					</div>
 					<div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
@@ -1576,19 +1597,7 @@
 				<div class="flex items-center justify-between">
 					<div>
 						<p class="text-secondary-500 text-sm font-medium">Available</p>
-						{% if patient_documents %}
-						<p class="text-3xl font-bold text-purple-600">{{ patient_documents|length }}</p>
-						{% elif documents %}
-						<p class="text-3xl font-bold text-purple-600">{{ documents|length }}</p>
-						{% elif recent_reports %}
-						<p class="text-3xl font-bold text-purple-600">{{ recent_reports|length }}</p>
-						{% elif reports %}
-						<p class="text-3xl font-bold text-purple-600">{{ reports|length }}</p>
-						{% elif recent_lab_results %}
-						<p class="text-3xl font-bold text-purple-600">{{ recent_lab_results|length }}</p>
-						{% else %}
-						<p class="text-3xl font-bold text-purple-600">0</p>
-						{% endif %}
+<p class="text-3xl font-bold text-purple-600">{{ reports_count|default:"0" }}</p>
 						<p class="text-xs text-secondary-400">Reports</p>
 					</div>
 					<div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -1621,13 +1630,13 @@
 		<!-- Next Appointment Hero Card -->
 		{% with next=upcoming_appointments.0 %}
 		<div class="mb-8 animate-slide-up" style="animation-delay: 0.5s">
-			<div class="gradient-bg rounded-3xl p-8 text-white shadow-elevated">
+			<div class="next-appointment-card gradient-bg rounded-3xl p-8 text-white shadow-elevated">
 				<div class="flex items-center justify-between">
 					<div class="flex-1">
 						<h2 class="text-2xl font-bold mb-3">Next Appointment</h2>
 						{% if next and next.status == 'accepted' %}
 						<div class="space-y-2">
-							<p class="text-lg font-semibold">Dr. {{ next.doctor.full_name|default:"Sarah Johnson" }}</p>
+							<p class="text-lg font-semibold">Dr. {{ next.doctor.full_name|default:"Doctor" }}</p>
 							<p class="text-blue-100">{{ next.doctor.specialization.first.sname|default:"General Medicine" }}</p>
 							<div class="flex items-center gap-2 mt-3">
 								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1657,7 +1666,7 @@
 							</div>
 						</a>
 						{% else %}
-						<button id="tw-book-btn" class="group card-hover bg-white rounded-2xl p-6 shadow-soft animate-slide-up" onclick="(window.bookAppointment || window.twOpenBooking || function(){})();">
+						<button id="tw-book-btn" class="group card-hover bg-white rounded-2xl p-6 shadow-soft animate-slide-up" onclick="if(window.bookAppointment){window.bookAppointment();}else{window.location.href='/appointments/';}">
 							<div class="flex items-center gap-4">
 								<div class="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
 									<svg class="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1686,13 +1695,13 @@
 				<!-- Book Appointment Button -->
 			<button class="group card-hover bg-white rounded-2xl p-6 shadow-soft animate-slide-up" onclick="if (window.bookAppointment) { window.bookAppointment(); } else if (window.twOpenBooking) { window.twOpenBooking(); } else { window.location.href='/appointments/'; }" style="animation-delay: 0.5s">
 					<div class="flex items-center gap-4">
-						<div class="w-14 h-14 bg-gradient-to-br rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
-							<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #059669;">
+						<div class="w-14 h-14 bg-gradient-to-br rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+							<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #2c5aa0;">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
 							</svg>
 						</div>
 						<div class="text-left">
-							<div class="font-semibold text-secondary-800 transition-colors" style="color: #1f2937;" onmouseover="this.style.color='#059669';" onmouseout="this.style.color='#1f2937';">Book Appointment</div>
+							<div class="font-semibold text-secondary-800 transition-colors" style="color: #1f2937;" onmouseover="this.style.color='#2c5aa0';" onmouseout="this.style.color='#1f2937';">Book Appointment</div>
 							<div class="text-sm text-secondary-500">Find specialist & slot</div>
 						</div>
 					</div>
@@ -2508,7 +2517,7 @@ function loadSpecializationsContent() {
 			<div class="col-md-6 col-lg-4 mb-4">
 				<div class="card h-100 specialization-card" style="border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s ease; cursor: pointer;" onclick="selectSpecialization('${specName}')">
 					<div class="card-body text-center">
-						<div class="specialization-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
+						<div class="specialization-icon mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #2c5aa0); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 1.5rem;">
 							${iconUrl ? `<img src="${iconUrl}" alt="${specName}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">` : '🩺'}
                 </div>
 						<h6 class="card-title mb-2" style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">${specName}</h6>
@@ -3003,43 +3012,8 @@ function handleConsentAction(consentId, action, evt) {
 	});
 }
 
-// Bootstrap dropdown functionality
+// Bootstrap owns dropdown interactions; avoid duplicate custom handlers.
 document.addEventListener('DOMContentLoaded', function() {
-	
-	// Handle dropdown toggle
-			
-			var dropdown = this.closest('.dropdown');
-			var menu = dropdown.querySelector('.dropdown-menu');
-			
-			// Close all other dropdowns
-			document.querySelectorAll('.dropdown-menu').forEach(function(otherMenu) {
-				if (otherMenu !== menu) {
-					otherMenu.classList.remove('show');
-					otherMenu.style.display = 'none';
-				}
-			});
-			
-			// Toggle current dropdown
-			if (menu.classList.contains('show')) {
-				menu.classList.remove('show');
-				menu.style.display = 'none';
-			} else {
-				menu.classList.add('show');
-				menu.style.display = 'block';
-			}
-		});
-	});
-	
-	// Close dropdowns when clicking outside
-	document.addEventListener('click', function(e) {
-		if (!e.target.closest('.dropdown')) {
-			document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
-				menu.classList.remove('show');
-				menu.style.display = 'none';
-			});
-		}
-	});
-	
 	// Sidebar Toggle Function
 	window.toggleSidebar = function() {
 		const sidebar = document.getElementById('sidebarContainer');
@@ -3051,7 +3025,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		document.addEventListener('click', function(e) {
 			const sidebar = document.getElementById('sidebarContainer');
 			const toggleBtn = document.getElementById('sidebarToggle');
-			if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+			if (sidebar && toggleBtn && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
 				sidebar.classList.remove('open');
 			}
 		});

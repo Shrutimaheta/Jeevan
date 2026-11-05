@@ -10,6 +10,8 @@ def create_teleconsultation(appointment, symptoms=None, actor=None):
     """
     Creates a new Teleconsultation session with cryptographically secure random meeting room links.
     """
+    if not settings.TELECONSULTATION_ENABLED:
+        raise ValidationError('Video consultations are not connected. Please contact the clinic.')
     if not appointment:
         raise ValidationError("Appointment must be specified.")
         
@@ -17,13 +19,23 @@ def create_teleconsultation(appointment, symptoms=None, actor=None):
         if not hasattr(actor, 'role') or actor.role not in ['doctor', 'patient', 'receptionist']:
             raise PermissionDenied("Only doctors, patients, or receptionists can setup teleconsultations.")
             
+    if not actor or not actor.is_authenticated:
+        raise PermissionDenied('Authentication is required.')
+    allowed = actor.pk in (appointment.doctor.user_id, appointment.patient.user_id)
+    if getattr(actor, 'role', '') == 'receptionist':
+        profile = getattr(actor, 'receptionist', None)
+        allowed = profile is not None and profile.hospital_id == appointment.hospital_id
+    if not allowed:
+        raise PermissionDenied('You cannot arrange this consultation.')
+    if appointment.status != 'accepted':
+        raise ValidationError('An accepted appointment is required.')
     with transaction.atomic():
         # Generate cryptographically secure random values
         room_id = str(uuid.uuid4())
         meeting_id = secrets.token_hex(8)
-        meeting_password = secrets.token_urlsafe(12)
+        meeting_password = None  # Admission is enforced by the configured provider.
         room_name = f"JeevanRoom_{room_id}"
-        meeting_link = f"https://meet.jit.si/{room_name}#config.prejoinPageEnabled=false"
+        meeting_link = f"{settings.TELECONSULTATION_ORIGIN}/{room_name}"
         
         tele_session = Teleconsultation.objects.create(
             doctor=appointment.doctor,

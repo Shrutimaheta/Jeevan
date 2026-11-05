@@ -9,7 +9,7 @@
             <div class="card">
                 <div class="card-header text-center">
                     <h3 style="font-size: 28px;"><i class="fas fa-envelope me-2"></i>Verify Email Code</h3>
-                    <p class="text-muted" style="font-size: 16px;">Enter the 6-digit code sent to {{ patient.email }}</p>
+                    <p class="text-muted" style="font-size: 16px;">If an eligible account exists, enter the 6-digit code sent to its registered email address.</p>
                     {% if messages %}
                         {% for message in messages %}
                             {% if 'Code:' in message.message %}

@@ -12,7 +12,7 @@ const CommonTimePicker: React.FC<CommonTimePickerProps> = ({
 }) => {
   return (
     <TimePicker
-      className='form-control flatpickr-input'
+      className={`form-control flatpickr-input ${className}`}
       format="HH:mm"
       suffixIcon={<i className="ti ti-clock-hour-10 text-dark" aria-hidden="true" />}
       aria-label={ariaLabel}

@@ -1,0 +1,11 @@
+{% load static %}
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Medical records{% endblock %} · Jeevan</title>
+{% include 'includes/clinic_ui.html' %}
+<style>
+body{margin:0;background:#f1f5fb;color:#183153}header{background:#2c5aa0;color:#fff;padding:18px 24px}header nav{max-width:1080px;margin:auto;display:flex;justify-content:space-between;gap:20px;align-items:center}header a{color:#fff;font-weight:600}main{max-width:1080px;margin:auto;padding:28px 20px}.records-heading{margin-bottom:24px}.records-heading h1{font-size:28px;margin:0 0 8px}.records-heading p{margin:0;color:#52657d}.records-card{background:white;border:1px solid #dbe4f0;border-radius:14px;padding:24px;margin-bottom:16px}.records-card h2{font-size:20px;margin:0 0 12px}.records-card p{overflow-wrap:anywhere;white-space:pre-wrap}.records-meta{font-size:14px;color:#52657d}.records-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.records-link{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border:1px solid #2c5aa0;border-radius:8px;color:#2c5aa0;text-decoration:none}.records-link.primary{background:#2c5aa0;color:white}.records-code{white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f5fb;padding:16px;border-radius:8px;font-size:13px}.records-empty{padding:40px 24px;text-align:center}@media(max-width:600px){main{padding:20px 16px}.records-card{padding:20px}.records-heading h1{font-size:24px}}
+</style></head><body>
+<header><nav aria-label="Medical records navigation"><a href="{% if request.user.role == 'doctor' %}{% url 'doctor:dashboard' %}{% else %}{% url 'patient:profile_dashboard' %}{% endif %}">Jeevan</a><a href="{% if request.user.role == 'doctor' %}{% url 'doctor:dashboard' %}{% else %}{% url 'patient:patient_profile' %}{% endif %}">{% if request.user.role == 'doctor' %}Doctor dashboard{% else %}Back to profile{% endif %}</a></nav></header>
+<main id="records-content">{% block content %}{% endblock %}</main>
+</body></html>

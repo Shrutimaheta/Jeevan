@@ -141,7 +141,7 @@
             <div class="healthcare-card">
                 <div class="healthcare-card-header">
                     <h3 class="mb-0" style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--text-primary);">
-                        <i class="fas fa-edit me-3" style="color: var(--primary-blue);"></i>Update Appointment #{{ appointment.abha_id }}
+                        <i class="fas fa-edit me-3" style="color: var(--primary-blue);"></i>Update Appointment #{{ appointment.id }}
                     </h3>
                 </div>
                 <div class="healthcare-card-body">
@@ -249,7 +249,7 @@
                                 </div>
                                 <div class="form-text">
                                     <i class="ti ti-clock me-1"></i>
-                                    Available hours: 8:00 AM - 6:00 PM
+                                    Available hours: 9:00 AM - 5:45 PM
                                 </div>
                                 <!-- Hidden time field -->
                                 {{ form.appointment_time }}
@@ -399,11 +399,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check business hours (8 AM to 6 PM)
-        const businessStart = 8;
+        const businessStart = 9;
         const businessEnd = 18;
         
         if (hour24 < businessStart || hour24 >= businessEnd) {
-            showFieldError(hourSelect, 'Appointment time must be between 8:00 AM and 6:00 PM.');
+            showFieldError(hourSelect, 'Appointment time must be between 9:00 AM and 5:45 PM.');
             return false;
         }
         

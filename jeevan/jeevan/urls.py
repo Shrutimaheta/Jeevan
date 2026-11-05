@@ -15,9 +15,12 @@ from nurse import views as nurse_views
 from patient import views as patient_views
 from patient import api_views as patient_api_views
 from . import views
+from . import health
 
 
 urlpatterns = [
+    path('health/live/', health.live, name='health_live'),
+    path('health/ready/', health.ready, name='health_ready'),
     path("admin/", admin.site.urls),
     path("login/", views.universal_login, name="universal_login"),
     path("logout/", views.universal_logout, name="universal_logout"),
@@ -93,4 +96,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+elif settings.RENDER_PROFILE:
+    from .render_hosting import public_media
+    urlpatterns += [path('media/<path:name>', public_media, name='render_public_media')]
 

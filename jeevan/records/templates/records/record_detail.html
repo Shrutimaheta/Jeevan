@@ -1,31 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Medical Record Details</title>
-</head>
-<body>
-    <h1>Medical Record Details</h1>
-    <p>Summary: {{ record.summary }}</p>
-    <p>Diagnosis: {{ record.diagnosis }}</p>
-    
-    {% if record.snomed_diagnosis_code %}
-        <p><strong>SNOMED-CT Diagnosis Code:</strong> {{ record.snomed_diagnosis_code }}</p>
-        <p><strong>SNOMED-CT Preferred Name:</strong> {{ record.snomed_diagnosis_display }}</p>
-    {% endif %}
-    
-    <p>Prescription: {{ record.prescription }}</p>
-
-    {% if fhir_condition_json or fhir_medication_request_json %}
-        <hr>
-        <h3>HL7 FHIR Interoperability Resources</h3>
-        {% if fhir_condition_json %}
-            <h4>FHIR Condition (Diagnosis)</h4>
-            <pre style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc; max-height: 250px; overflow: auto; font-family: monospace;">{{ fhir_condition_json }}</pre>
-        {% endif %}
-        {% if fhir_medication_request_json %}
-            <h4>FHIR MedicationRequest (Prescription)</h4>
-            <pre style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc; max-height: 250px; overflow: auto; font-family: monospace;">{{ fhir_medication_request_json }}</pre>
-        {% endif %}
-    {% endif %}
-</body>
-</html>
+{% extends 'records/base.html' %}
+{% block title %}Medical record details{% endblock %}
+{% block content %}
+<div class="records-heading"><h1>Medical record details</h1><p>{{ patient.full_name }} · {{ record.created_at|date:"M j, Y" }}</p></div>
+<article class="records-card"><h2>Visit summary</h2><p>{{ record.summary }}</p>
+<h2>Diagnosis</h2><p>{{ record.diagnosis|default:"Not recorded" }}</p>
+<h2>Prescription</h2><p>{{ record.prescription|default:"Not recorded" }}</p>
+{% if record.next_dose_date %}<h2>Next dose date</h2><p>{{ record.next_dose_date|date:"M j, Y" }}</p>{% endif %}
+{% if record.report_file %}<a class="records-link primary" href="{% url 'records:download_file' record.id %}">Download attachment</a>{% endif %}</article>
+{% if record.snomed_diagnosis_code %}<section class="records-card"><h2>Diagnosis reference</h2><p>{{ record.snomed_diagnosis_code }} · {{ record.snomed_diagnosis_display }}</p></section>{% endif %}
+{% if request.user.role == 'doctor' %}{% if fhir_condition_json or fhir_medication_request_json %}<details class="records-card"><summary>Interoperability resources</summary>{% if fhir_condition_json %}<h2>FHIR Condition</h2><pre class="records-code">{{ fhir_condition_json }}</pre>{% endif %}{% if fhir_medication_request_json %}<h2>FHIR MedicationRequest</h2><pre class="records-code">{{ fhir_medication_request_json }}</pre>{% endif %}</details>{% endif %}{% endif %}
+<a class="records-link" href="{% url 'records:record_list' patient.id %}">Back to medical records</a>
+{% endblock %}

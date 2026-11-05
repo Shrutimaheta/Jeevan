@@ -1,7 +1,9 @@
 from django.db import transaction
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.utils import timezone
+from django.urls import reverse
 from .models import Appointment
+from .scheduling import validate_booking_slot
 from jeevan.decorators import log_audit_event
 from patient.notifications import create_notification
 
@@ -13,6 +15,18 @@ def create_appointment(patient, doctor, hospital, appointment_date, appointment_
     Service to book a new appointment.
     Ensures race-safety using database atomic transactions and checks slot availability.
     """
+    if not doctor.is_active or not doctor.user.is_active:
+        raise ValidationError('This doctor is not available for appointments.')
+    actor = actor or patient.user
+    role = getattr(actor, 'role', '')
+    allowed = (role == 'patient' and actor.pk == patient.user_id) or (role == 'doctor' and actor.pk == doctor.user_id)
+    if role == 'receptionist':
+        profile = getattr(actor, 'receptionist', None)
+        allowed = profile is not None and profile.is_active and profile.hospital_id == hospital.pk
+    if not actor.is_authenticated or not actor.is_active or not allowed:
+        raise PermissionDenied('You cannot book this appointment.')
+    if role == 'patient' and status != 'pending':
+        raise PermissionDenied('Patients can only request pending appointments.')
     if not appointment_date or not appointment_time:
         raise ValidationError("Appointment date and time must be explicitly specified.")
     
@@ -51,7 +65,14 @@ def create_appointment(patient, doctor, hospital, appointment_date, appointment_
     if doctor.hospital != hospital:
         raise ValidationError("The selected doctor does not belong to the selected hospital.")
 
+    appointment_date, appointment_time = validate_booking_slot(date_obj, time_obj)
     with transaction.atomic():
+        # Lock the doctor even when there are no appointments to lock yet.
+        doctor = type(doctor).objects.select_for_update().select_related('user').get(pk=doctor.pk)
+        if not doctor.is_active or not doctor.user.is_active:
+            raise ValidationError('This doctor is not available for appointments.')
+        if doctor.hospital_id != hospital.pk:
+            raise ValidationError('The selected doctor does not belong to the selected hospital.')
         # Check slot availability with SELECT FOR UPDATE to prevent race conditions
         conflicting_appointments = Appointment.objects.select_for_update().filter(
             doctor=doctor,
@@ -92,6 +113,12 @@ def update_appointment_status(appointment_id, new_status, actor, reason=None):
         'cancelled': [],
         'expired': [],
     }
+    if not getattr(actor, 'is_authenticated', False) or not actor.is_active:
+        raise PermissionDenied('An active account is required.')
+    if getattr(actor, 'role', '') in ('doctor', 'receptionist'):
+        profile = getattr(actor, actor.role, None)
+        if profile is None or not profile.is_active:
+            raise PermissionDenied('An active staff profile is required.')
 
     with transaction.atomic():
         try:
@@ -166,7 +193,7 @@ def send_appointment_notification(appointment, status, reason=None):
             title="Appointment Confirmed",
             message=f"Your appointment with Dr. {doctor_name} on {date_str} at {time_str} has been confirmed.",
             notification_type='appointment',
-            action_url=f"/appointments/{appointment.id}/"
+            action_url=reverse('appointments:appointment_detail', args=[appointment.pk])
         )
     elif status == 'rejected':
         msg = f"Your appointment with Dr. {doctor_name} on {date_str} has been rejected."
@@ -177,7 +204,7 @@ def send_appointment_notification(appointment, status, reason=None):
             title="Appointment Rejected",
             message=msg,
             notification_type='appointment',
-            action_url=f"/appointments/{appointment.id}/"
+            action_url=reverse('appointments:appointment_detail', args=[appointment.pk])
         )
     elif status == 'cancelled':
         create_notification(
@@ -185,7 +212,7 @@ def send_appointment_notification(appointment, status, reason=None):
             title="Appointment Cancelled",
             message=f"Your appointment with Dr. {doctor_name} on {date_str} has been cancelled.",
             notification_type='appointment',
-            action_url=f"/appointments/{appointment.id}/"
+            action_url=reverse('appointments:appointment_detail', args=[appointment.pk])
         )
     elif status == 'completed':
         create_notification(
@@ -193,7 +220,7 @@ def send_appointment_notification(appointment, status, reason=None):
             title="Appointment Completed",
             message=f"Your appointment with Dr. {doctor_name} has been completed. Check your profile for prescriptions or notes.",
             notification_type='appointment',
-            action_url=f"/appointments/{appointment.id}/"
+            action_url=reverse('appointments:appointment_detail', args=[appointment.pk])
         )
     elif status == 'rescheduled':
         create_notification(
@@ -201,7 +228,7 @@ def send_appointment_notification(appointment, status, reason=None):
             title="Appointment Rescheduled",
             message=f"Your appointment with Dr. {doctor_name} has been rescheduled to {date_str} at {time_str}.",
             notification_type='appointment',
-            action_url=f"/appointments/{appointment.id}/"
+            action_url=reverse('appointments:appointment_detail', args=[appointment.pk])
         )
 
 def reschedule_appointment(appointment_id, new_date, new_time, symptoms=None, payment_mode=None, actor=None):
@@ -241,16 +268,36 @@ def reschedule_appointment(appointment_id, new_date, new_time, symptoms=None, pa
 
     with transaction.atomic():
         try:
+            # Booking and rescheduling take locks in the same order. Locking
+            # an appointment before its doctor can deadlock a competing booking.
+            from doctor.models import Doctor
+            doctor_id = Appointment.objects.values_list('doctor_id', flat=True).get(id=appointment_id)
+            locked_doctor = Doctor.objects.select_for_update().select_related('user').get(pk=doctor_id)
+            if not locked_doctor.is_active or not locked_doctor.user.is_active:
+                raise ValidationError('This doctor is not available for appointments.')
             appointment = Appointment.objects.select_for_update().get(id=appointment_id)
         except Appointment.DoesNotExist:
             raise ValidationError("Appointment not found.")
+        if appointment.doctor_id != doctor_id:
+            raise ValidationError('The doctor changed. Please reload and try again.')
             
         if not appointment.can_edit:
             raise ValidationError("This appointment cannot be edited.")
             
-        # Check permission
-        if hasattr(actor, 'role') and actor.role == 'patient' and appointment.patient.user != actor:
+        if not actor or not actor.is_authenticated or not actor.is_active:
+            raise PermissionDenied("An active account is required.")
+        role = getattr(actor, 'role', '')
+        if role in ('doctor', 'receptionist'):
+            profile = getattr(actor, role, None)
+            if profile is None or not profile.is_active:
+                raise PermissionDenied('An active staff profile is required.')
+        allowed = (role == 'patient' and appointment.patient.user_id == actor.pk) or (
+            role == 'doctor' and appointment.doctor.user_id == actor.pk) or (
+            role == 'receptionist' and getattr(actor, 'receptionist', None)
+            and actor.receptionist.hospital_id == appointment.hospital_id)
+        if not allowed:
             raise PermissionDenied("You do not have permission to modify this appointment.")
+        new_date, new_time = validate_booking_slot(date_obj, time_obj)
             
         # Check slot availability
         conflicting_appointments = Appointment.objects.select_for_update().filter(

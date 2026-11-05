@@ -558,6 +558,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Modern Header with Integrated Navigation -->
@@ -573,7 +574,7 @@
                         <div class="logo-container">
                                 <i class="fas fa-heartbeat"></i>
                         </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                         </a>
                     </div>
                 </div>
@@ -678,9 +679,12 @@
                     Patient Registration
                 </h1>
                 <p class="page-subtitle">Manage registered patients and their appointments</p>
-                <div class="mt-3">
+                <div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">
                     <a href="{% url 'receptionist:register_patient' %}" class="btn btn-success">
                         <i class="fas fa-user-plus"></i> Register New Patient
+                    </a>
+                    <a href="{% url 'receptionist:book_appointment' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Book walk-in appointment
                     </a>
                 </div>
             </div>
@@ -699,19 +703,19 @@
                             </div>
                             
                             <div class="patient-info">
-                                {% if patient.email %}
+                                {% if patient.user.email %}
                                 <div class="info-item">
                                     <i class="fas fa-envelope"></i>
                                     <span class="info-label">Email:</span>
-                                    <span class="info-value">{{ patient.email }}</span>
+                                    <span class="info-value">{{ patient.user.email }}</span>
                                 </div>
                                 {% endif %}
                                 
-                                {% if patient.contact_number %}
+                                {% if patient.user.contact_number %}
                                 <div class="info-item">
                                     <i class="fas fa-phone"></i>
                                     <span class="info-label">Contact:</span>
-                                    <span class="info-value">{{ patient.contact_number }}</span>
+                                    <span class="info-value">{{ patient.user.contact_number }}</span>
                                 </div>
                                 {% endif %}
                                 

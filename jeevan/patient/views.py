@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from .access import patients_for_user, can_access_patient
 from jeevan.decorators import role_required, patient_required, log_audit_event
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -21,15 +22,24 @@ from .forgot_password_views import (
     forgot_password, verify_otp, verify_email_otp, reset_password, forgot_password_sent
 )
 from datetime import date, timedelta
+from django.utils import timezone
 
 from django.views.decorators.http import require_GET, require_POST
+
+
+@patient_required
+@require_GET
+def patient_medical_records(request):
+    """Keep old patient links safe while using the authorized records screen."""
+    patient = get_object_or_404(Patient, user=request.user)
+    return redirect('records:record_list', patient_id=patient.pk)
 
 
 @login_required
 @role_required(['doctor', 'receptionist', 'nurse'])
 def patient_list(request):
     """View to list all patients"""
-    patients = Patient.objects.all().order_by('-id')
+    patients = patients_for_user(request.user).order_by('-id')
     
     # Add pagination
     paginator = Paginator(patients, 10)  # Show 10 patients per page
@@ -48,19 +58,12 @@ def patient_detail(request, patient_id):
     """View to show detailed information about a specific patient"""
     patient = get_object_or_404(Patient, id=patient_id)
     
-    # Check permissions: must be the patient themselves or a staff member
-    if request.user.role == 'patient':
-        try:
-            user_patient = request.user.patient_profile
-            if user_patient.id != patient.id:
-                raise PermissionDenied("You do not have permission to view this profile.")
-        except Patient.DoesNotExist:
-            raise PermissionDenied("Patient profile not found.")
-    elif request.user.role not in ['doctor', 'receptionist', 'nurse']:
+    if not can_access_patient(request.user, patient):
         raise PermissionDenied("You do not have permission to view this profile.")
-        
+    log_audit_event(request.user, "VIEW_PATIENT_PROFILE", patient.id)
     context = {
         'patient': patient,
+        'can_view_health': can_access_patient(request.user, patient, clinical=True),
     }
     return render(request, 'patient/patient_detail.html', context)
 
@@ -69,11 +72,12 @@ def patient_detail(request, patient_id):
 @role_required(['doctor', 'receptionist', 'nurse'])
 def patient_api_list(request):
     """API view to return patient data as JSON"""
-    patients = Patient.objects.all().order_by('-id')
+    patients = patients_for_user(request.user).order_by('-id')
+    page = Paginator(patients, 100).get_page(request.GET.get('page'))
     
     # Convert to list of dictionaries
     patients_data = []
-    for patient in patients:
+    for patient in page:
         patients_data.append({
             'id': patient.id,
             'full_name': patient.full_name,
@@ -82,13 +86,14 @@ def patient_api_list(request):
             'gender': patient.gender,
             'dob': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else None,
             'city': patient.city,
-            'blood_group': patient.blood_group,
-            'abha_id': patient.abha_id,
         })
     
     return JsonResponse({
         'patients': patients_data,
-        'count': len(patients_data)
+        'count': len(patients_data),
+        'total': page.paginator.count,
+        'page': page.number,
+        'pages': page.paginator.num_pages,
     })
 
 
@@ -113,98 +118,8 @@ def patient_register(request):
 
 @login_required
 def patient_dashboard(request):
-    """Patient dashboard view with real health data"""
-    try:
-        patient = Patient.objects.get(user=request.user)
-    except Patient.DoesNotExist:
-        messages.error(request, 'Patient profile not found.')
-        return redirect('patient:patient_login')
-    
-    # Get upcoming appointments (today and future) - exclude cancelled
-    from datetime import date, datetime
-    from appointments.models import Appointment
-    
-    today = date.today()
-    upcoming_appointments = Appointment.objects.filter(
-        patient=patient,
-        appointment_date__gte=today
-    ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:5]  # Limit to 5 upcoming appointments
-    
-    # Get all appointments for stats (exclude cancelled)
-    all_appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
-    total_appointments = all_appointments.count()
-    
-    # Get appointment counts by status
-    accepted_appointments = all_appointments.filter(status='accepted').count()
-    pending_appointments = all_appointments.filter(status='pending').count()
-    rejected_appointments = all_appointments.filter(status='rejected').count()
-    completed_appointments = all_appointments.filter(status='completed').count()
-    
-    # Get recent appointments (last 5)
-    recent_appointments = all_appointments.order_by('-created_at')[:5]
-    
-    # Check for recent status changes (last 24 hours)
-    from datetime import timedelta
-    yesterday = today - timedelta(days=1)
-    recent_status_changes = all_appointments.filter(
-        updated_at__gte=yesterday
-    ).exclude(status='pending').order_by('-updated_at')[:3]
-    
-    # Get real health data
-    
-    # Get latest vital signs
-    latest_vitals = VitalSign.objects.filter(patient=patient).order_by('-recorded_at').first()
-    
-    # Get recent wellness logs (last 7 days)
-    recent_wellness = WellnessLog.objects.filter(patient=patient).order_by('-date')[:7]
-    
-    # Get active medications
-    active_medications = Medication.objects.filter(patient=patient, is_active=True).order_by('-prescribed_date')[:5]
-    
-    # Get unread notifications
-    unread_notifications = Notification.objects.filter(patient=patient, is_read=False).order_by('-created_at')[:5]
-    
-    # Get recent lab results
-    recent_lab_results = LabResult.objects.filter(patient=patient).order_by('-test_date')[:3]
-    
-    # Calculate health score based on real data
-    health_score = calculate_health_score(patient)
-    
-    # Calculate medication adherence
-    medication_adherence = calculate_medication_adherence(patient)
-    
-    # Get wellness statistics
-    wellness_stats = calculate_wellness_stats(patient)
-    
-    context = {
-        'patient': patient,
-        'upcoming_appointments': upcoming_appointments,
-        'recent_appointments': recent_appointments,
-        'recent_status_changes': recent_status_changes,
-        'total_appointments': total_appointments,
-        'accepted_appointments': accepted_appointments,
-        'pending_appointments': pending_appointments,
-        'rejected_appointments': rejected_appointments,
-        'completed_appointments': completed_appointments,
-        
-        # Health data
-        'latest_vitals': latest_vitals,
-        'recent_wellness': recent_wellness,
-        'active_medications': active_medications,
-        'unread_notifications': unread_notifications,
-        'recent_lab_results': recent_lab_results,
-        'health_score': health_score,
-        'medication_adherence': medication_adherence,
-        'wellness_stats': wellness_stats,
-    }
-    response = render(request, 'patient/profile_dashboard.html', context)
-    
-    # Add cache prevention headers to prevent back button issues after logout
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    
-    return response
+    """Legacy URL uses the canonical dashboard's complete, consistent context."""
+    return profile_dashboard(request)
 
 
 @login_required
@@ -287,16 +202,10 @@ def change_password(request):
             request.user.set_password(new_password)
             request.user.save()
             
-            # Also update the patient's password field
-            from django.contrib.auth.hashers import make_password
-            patient.password = make_password(new_password)
-            patient.save()
-            
             # Logout the user for security
             logout(request)
-            
-            # Redirect to login page with password change indicator
-            return redirect('patient:patient_login?password_changed=1')
+            messages.success(request, 'Your password has been changed. Sign in with your new password.')
+            return redirect('universal_login')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -388,6 +297,7 @@ def document_detail(request, document_id):
 
 
 @login_required
+@require_POST
 def document_delete(request, document_id):
     """View to delete a document"""
     try:
@@ -459,13 +369,13 @@ def document_download(request, document_id):
     log_audit_event(request.user, "ACCESS_PATIENT_RECORDS", document.patient.id, f"Downloaded/Viewed document: {document.title} (ID: {document.id})")
     
     try:
-        response = HttpResponse(document.file.read(), content_type=content_type)
-        disposition = 'inline' if (view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']) else 'attachment'
-        response['Content-Disposition'] = f'{disposition}; filename="{document.title}.{file_ext}"'
+        inline = view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        response = FileResponse(document.file.open('rb'), content_type=content_type,
+                                as_attachment=not inline, filename=f'{document.title}.{file_ext}')
         return response
-    except Exception as e:
-        messages.error(request, f"Error reading file: {str(e)}")
-        return redirect('patient:document_list')
+    except Exception:
+        # A missing/unavailable stored file must not expose its private storage path.
+        raise Http404('This document file is currently unavailable.') from None
 
 
 @login_required
@@ -490,12 +400,14 @@ def profile_dashboard(request):
     specializations = Specialization.objects.all()
     
     # Get upcoming appointments (today and future) - only accepted status, exclude cancelled
-    today = date.today()
+    today = timezone.localdate()
+    now = timezone.localtime()
+    from django.db.models import Q
     upcoming_appointments = Appointment.objects.filter(
         patient=patient,
         appointment_date__gte=today,
         status='accepted'
-    ).exclude(status='cancelled').order_by('appointment_date', 'appointment_time')[:5]
+    ).filter(Q(appointment_date__gt=today) | Q(appointment_date=today, appointment_time__gte=now.time())).order_by('appointment_date', 'appointment_time')
     
     # Get all appointments for stats (exclude cancelled)
     all_appointments = Appointment.objects.filter(patient=patient).exclude(status='cancelled')
@@ -514,13 +426,13 @@ def profile_dashboard(request):
     from doctor.models import AppointmentPrescription
     prescriptions = AppointmentPrescription.objects.filter(
         appointment__patient=patient
-    ).select_related('doctor', 'appointment').order_by('-created_at')[:5]
+    ).select_related('doctor', 'appointment').order_by('-created_at')
 
     # Get reports from PatientDocument (report, lab_result, scan types)
     reports = PatientDocument.objects.filter(
         patient=patient,
         document_type__in=['report', 'lab_result', 'scan']
-    ).order_by('-uploaded_at')[:5]
+    ).order_by('-uploaded_at')
     
     # Get pending consent requests from doctors
     from doctor.models import Consent
@@ -535,15 +447,19 @@ def profile_dashboard(request):
         'patient': patient,
         'hospitals': hospitals,
         'specializations': specializations,
-        'upcoming_appointments': upcoming_appointments,
+        'upcoming_appointments': upcoming_appointments[:5],
+        'upcoming_count': upcoming_appointments.count(),
+        'first_patient_login': request.session.get('patient_first_login', False),
         'recent_appointments': recent_appointments,
         'total_appointments': total_appointments,
         'accepted_appointments': accepted_appointments,
         'pending_appointments': pending_appointments,
         'rejected_appointments': rejected_appointments,
         'completed_appointments': completed_appointments,
-        'prescriptions': prescriptions,
-        'reports': reports,
+        'prescriptions': prescriptions[:5],
+        'prescriptions_count': prescriptions.count(),
+        'reports': reports[:5],
+        'reports_count': reports.count(),
         'bills_due_total': bills_due_total,
         'pending_consents': pending_consents,
         'pending_consents_count': pending_consents.count(),
@@ -758,76 +674,36 @@ def calculate_health_score(patient):
         score += avg_wellness * 0.25
         factors += 0.25
     
-    # Medication adherence factor (25% weight)
-    adherence = calculate_medication_adherence(patient)
-    score += adherence * 0.25
-    factors += 0.25
-    
+    # Daily self-reported medication logs cannot establish dose adherence or health.
+
     # Appointment compliance factor (20% weight)
     from appointments.models import Appointment
     from datetime import timedelta
     recent_appointments = Appointment.objects.filter(
         patient=patient,
-        appointment_date__gte=timezone.now().date() - timedelta(days=30)
-    ).exclude(status='cancelled')
+        appointment_date__gte=timezone.localdate() - timedelta(days=30),
+        appointment_date__lte=timezone.localdate(),
+        status__in=['accepted', 'completed'],
+    )
     
     if recent_appointments:
         completed_rate = recent_appointments.filter(status='completed').count() / recent_appointments.count()
-        score += completed_rate * 20 * 0.2
+        score += completed_rate * 100 * 0.2
         factors += 0.2
     
     # Normalize score
     if factors > 0:
         final_score = min(100, max(0, score / factors))
     else:
-        final_score = 75  # Default score if no data
+        return None  # No observations: do not invent a health result.
     
     return round(final_score, 1)
 
 
 def calculate_medication_adherence(patient):
-    """Calculate medication adherence percentage"""
-    from datetime import timedelta
-    
-    medications = Medication.objects.filter(patient=patient, is_active=True)
-    if not medications:
-        return 100.0  # No medications = 100% adherence
-    
-    total_adherence = 0
-    medication_count = 0
-    
-    for med in medications:
-        # Calculate expected doses based on frequency
-        days_since_prescribed = (timezone.now().date() - med.prescribed_date).days + 1
-        if days_since_prescribed <= 0:
-            continue
-        
-        # Map frequency to daily doses
-        frequency_map = {
-            'once_daily': 1,
-            'twice_daily': 2,
-            'three_times_daily': 3,
-            'four_times_daily': 4,
-            'weekly': 1/7,
-            'monthly': 1/30,
-            'as_needed': 0.5,  # Assume taken half the time
-        }
-        
-        daily_doses = frequency_map.get(med.frequency, 1)
-        expected_doses = days_since_prescribed * daily_doses
-        
-        # Count actual doses taken
-        actual_doses = MedicationLog.objects.filter(
-            medication=med,
-            taken_date__gte=med.prescribed_date
-        ).count()
-        
-        if expected_doses > 0:
-            adherence_rate = min(100, (actual_doses / expected_doses) * 100)
-            total_adherence += adherence_rate
-            medication_count += 1
-    
-    return round(total_adherence / medication_count, 1) if medication_count > 0 else 100.0
+    """Compatibility name: percentage of eligible days with self-reported logs."""
+    from .services import medication_logging_summary
+    return medication_logging_summary(patient)[0]
 
 
 def calculate_wellness_stats(patient):

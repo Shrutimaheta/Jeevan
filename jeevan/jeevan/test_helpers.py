@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from datetime import date
 from care.models import Hospital, Specialization
 from doctor.models import Doctor
 from patient.models import Patient
@@ -58,7 +59,7 @@ class JeevanTestClientMixin:
         defaults = {
             "full_name": user.full_name,
             "gender": "Male",
-            "dob": "1990-01-01",
+            "dob": date(1990, 1, 1),
             "address": "Test Address Street",
         }
         defaults.update(kwargs)

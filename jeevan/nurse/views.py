@@ -22,20 +22,10 @@ def nurse_dashboard(request):
         messages.error(request, "Nurse profile not found.")
         return redirect('universal_login')
         
-    # Get patients who have booked or completed appointments at the nurse's hospital
-    appointments = Appointment.objects.filter(
-        hospital=nurse.hospital,
-        status__in=['pending', 'accepted', 'completed']
-    ).select_related('patient').order_by('-appointment_date', '-appointment_time')
-    
-    # De-duplicate patients
-    seen_patients = set()
-    patients_data = []
-    for appt in appointments:
-        if appt.patient.id not in seen_patients:
-            seen_patients.add(appt.patient.id)
-            patients_data.append(appt.patient)
-            
+    # Match the hospital association policy used by patient_detail and vitals.
+    # An expired/past appointment must not make an authorized patient disappear.
+    patients_data = Patient.objects.filter(associated_hospitals=nurse.hospital).select_related('user').distinct().order_by('full_name')
+
     context = {
         'nurse': nurse,
         'patients': patients_data,
@@ -91,10 +81,10 @@ def log_vitals(request, patient_id):
         blood_pressure_systolic = int(request.POST.get('blood_pressure_systolic'))
         blood_pressure_diastolic = int(request.POST.get('blood_pressure_diastolic'))
         heart_rate = int(request.POST.get('heart_rate'))
-        temperature = float(request.POST.get('temperature'))
+        temperature = request.POST.get('temperature')
         oxygen_saturation = int(request.POST.get('oxygen_saturation'))
         weight = request.POST.get('weight')
-        weight = float(weight) if weight else None
+        weight = weight if weight else None
         notes = request.POST.get('notes', '').strip()
         
         log_patient_vitals(
@@ -170,7 +160,7 @@ def edit_note(request, note_id):
 @nurse_required
 def nurse_list_api(request):
     """API to get list of nurses"""
-    nurses = Nurse.objects.all()
+    nurses = Nurse.objects.filter(hospital=request.user.nurse.hospital, is_active=True).select_related('user', 'hospital')
     nurses_data = []
     for nurse in nurses:
         nurses_data.append({

@@ -1,3 +1,4 @@
+from django.db import transaction
 import secrets
 import string
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,6 +17,7 @@ from jeevan.decorators import rate_limit
 
 
 @rate_limit(key_prefix="forgot_password", limit=5, period=60)
+@transaction.atomic
 def forgot_password(request):
     """Forgot password page - step 1: Enter email or phone"""
     if request.method == 'POST':
@@ -25,12 +27,15 @@ def forgot_password(request):
             email = form.cleaned_data.get('email')
             contact_number = form.cleaned_data.get('contact_number')
             
+            if recovery_method == 'phone':
+                form.add_error('recovery_method', 'Phone recovery is unavailable. Please use email.')
+                return render(request, 'patient/forgot_password.html', {'form': form}, status=400)
             user = None
             patient = None
             
             # Find the user and check if they have a patient profile
             if recovery_method == 'email':
-                user = CustomUser.objects.filter(email=email).first()
+                user = CustomUser.objects.select_for_update().filter(email__iexact=email).first()
             elif recovery_method == 'phone':
                 user = CustomUser.objects.filter(contact_number=contact_number).first()
                 
@@ -47,8 +52,8 @@ def forgot_password(request):
                 now = timezone.now()
                 last_otp = OTPVerification.objects.filter(user=user, purpose='password_reset').first()
                 if last_otp and now < last_otp.created_at + timezone.timedelta(seconds=60):
-                    messages.error(request, 'Please wait at least 60 seconds before requesting a new code.')
-                    return render(request, 'patient/forgot_password.html', {'form': form})
+                    request.session['reset_user_id'] = user.id
+                    return redirect('patient:verify_email_otp', patient_id=9999999)
                 
                 # Delete any old OTPs
                 OTPVerification.objects.filter(user=user, purpose='password_reset').delete()
@@ -69,17 +74,10 @@ def forgot_password(request):
                     max_attempts=3
                 )
                 
-                # Log/print OTP in console for developer/test access
-                print(f"==========================================")
-                print(f"[SECURITY] Generated OTP for user {user.username}: {otp}")
-                print(f"==========================================")
-                
                 # Send the OTP via recovery channel
                 if recovery_method == 'phone':
-                    # In production, send SMS. For dev, we do NOT put OTP in messages.
-                    messages.success(request, 'A verification code has been sent to your registered phone number.')
-                    request.session['reset_user_id'] = user.id
-                    return redirect('patient:verify_otp', patient_id=patient.id)
+                    messages.error(request, 'Phone recovery is unavailable. Please use your email address.')
+                    return render(request, 'patient/forgot_password.html', {'form': form})
                 else:
                     subject = 'Password Reset Code - Patient Management System'
                     message = f'''Hello {patient.full_name},
@@ -100,17 +98,16 @@ Patient Management System Team'''
                             [user.email],
                             fail_silently=False,
                         )
-                        messages.success(request, 'A verification code has been sent to your registered email address.')
+                        messages.success(request, 'If an eligible account exists, a verification code has been sent to its registered email address.')
                     except Exception as e:
-                        print(f"Error sending email: {e}")
-                        messages.error(request, 'Failed to send verification code. Please try again later.')
-                        return render(request, 'patient/forgot_password.html', {'form': form})
+                        pass  # Sensitive request data is not logged.
+                        OTPVerification.objects.filter(user=user, purpose='password_reset').delete()
                     
                     request.session['reset_user_id'] = user.id
-                    return redirect('patient:verify_email_otp', patient_id=patient.id)
+                    return redirect('patient:verify_email_otp', patient_id=9999999)
             else:
                 # To prevent user enumeration, simulate a redirect and success message even if user does not exist
-                messages.success(request, f'A verification code has been sent to your registered {recovery_method}.')
+                messages.success(request, 'If an eligible account exists, a verification code has been sent to its registered email address.')
                 request.session['reset_user_id'] = None
                 dummy_id = 9999999
                 if recovery_method == 'phone':
@@ -124,18 +121,14 @@ Patient Management System Team'''
     return render(request, 'patient/forgot_password.html', {'form': form})
 
 
+@transaction.atomic
 def verify_otp_internal(request, patient_id, template_name, recovery_method):
     """Internal helper to verify phone/email OTP"""
     reset_user_id = request.session.get('reset_user_id')
     
-    # Try to fetch the patient for UI rendering
+    # This public step never renders an identifiable patient profile.
     patient = None
-    if patient_id != 9999999:
-        try:
-            patient = Patient.objects.get(id=patient_id)
-        except Patient.DoesNotExist:
-            pass
-            
+
     if request.method == 'POST':
         entered_otp = request.POST.get('otp', '').strip()
         
@@ -149,7 +142,7 @@ def verify_otp_internal(request, patient_id, template_name, recovery_method):
             messages.error(request, 'Invalid verification code. Please try again.')
             return render(request, template_name, {'patient': patient})
             
-        verification = OTPVerification.objects.filter(user=user, purpose='password_reset').first()
+        verification = OTPVerification.objects.select_for_update().filter(user=user, purpose='password_reset').first()
         if not verification:
             messages.error(request, 'Verification code has expired. Please request a new one.')
             return redirect('patient:forgot_password')
@@ -213,10 +206,11 @@ def verify_email_otp(request, patient_id):
 
 
 @rate_limit(key_prefix="reset_password", limit=5, period=60)
+@transaction.atomic
 def reset_password(request, token):
     """Reset password page - step 2: Enter new password"""
     try:
-        token_obj = PasswordResetToken.objects.get(token=token)
+        token_obj = PasswordResetToken.objects.select_for_update().get(token=token)
     except PasswordResetToken.DoesNotExist:
         messages.error(request, 'Invalid or expired reset link.')
         return redirect('patient:forgot_password')

@@ -1,0 +1,60 @@
+name: Render preparation
+on: [push, pull_request]
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: jeevan_qa
+          POSTGRES_USER: render_ci
+          POSTGRES_PASSWORD: fictional-ci-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U render_ci -d jeevan_qa"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      JEEVAN_ENV: production
+      JEEVAN_RENDER_PROFILE: preview
+      JEEVAN_DEMO_MODE: 'true'
+      DATABASE_URL: postgresql://render_ci:fictional-ci-only@127.0.0.1:5432/jeevan_qa
+      DJANGO_SECRET_KEY: fictional-render-ci-configuration-secret-20261104-not-a-deployment-key
+      PREVIEW_ACCESS_TOKEN: fictional-render-ci-access-token-20261104-only
+      PREVIEW_ACCOUNT_PASSWORD: Fictional-CI-Password!47
+      RENDER_EXTERNAL_HOSTNAME: 127.0.0.1
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+      EMAIL_BACKEND: django.core.mail.backends.dummy.EmailBackend
+      PORT: '10000'
+      WEB_CONCURRENCY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: jeevan/requirements.txt
+      - name: Check Render blueprints against the current official schema
+        run: |
+          python -m pip install PyYAML jsonschema
+          python - <<'PY'
+          import json, pathlib, urllib.request, yaml, jsonschema
+          schema = json.load(urllib.request.urlopen('https://render.com/schema/render.yaml.json', timeout=30))
+          for name in ('render.yaml', 'deploy/render.production.yaml'):
+              jsonschema.validate(yaml.safe_load(pathlib.Path(name).read_text()), schema)
+              print(name, 'passed official schema')
+          PY
+      - name: Build and start the actual preview scripts
+        run: |
+          export MEDIA_ROOT="$RUNNER_TEMP/render/public-media"
+          export PRIVATE_MEDIA_ROOT="$RUNNER_TEMP/render/private-media"
+          bash -n deploy/render-build.sh
+          bash -n deploy/render-start.sh
+          bash deploy/render-build.sh
+          bash deploy/render-start.sh > "$RUNNER_TEMP/render-preview.log" 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          if ! python deploy/scripts/render_preview_smoke.py; then
+            cat "$RUNNER_TEMP/render-preview.log"
+            exit 1
+          fi

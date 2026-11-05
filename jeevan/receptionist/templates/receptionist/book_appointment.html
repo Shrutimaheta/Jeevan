@@ -361,6 +361,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Sidebar -->
@@ -408,7 +409,7 @@
         <div class="topbar">
             <h2>
                 <i class="fas fa-heartbeat"></i>
-                Patient Management System (Receptionist Portal)
+                Jeevan (Receptionist Portal)
             </h2>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
@@ -437,6 +438,7 @@
                         <!-- Appointment Form -->
                         <form method="post" id="appointmentForm">
                             {% csrf_token %}
+                            {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
                             
                             <!-- Patient Information Section -->
                             <div class="section-header">
@@ -611,7 +613,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="{{ form.abha_id.id_for_label }}" class="form-label required-field">{{ form.abha_id.label }}</label>
+                                        <label for="{{ form.abha_id.id_for_label }}" class="form-label">{{ form.abha_id.label }}</label>
                                         {{ form.abha_id }}
                                         {% if form.abha_id.errors %}
                                             <div class="text-danger">
@@ -807,11 +809,11 @@
 
         // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('appointment_date').setAttribute('min', today);
-        document.getElementById('date_of_birth').setAttribute('max', today);
+        document.getElementById('id_appointment_date').setAttribute('min', today);
+        document.getElementById('id_date_of_birth').setAttribute('max', today);
 
         // Contact number validation
-        document.getElementById('contact_number').addEventListener('input', function(e) {
+        document.getElementById('id_contact_number').addEventListener('input', function(e) {
             const value = e.target.value.replace(/\D/g, '');
             if (value.length > 10) {
                 e.target.value = value.slice(0, 10);
@@ -819,7 +821,7 @@
         });
 
         // Emergency number validation
-        document.getElementById('emergency_number').addEventListener('input', function(e) {
+        document.getElementById('id_emergency_number').addEventListener('input', function(e) {
             const value = e.target.value.replace(/\D/g, '');
             if (value.length > 10) {
                 e.target.value = value.slice(0, 10);
@@ -827,7 +829,7 @@
         });
 
         // Pincode validation
-        document.getElementById('pincode').addEventListener('input', function(e) {
+        document.getElementById('id_pincode').addEventListener('input', function(e) {
             const value = e.target.value.replace(/\D/g, '');
             if (value.length > 6) {
                 e.target.value = value.slice(0, 6);
@@ -835,7 +837,7 @@
         });
 
         // ABHA ID validation
-        document.getElementById('abha_id').addEventListener('input', function(e) {
+        document.getElementById('id_abha_id').addEventListener('input', function(e) {
             const value = e.target.value.replace(/\D/g, '');
             if (value.length > 14) {
                 e.target.value = value.slice(0, 14);
@@ -857,9 +859,9 @@
         };
 
         // City change handler for pincode suggestions
-        document.getElementById('city').addEventListener('input', function(e) {
+        document.getElementById('id_city').addEventListener('input', function(e) {
             const city = e.target.value.toLowerCase().trim();
-            const pincodeField = document.getElementById('pincode');
+            const pincodeField = document.getElementById('id_pincode');
             
             if (cityPincodeMap[city]) {
                 // Show pincode suggestions
@@ -912,11 +914,8 @@
             const errorMessages = [];
 
             // Check ABHA ID
-            const abhaId = document.getElementById('abha_id').value.replace(/\D/g, '');
-            if (!abhaId) {
-                errorMessages.push('ABHA ID is required.');
-                isValid = false;
-            } else if (abhaId.length !== 14) {
+            const abhaId = document.getElementById('id_abha_id').value.replace(/\D/g, '');
+            if (abhaId && abhaId.length !== 14) {
                 errorMessages.push('ABHA ID must be exactly 14 digits.');
                 isValid = false;
             }
@@ -943,7 +942,7 @@
         });
 
         // Real-time ABHA ID validation
-        document.getElementById('abha_id').addEventListener('blur', function(e) {
+        document.getElementById('id_abha_id').addEventListener('blur', function(e) {
             const value = e.target.value.replace(/\D/g, '');
             if (value && value.length !== 14) {
                 e.target.classList.add('is-invalid');
@@ -966,7 +965,7 @@
         });
 
         // Clear error on input
-        document.getElementById('abha_id').addEventListener('input', function(e) {
+        document.getElementById('id_abha_id').addEventListener('input', function(e) {
             e.target.classList.remove('is-invalid');
             const errorDiv = e.target.parentNode.querySelector('.abha-error');
             if (errorDiv) {

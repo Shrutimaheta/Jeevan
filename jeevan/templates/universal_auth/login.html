@@ -2,312 +2,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patient Management System - Login</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/patient_login_premium.css' %}?v=1.0.3">
-    <style>
-    /* Hide native password reveal icons to avoid duplicate eyes (Edge/IE) */
-    input[type="password"]::-ms-reveal,
-    input[type="password"]::-ms-clear { display:none; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · Jeevan</title>
+<link rel="stylesheet" href="{% static 'css/clinic-auth.css' %}?v=3">
 </head>
-<body>
-    <!-- Premium Background with Animated Elements -->
-    <div class="premium-bg">
-        <div class="bg-gradient-1"></div>
-        <div class="bg-gradient-2"></div>
-        <div class="bg-gradient-3"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-        </div>
-    </div>
-
-    <div class="vm-container premium-container">
-        <!-- Premium Auth Panel -->
-        <div class="vm-auth-panel premium-panel" style="display: flex; flex-direction: column; overflow: hidden;">
-            <!-- Premium Header Section -->
-            <div class="premium-header">
-                <div class="brand-section">
-                    <div class="logo-container">
-                        <div class="logo-wrapper">
-                            <img src="/media/patient_photos/logo.jpg" alt="Patient Management System Logo" class="premium-logo" loading="lazy">
-                            <div class="logo-glow"></div>
-                        </div>
-                        <div class="brand-info">
-                            <h1 class="premium-brand-name">Patient Management System</h1>
-                            <div class="brand-accent"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="welcome-section">
-                    <h2 class="premium-welcome">Welcome Back</h2>
-                    <p class="premium-subtitle">Sign in to access your healthcare dashboard</p>
-                    <div class="welcome-decoration"></div>
-                </div>
-            </div>
-
-            <!-- Premium Form Section -->
-            <form class="premium-login-form" action="{% url 'universal_login' %}" method="post" novalidate autocomplete="off" id="loginForm">
-                {% csrf_token %}
-                {% if next_url %}
-                <input type="hidden" name="next" value="{{ next_url }}">
-                {% endif %}
-                
-                <!-- Premium Messages -->
-                {% if messages %}
-                    <div class="premium-messages">
-                        {% for message in messages %}
-                            <div class="premium-msg premium-msg-{{ message.tags }}">
-                                <div class="msg-icon"></div>
-                                <span>{{ message }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                
-                {% if form.non_field_errors %}
-                    <div class="premium-messages">
-                        {% for error in form.non_field_errors %}
-                            <div class="premium-msg premium-msg-error">
-                                <div class="msg-icon"></div>
-                                <span>{{ error }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
-                <!-- Premium Form Fields -->
-                <div class="premium-form-group">
-                    <label for="username" class="premium-label">
-                        <span class="label-text">Username or Email</span>
-                        <span class="label-accent"></span>
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="text" id="username" name="username" placeholder="Enter your username or email" class="premium-input" required />
-                        <div class="input-icon user-icon"></div>
-                        <div class="input-focus-line"></div>
-                    </div>
-                </div>
-
-                <!-- Role Selection Field -->
-                <div class="premium-form-group">
-                    <label for="role" class="premium-label">
-                        <span class="label-text">Select Role</span>
-                        <span class="label-accent"></span>
-                    </label>
-                    <div class="input-wrapper">
-                        <select id="role" name="role" class="premium-input premium-select" required>
-                            <option value="">Choose your role</option>
-                            <option value="patient">Patient</option>
-                            <option value="doctor">Doctor</option>
-                            <option value="receptionist">Receptionist</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                        <div class="input-icon role-icon"></div>
-                        <div class="input-focus-line"></div>
-                    </div>
-                </div>
-
-                <div class="premium-form-group">
-                    <label for="password" class="premium-label">
-                        <span class="label-text">Password</span>
-                        <span class="label-accent"></span>
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="password" id="password" name="password" placeholder="Enter your password" class="premium-input" required />
-                        <div class="input-icon password-icon"></div>
-                        <div class="input-focus-line"></div>
-                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-                            <div class="toggle-icon"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Premium Options -->
-                <div class="premium-options">
-                    <a href="{% url 'patient:forgot_password' %}" class="forgot-link">Forgot Password?</a>
-                    <div class="security-indicator">
-                        <div class="security-icon"></div>
-                        <span>Secure Login</span>
-                    </div>
-                </div>
-
-                <!-- Premium Submit Buttons -->
-                <div class="premium-button-group" style="margin-top: 6px;">
-                    <button type="submit" class="premium-btn premium-btn-primary" id="loginButton">
-                        <span class="btn-text">Sign In</span>
-                        <div class="btn-icon"></div>
-                        <div class="btn-shine"></div>
-                        <div class="btn-spinner" style="display:none;">
-                            <div class="spinner"></div>
-                        </div>
-                    </button>
-                    
-                </div>
-            </form>
-
-            <!-- Divider and Registration Call-to-action -->
-            <div style="margin: 0.75rem 0; border-top: 1px dashed rgba(44, 90, 160, 0.15);"></div>
-            <div style="text-align: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 0.85rem; color: #64748b;">New Patient?</span>
-                <a href="{% url 'patient:patient_register' %}" style="font-size: 0.85rem; color: #2c5aa0; text-decoration: none; font-weight: 600; margin-left: 5px; border-bottom: 2px solid rgba(44, 90, 160, 0.2); padding-bottom: 1px; transition: border-color 0.2s ease;">
-                    Register Here
-                </a>
-            </div>
-
-            <!-- Premium Footer -->
-            <div class="premium-footer">
-                <p class="signup-text">
-                    Secure access to your healthcare dashboard
-                </p>
-            </div>
-        </div>
-
-        <!-- Premium Illustration Section -->
-        <div class="vm-illustration premium-illustration">
-            <div class="illustration-container">
-                <div class="illustration-bg"></div>
-                <div class="illustration-content">
-                    <div class="hero-image-wrapper">
-                        <img src="/media/patient_photos/b2.jpg" alt="Patient Management System" class="premium-hero-image" loading="lazy" decoding="async" />
-                        <div class="image-overlay"></div>
-                    </div>
-                    <div class="illustration-text">
-                        <h3 class="illustration-title">Patient Management System</h3>
-                        <p class="illustration-description">Comprehensive healthcare management for modern medical facilities</p>
-                        <div class="feature-highlights">
-                            <div class="feature-item">
-                                <div class="feature-icon"></div>
-                                <span>Secure & Private</span>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon"></div>
-                                <span>24/7 Access</span>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon"></div>
-                                <span>AI-Powered</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="illustration-decoration">
-                    <div class="decoration-circle circle-1"></div>
-                    <div class="decoration-circle circle-2"></div>
-                    <div class="decoration-circle circle-3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Premium Loading Animation -->
-    <div class="premium-loader" id="premiumLoader">
-            <div class="loader-content">
-                <div class="loader-logo"></div>
-                <div class="loader-text">Patient Management System</div>
-                <div class="loader-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-    </div>
-    <script>
-        // Premium interactions and animations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Hide loader after page load
-            setTimeout(() => {
-                const loader = document.getElementById('premiumLoader');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 300);
-                }
-            }, 1000);
-
-            // Premium form interactions
-            const form = document.getElementById('loginForm');
-            const btn = document.getElementById('loginButton');
-            
-            if(form && btn) {
-                form.addEventListener('submit', function() {
-                    if(btn.dataset.loading === '1') return;
-                    
-                    btn.dataset.loading = '1';
-                    btn.classList.add('loading');
-                    btn.querySelector('.btn-text').textContent = 'Signing In...';
-                    btn.querySelector('.btn-spinner').style.display = 'flex';
-                    btn.setAttribute('disabled', 'disabled');
-                });
-            }
-
-            // Password toggle functionality
-            const passwordToggle = document.querySelector('.password-toggle');
-            const passwordInput = document.querySelector('#password');
-            
-            if(passwordToggle && passwordInput) {
-                passwordToggle.addEventListener('click', function() {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    this.classList.toggle('active');
-                });
-            }
-
-            // Form validation with premium feedback
-            const inputs = document.querySelectorAll('.premium-input');
-            
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('focused');
-                });
-                
-                input.addEventListener('blur', function() {
-                    if (!this.value) {
-                        this.parentElement.classList.remove('focused');
-                    }
-                });
-            });
-
-            // Role selection enhancement
-            const roleSelect = document.querySelector('#role');
-            if(roleSelect) {
-                roleSelect.addEventListener('change', function() {
-                    const selectedRole = this.value;
-                    const welcomeText = document.querySelector('.premium-welcome');
-                    const subtitleText = document.querySelector('.premium-subtitle');
-                    
-                    if(selectedRole) {
-                        welcomeText.textContent = `Welcome Back, ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`;
-                        subtitleText.textContent = `Sign in to access your ${selectedRole} dashboard`;
-                    } else {
-                        welcomeText.textContent = 'Welcome Back';
-                        subtitleText.textContent = 'Sign in to access your healthcare dashboard';
-                    }
-                });
-            }
-
-            // Restore button state if page re-rendered with errors
-            const errorMsgs = document.querySelectorAll('.premium-msg-error');
-            if(errorMsgs.length) {
-                const b = document.getElementById('loginButton');
-                if(b) {
-                    b.removeAttribute('disabled');
-                    b.classList.remove('loading');
-                    const spinner = b.querySelector('.btn-spinner');
-                    if(spinner) spinner.style.display = 'none';
-                    const textSpan = b.querySelector('.btn-text');
-                    if(textSpan) textSpan.textContent = 'Sign In';
-                }
-            }
-        });
-    </script>
-</body>
-</html>
-
+<body class="auth-page">
+<a class="skip-link" href="#sign-in">Skip to sign in</a>
+<div class="auth-shell">
+<aside class="auth-intro" aria-label="About Jeevan">
+<a class="auth-brand" href="{% url 'home' %}"><img src="{% static 'images/clinic-mark.svg' %}?v=2" width="44" height="44" alt=""><span>Jeevan</span></a>
+<div class="auth-intro-copy"><span class="auth-eyebrow">YOUR CLINIC, CONNECTED</span><h1>Care starts with a connection.</h1><p>Manage appointments, access your documents and stay connected with your clinic in one place.</p><ul class="auth-benefits"><li>Appointments and visit updates</li><li>Patient documents and consent</li><li>A workspace for your care team</li></ul></div>
+<p class="auth-intro-note">For emergencies, contact your local emergency service. This website does not monitor emergency requests.</p>
+</aside>
+<main class="auth-form-panel" id="sign-in" tabindex="-1">
+<a class="auth-back" href="{% url 'home' %}">← Back to home</a>
+<div class="auth-form-heading"><h2>Welcome back</h2><p>Sign in to your Jeevan account.</p></div>
+{% if messages %}<div class="auth-messages" aria-live="polite">{% for message in messages %}<div class="auth-message {{ message.tags }}" {% if message.tags == 'error' %}role="alert"{% endif %}>{{ message }}</div>{% endfor %}</div>{% endif %}
+<form method="post" action="{% url 'universal_login' %}" id="loginForm">
+{% csrf_token %}
+{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+<div class="auth-field"><label for="username">Username or Email</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ request.POST.username|default:'' }}" required maxlength="254" placeholder="Enter your username or email"></div>
+<div class="auth-field"><label for="role">Select Role</label><select id="role" name="role" required aria-describedby="role-help">
+<option value="">Choose your role</option>
+<option value="patient" {% if request.POST.role == 'patient' %}selected{% endif %}>Patient</option>
+<option value="doctor" {% if request.POST.role == 'doctor' %}selected{% endif %}>Doctor</option>
+<option value="nurse" {% if request.POST.role == 'nurse' %}selected{% endif %}>Nurse</option>
+<option value="receptionist" {% if request.POST.role == 'receptionist' %}selected{% endif %}>Receptionist</option>
+<option value="care_coordinator" {% if request.POST.role == 'care_coordinator' %}selected{% endif %}>Care Coordinator</option>
+<option value="admin" {% if request.POST.role == 'admin' %}selected{% endif %}>Admin</option>
+</select><small id="role-help">Use the role assigned to your account by your clinic.</small></div>
+<div class="auth-field"><label for="password">Password</label><div class="auth-password"><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password"><button type="button" id="passwordToggle" aria-label="Show password" aria-controls="password" aria-pressed="false">Show</button></div></div>
+<a class="auth-recovery" href="{% url 'patient:forgot_password' %}">Forgot Password?</a>
+<button class="auth-submit" type="submit" id="loginButton">Sign In</button>
+<p class="auth-status" id="loginStatus" role="status" aria-live="polite"></p>
+</form>
+<p class="auth-register">New patient? <a href="{% url 'patient:patient_register' %}">Create an account</a></p>
+<p class="auth-help">Clinic staff: contact your administrator if you need account access.</p>
+</main>
+</div>
+<script src="{% static 'js/clinic-auth.js' %}?v=2" defer></script>
+</body></html>

@@ -33,7 +33,7 @@ const EditDoctors = () => {
   const handleModalNavigation = () => {
     const modal = document.getElementById("success_modal");
     if (modal) {
-      // @ts-ignore
+
       const bsModal = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
       bsModal.hide();
       

@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from jeevan.decorators import patient_required, log_audit_event
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -18,9 +18,6 @@ def appointment_list(request):
     """Display list of appointments for the logged-in patient (exclude cancelled by default)"""
     try:
         patient = Patient.objects.get(user=request.user)
-        
-        # Mark expired appointments before processing
-        Appointment.mark_expired_appointments()
         
         # Optional status filter via query param (?status=pending|accepted|rejected|completed|expired|cancelled|all)
         selected_status = request.GET.get('status', '').strip().lower()
@@ -67,7 +64,6 @@ def appointment_list_accepted(request):
     """Display only accepted appointments for the logged-in patient"""
     try:
         patient = Patient.objects.get(user=request.user)
-        Appointment.mark_expired_appointments()
         appointments = (
             Appointment.objects
             .filter(patient=patient, status='accepted')
@@ -90,6 +86,7 @@ def appointment_list_accepted(request):
         messages.error(request, "Patient profile not found.")
         return redirect('/login/')
 
+@login_required
 @patient_required
 def appointment_create(request):
     """Create a new appointment"""
@@ -99,6 +96,9 @@ def appointment_create(request):
         # Support pre-selection via query params (doctor or hospital)
         preselect_hospital_id = request.GET.get('hospital')
         preselect_doctor_id = request.GET.get('doctor')
+        for value in (preselect_hospital_id, preselect_doctor_id):
+            if value and (not value.isascii() or not value.isdigit() or len(value) > 9):
+                return HttpResponseBadRequest('Invalid clinic or doctor selection.')
         # Ensure initial_data exists for both GET and POST code paths
         initial_data = {}
 
@@ -106,7 +106,7 @@ def appointment_create(request):
             # If doctor is preselected via query param, force hospital/doctor values
             if preselect_doctor_id:
                 try:
-                    locked_doctor = Doctor.objects.get(id=preselect_doctor_id)
+                    locked_doctor = Doctor.objects.get(id=preselect_doctor_id, is_active=True, user__is_active=True)
                     post_data = request.POST.copy()
                     post_data['hospital'] = str(locked_doctor.hospital_id)
                     post_data['doctor'] = str(locked_doctor.id)
@@ -115,17 +115,17 @@ def appointment_create(request):
                     initial_data['doctor'] = locked_doctor.id
                     form = AppointmentForm(post_data, patient=patient)
                     # Ensure the doctor choice is valid for the locked hospital
-                    form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=locked_doctor.hospital_id)
+                    form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=locked_doctor.hospital_id, is_active=True, user__is_active=True)
                 except Doctor.DoesNotExist:
-                    form = AppointmentForm(request.POST, patient=patient)
+                    return HttpResponseBadRequest('The selected doctor is unavailable. Please select a listed doctor.')
             else:
                 form = AppointmentForm(request.POST, patient=patient)
             
             # If form is invalid, reload doctor choices based on selected hospital
             if not form.is_valid() and 'hospital' in form.data:
-                hospital_id = form.data.get('hospital')
-                if hospital_id:
-                    form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=hospital_id)
+                hospital = form.cleaned_data.get('hospital')
+                if hospital:
+                    form.fields['doctor'].queryset = Doctor.objects.filter(hospital=hospital, is_active=True, user__is_active=True)
                     form.fields['doctor'].widget.attrs['disabled'] = False
             
             if form.is_valid():
@@ -141,7 +141,7 @@ def appointment_create(request):
                         payment_mode=form.cleaned_data.get('payment_mode', 'cash'),
                         actor=request.user
                     )
-                    messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
+                    messages.success(request, 'Appointment requested successfully. Check My Appointments for confirmation from your clinic.')
                     return redirect('appointments:appointment_list')
                 except Exception as e:
                     messages.error(request, str(e))
@@ -184,11 +184,11 @@ def appointment_create(request):
             # Build initial data for GET based on query params
             if preselect_doctor_id:
                 try:
-                    selected_doctor = Doctor.objects.get(id=preselect_doctor_id)
+                    selected_doctor = Doctor.objects.get(id=preselect_doctor_id, is_active=True, user__is_active=True)
                     initial_data['hospital'] = selected_doctor.hospital_id
                     initial_data['doctor'] = selected_doctor.id
                 except Doctor.DoesNotExist:
-                    pass
+                    return HttpResponseBadRequest('The selected doctor is unavailable. Please select a listed doctor.')
             elif preselect_hospital_id:
                 try:
                     initial_data['hospital'] = int(preselect_hospital_id)
@@ -199,13 +199,13 @@ def appointment_create(request):
 
             # If doctor is preselected, constrain doctor queryset to that hospital so the option exists
             if 'doctor' in initial_data and 'hospital' in initial_data:
-                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'])
+                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'], is_active=True, user__is_active=True)
                 # Lock both hospital and doctor if a doctor is preselected (coming from hospital doctors page)
                 form.fields['hospital'].widget.attrs['disabled'] = True
                 form.fields['doctor'].widget.attrs['disabled'] = True
             # If only hospital is preselected, start with an empty doctor list until AJAX fills it, but allow manual selection
             elif 'hospital' in initial_data:
-                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'])
+                form.fields['doctor'].queryset = Doctor.objects.filter(hospital_id=initial_data['hospital'], is_active=True, user__is_active=True)
         
         context = {
             'form': form,
@@ -301,7 +301,7 @@ def get_doctors(request):
     try:
         hospital_id = request.GET.get('hospital_id')
         if hospital_id:
-            doctors = Doctor.objects.filter(hospital_id=hospital_id).prefetch_related('specialization')
+            doctors = Doctor.objects.filter(hospital_id=hospital_id, is_active=True, user__is_active=True).prefetch_related('specialization')
             doctor_list = []
             for doctor in doctors:
                 specializations = [spec.sname for spec in doctor.specialization.all()]

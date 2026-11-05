@@ -246,7 +246,7 @@
                         </div>
                     {% endif %}
                     <h4>{{ patient.full_name }}</h4>
-                    <p class="text-muted">{{ patient.email }}</p>
+                    <p class="text-muted">{{ patient.user.email }}</p>
                     <div class="profile-stats">
                         <div class="stat-item">
                             <span class="stat-number">{{ total_appointments }}</span>
@@ -277,7 +277,7 @@
                         <i class="fas fa-upload"></i>
                         Upload Document
                     </a>
-                    <a href="{% url 'patient:profile' %}" class="action-btn">
+                    <a href="{% url 'patient:patient_profile' %}" class="action-btn">
                         <i class="fas fa-user-edit"></i>
                         Edit Profile
                     </a>
@@ -304,14 +304,14 @@
                 <!-- Health Score -->
                 <div class="health-score-section">
                     <div class="health-score-header">
-                        <h6>Overall Health Score</h6>
-                        <span class="score-value">{{ health_score }}%</span>
+                        <h6>Wellness activity indicator</h6>
+                        <span class="score-value">{{ health_score|default_if_none:"No data" }}</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ health_score }}%;"></div>
+                        <div class="progress-fill" style="width: {{ health_score|default_if_none:0 }}%;"></div>
                     </div>
                     <div class="score-details">
-                        <span class="score-trend positive">Based on your recent health data</span>
+                        <span class="score-trend positive">An activity summary, not a medical assessment. Missing observations are excluded.</span>
                     </div>
                 </div>
 
@@ -323,9 +323,9 @@
                         <div class="health-stat-trend">{{ completed_appointments }} completed</div>
                     </div>
                     <div class="health-stat">
-                        <div class="health-stat-number">{{ medication_adherence }}%</div>
-                        <div class="health-stat-label">Medication Adherence</div>
-                        <div class="health-stat-trend">This month</div>
+                        <div class="health-stat-number">{% if medication_adherence is not None %}{{ medication_adherence }}%{% else %}—{% endif %}</div>
+                        <div class="health-stat-label">Medication Logging</div>
+                        <div class="health-stat-trend">Self-reported days with a log</div>
                     </div>
                 </div>
 
@@ -422,13 +422,13 @@
                     </div>
                 </div>
 
-                <!-- Medication Adherence -->
+                <!-- Self-reported medication logging, not dose adherence -->
                 <div class="col-lg-6">
                     <div class="premium-card">
                         <div class="card-header">
                             <h3 class="card-title">
                                 <span class="card-icon">💊</span>
-                                Medication Adherence
+                                Medication Logging
                             </h3>
                         </div>
                         <div class="chart-container">
@@ -840,7 +840,7 @@ function initializeWellnessChart() {
     });
 }
 
-// Medication Adherence Chart (Doughnut Chart)
+// Medication Logging Chart (Doughnut Chart)
 function initializeMedicationChart() {
     const ctx = document.getElementById('medicationChart');
     if (!ctx) return;
@@ -853,12 +853,12 @@ function initializeMedicationChart() {
                 updateMedicationChart(data.data);
             } else {
                 console.error('Failed to load medication data:', data.error);
-                showFallbackChart(ctx, 'Medication Adherence');
+                showFallbackChart(ctx, 'Medication Logging');
             }
         })
         .catch(error => {
             console.error('Error loading medication data:', error);
-            showFallbackChart(ctx, 'Medication Adherence');
+            showFallbackChart(ctx, 'Medication Logging');
         });
 }
 
@@ -866,9 +866,22 @@ function updateMedicationChart(data) {
     const ctx = document.getElementById('medicationChart');
     if (!ctx) return;
     
-    const adherence = data.overall_adherence || 0;
+    if (data.overall_adherence === null || data.medication_count === 0) {
+        ctx.hidden = true;
+        if (!ctx.parentElement.querySelector('[data-medication-empty]')) {
+            const message = document.createElement('p');
+            message.dataset.medicationEmpty = 'true';
+            message.className = 'text-muted text-center';
+            message.textContent = 'No medication logging data yet. This records days logged, not prescribed doses taken.';
+            ctx.parentElement.append(message);
+        }
+        return;
+    }
+    ctx.hidden = false;
+    ctx.parentElement.querySelector('[data-medication-empty]')?.remove();
+    const adherence = data.overall_adherence;
     const chartData = {
-        labels: ['Adherent', 'Missed'],
+        labels: ['Days logged', 'Days without a log'],
         datasets: [{
             data: [adherence, 100 - adherence],
             backgroundColor: ['#10B981', '#EF4444'],

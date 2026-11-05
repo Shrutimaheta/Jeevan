@@ -250,13 +250,22 @@ class ReceptionistPatientRegistrationForm(forms.Form):
             if CustomUser.objects.filter(username=username).exists():
                 raise forms.ValidationError("This username is already taken. Please choose a different username.")
         return username
+
+    def clean_dob(self):
+        from django.utils import timezone
+        birth_date = self.cleaned_data['dob']
+        today = timezone.localdate()
+        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        if birth_date > today or age > 120:
+            raise forms.ValidationError('Enter a date of birth between today and 120 years ago.')
+        return birth_date
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
             # Check if email already exists in CustomUser
             from care.models import CustomUser
-            if CustomUser.objects.filter(email=email).exists():
+            if CustomUser.objects.filter(email__iexact=email).exists():
                 raise forms.ValidationError("A user with this email already exists.")
         return email
     
@@ -309,6 +318,15 @@ class ReceptionistPatientRegistrationForm(forms.Form):
             if password != confirm_password:
                 raise forms.ValidationError("Passwords don't match.")
         
+        if password:
+            from django.contrib.auth.password_validation import validate_password
+            from care.models import CustomUser
+            candidate = CustomUser(username=cleaned_data.get('username', ''), email=cleaned_data.get('email', ''),
+                                   full_name=f"{cleaned_data.get('first_name', '')} {cleaned_data.get('last_name', '')}".strip())
+            try:
+                validate_password(password, user=candidate)
+            except ValidationError as exc:
+                self.add_error('password', exc)
         return cleaned_data
 
 
@@ -358,7 +376,7 @@ class SimpleAppointmentBookingForm(forms.Form):
         hospital = kwargs.pop('hospital', None)
         super().__init__(*args, **kwargs)
         if hospital:
-            self.fields['doctor'].queryset = Doctor.objects.filter(hospital=hospital)
+            self.fields['doctor'].queryset = Doctor.objects.filter(hospital=hospital, is_active=True, user__is_active=True)
     
     def clean_appointment_date(self):
         appointment_date = self.cleaned_data.get('appointment_date')

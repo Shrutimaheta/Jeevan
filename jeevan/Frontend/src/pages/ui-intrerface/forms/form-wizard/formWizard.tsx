@@ -458,7 +458,7 @@ const FormWizard = () => {
     }
   };
 
-  const handleChange3 = (e: any) => {
+  const handleChange3 = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData3((prev) => ({
       ...prev,

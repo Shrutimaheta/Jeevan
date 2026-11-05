@@ -29,24 +29,24 @@ const UiRating = () => {
       // Handle star selection
     }
   };
-  const handleRatingChange1 = (newRating: any) => {
+  const handleRatingChange1 = (newRating: number) => {
     setRating1(newRating);
   };
 
 
-  const handleRatingChange2 = (newRating: any) => {
+  const handleRatingChange2 = (newRating: number) => {
     setRating2(newRating);
   };
-  const handleRatingChange3 = (newRating: any) => {
+  const handleRatingChange3 = (newRating: number) => {
     setRating3(newRating);
   };
-  const handleRatingChange4 = (newRating: any) => {
+  const handleRatingChange4 = (newRating: number) => {
     setRating4(newRating);
   };
-  const handleRatingChange5 = (newRating: any) => {
+  const handleRatingChange5 = (newRating: number) => {
     setRating5(newRating);
   };
-  const handleRatingChange6 = (newRating: any) => {
+  const handleRatingChange6 = (newRating: number) => {
     setRating6(newRating);
   };
 

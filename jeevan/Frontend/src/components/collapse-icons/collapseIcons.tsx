@@ -6,13 +6,13 @@ const CollapseIcons = () => {
 
   useEffect(() => {
     // Initialize Bootstrap tooltips
-    // @ts-ignore
+
     if (window.bootstrap) {
       const tooltipTriggerList = [].slice.call(
         document.querySelectorAll('[data-bs-toggle="tooltip"]')
       );
       tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-        // @ts-ignore
+
         new window.bootstrap.Tooltip(tooltipTriggerEl);
       });
     }

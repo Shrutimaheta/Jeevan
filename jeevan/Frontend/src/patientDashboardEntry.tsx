@@ -5,13 +5,13 @@ interface DashboardStats { total:number; accepted:number; pending:number; reject
 interface UpcomingAppt { id:number; appointment_date:string; appointment_time:string; status:string }
 interface Prescription { id:number; appointment_id:number; diagnosis:string; created_at:string }
 
-const PatientDashboardApp: React.FC = () => {
+export const PatientDashboardApp: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [upcoming, setUpcoming] = useState<UpcomingAppt[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const patient = (window as any).__PATIENT__ || { name: 'Patient' };
+  const patient = window.__PATIENT__ || { name: 'Patient' };
 
   useEffect(() => {
     fetch('/patient/api/dashboard-data/')

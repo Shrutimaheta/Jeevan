@@ -1,3 +1,4 @@
+import type { DropResult } from '@hello-pangea/dnd';
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useState } from "react";
@@ -126,7 +127,7 @@ const UiDragula = () => {
   const [items, setItems] = useState(initialItems);
   const [items2, setItems2] = useState(initialItems2);
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const reorderedItems = Array.from(items);
@@ -135,7 +136,7 @@ const UiDragula = () => {
 
     setItems(reorderedItems);
   };
-  const onDragEnd2 = (result: any) => {
+  const onDragEnd2 = (result: DropResult) => {
     if (!result.destination) return;
 
     const reorderedItems2 = Array.from(items2);

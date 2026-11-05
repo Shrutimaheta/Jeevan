@@ -73,6 +73,18 @@ def validate_file_security(file, is_image_only=False):
 
 
 class PatientRegistrationForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth.validators import UnicodeUsernameValidator
+        self.fields['username'].validators.append(UnicodeUsernameValidator())
+        self.fields['username'].widget.attrs.update(autocomplete='username', autocapitalize='none')
+        self.fields['email'].widget.attrs.update(autocomplete='email')
+        self.fields['full_name'].widget.attrs.update(autocomplete='name')
+        self.fields['contact_number'].widget.attrs.update(
+            autocomplete='tel-national', inputmode='numeric', maxlength='10', pattern='[0-9]{10}')
+        for name in ('password', 'confirm_password'):
+            self.fields[name].widget.attrs.update(autocomplete='new-password', minlength='8')
+
     username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Username'
@@ -106,7 +118,7 @@ class PatientRegistrationForm(forms.ModelForm):
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if CustomUser.objects.filter(email=email).exists():
+        if CustomUser.objects.filter(email__iexact=email).exists():
             raise ValidationError("A user with this email already exists.")
         return email
 
@@ -118,6 +130,8 @@ class PatientRegistrationForm(forms.ModelForm):
     
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
+        if not contact_number or len(contact_number) != 10 or not contact_number.isascii() or not contact_number.isdigit():
+            raise ValidationError('Enter a valid 10-digit phone number.')
         if contact_number:
             if CustomUser.objects.filter(contact_number=contact_number).exists():
                 raise ValidationError("A user with this phone number already exists.")
@@ -132,6 +146,15 @@ class PatientRegistrationForm(forms.ModelForm):
             if password != confirm_password:
                 raise ValidationError("Passwords don't match.")
         
+        if password:
+            from django.contrib.auth.password_validation import validate_password
+            candidate = CustomUser(username=cleaned_data.get('username', ''),
+                                   email=cleaned_data.get('email', ''),
+                                   full_name=cleaned_data.get('full_name', ''))
+            try:
+                validate_password(password, user=candidate)
+            except ValidationError as exc:
+                self.add_error('password', exc)
         return cleaned_data
     
     def save(self, commit=True):
@@ -143,23 +166,9 @@ class PatientRegistrationForm(forms.ModelForm):
         contact_number = self.cleaned_data.get('contact_number')
 
         with transaction.atomic():
-            user, created = CustomUser.objects.get_or_create(
-                username=username,
-                defaults={
-                    'email': email,
-                    'full_name': full_name,
-                    'contact_number': contact_number,
-                    'role': 'patient'
-                }
-            )
-
-            user.email = email
-            user.full_name = full_name
-            user.contact_number = contact_number
-            user.role = 'patient'
-            if created:
-                user.set_password(password)
-            user.save()
+            user = CustomUser.objects.create_user(
+                username=username, email=email, password=password,
+                full_name=full_name, contact_number=contact_number, role='patient')
 
             patient.user = user
 
@@ -239,7 +248,7 @@ class PatientProfileForm(forms.ModelForm):
             'gender': forms.Select(attrs={
                 'class': 'form-control'
             }),
-            'date_of_birth': forms.DateInput(attrs={
+            'date_of_birth': forms.DateInput(format='%Y-%m-%d', attrs={
                 'class': 'form-control',
                 'type': 'date'
             }),
@@ -288,15 +297,17 @@ class PatientProfileForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if self.instance and self.instance.user:
-            if CustomUser.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
+            if CustomUser.objects.filter(email__iexact=email).exclude(pk=self.instance.user.pk).exists():
                 raise ValidationError("A user with this email already exists.")
         else:
-            if CustomUser.objects.filter(email=email).exists():
+            if CustomUser.objects.filter(email__iexact=email).exists():
                 raise ValidationError("A user with this email already exists.")
         return email
 
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
+        if not contact_number or not contact_number.isascii() or not contact_number.isdigit() or len(contact_number) != 10:
+            raise ValidationError('Enter a valid 10-digit phone number.')
         if self.instance and self.instance.user:
             if CustomUser.objects.filter(contact_number=contact_number).exclude(pk=self.instance.user.pk).exists():
                 raise ValidationError("A user with this contact number already exists.")
@@ -305,12 +316,21 @@ class PatientProfileForm(forms.ModelForm):
                 raise ValidationError("A user with this contact number already exists.")
         return contact_number
 
+    def clean_date_of_birth(self):
+        from django.utils import timezone
+        date_of_birth = self.cleaned_data.get('date_of_birth')
+        if date_of_birth and date_of_birth > timezone.localdate():
+            raise ValidationError('Date of birth cannot be in the future.')
+        return date_of_birth
+
     def clean_profile_photo(self):
         profile_photo = self.cleaned_data.get('profile_photo')
-        if profile_photo:
+        from django.core.files.uploadedfile import UploadedFile
+        if isinstance(profile_photo, UploadedFile):
             validate_file_security(profile_photo, is_image_only=True)
         return profile_photo
 
+    @transaction.atomic
     def save(self, commit=True):
         patient = super().save(commit=False)
         email = self.cleaned_data.get('email')
@@ -368,6 +388,12 @@ class ChangePasswordForm(forms.Form):
         if new_password and confirm_password:
             if new_password != confirm_password:
                 raise ValidationError("New passwords don't match.")
+        if new_password:
+            from django.contrib.auth.password_validation import validate_password
+            try:
+                validate_password(new_password, user=self.user)
+            except ValidationError as exc:
+                self.add_error('new_password', exc)
         
         return cleaned_data
 

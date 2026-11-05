@@ -13,11 +13,8 @@ def check_doctor_patient_access(doctor, patient):
     Helper to check if a doctor has a valid relationship with a patient
     either through active consent or an appointment.
     """
-    if check_consent(doctor, patient):
-        return True
-    if Appointment.objects.filter(doctor=doctor, patient=patient).exists():
-        return True
-    return False
+    from patient.access import can_access_patient
+    return can_access_patient(doctor.user, patient)
 
 @doctor_required
 def doctor_patients(request):
@@ -60,6 +57,8 @@ def doctor_patients(request):
             patients_data[patient_id]['total_appointments'] += 1
             
     patients_list = list(patients_data.values())
+    for item in patients_list:
+        item['can_view_details'] = check_doctor_patient_access(doctor, item['patient'])
     
     context = {
         'doctor': doctor,
@@ -94,8 +93,8 @@ def patient_detail(request, patient_id):
     consent_status = None
     existing_consent = None
     try:
-        existing_consent = Consent.objects.get(doctor=doctor, patient=patient)
-        consent_status = existing_consent.status
+        existing_consent = Consent.objects.filter(doctor=doctor, patient=patient).order_by('-requested_at', '-id').first()
+        consent_status = existing_consent.status if existing_consent else 'none'
     except Consent.DoesNotExist:
         consent_status = 'none'
         
@@ -108,6 +107,7 @@ def patient_detail(request, patient_id):
         'consent_status': consent_status,
         'existing_consent': existing_consent,
     }
+    log_audit_event(request.user, 'VIEW_PATIENT_PROFILE', patient.id)
     return render(request, 'doctor/patient_detail.html', context)
 
 @doctor_required
@@ -123,8 +123,8 @@ def patient_reports(request, patient_id):
     
     consent_status = 'none'
     try:
-        consent = Consent.objects.get(doctor=doctor, patient=patient)
-        consent_status = consent.status
+        consent = Consent.objects.filter(doctor=doctor, patient=patient).order_by('-requested_at', '-id').first()
+        consent_status = consent.status if consent else 'none'
     except Consent.DoesNotExist:
         pass
         

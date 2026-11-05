@@ -7,7 +7,7 @@ export function useThemeSettings() {
   const themeSettings = useAppSelector((state) => state.theme.themeSettings);
 
   useEffect(() => {
-    const htmlElement: any = document.documentElement;
+    const htmlElement = document.documentElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
       htmlElement.setAttribute(key, value);
     });
@@ -18,7 +18,7 @@ export function useThemeSettings() {
       dispatch(updateTheme({ dir: "ltr" }));
     }
     dispatch(updateTheme({ [key]: value }));
-  }, [dispatch, themeSettings.dir]);
+  }, [dispatch, themeSettings]);
 
   const handleResetTheme = useCallback(() => {
     dispatch(resetTheme());

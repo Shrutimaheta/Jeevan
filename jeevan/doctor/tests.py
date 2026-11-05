@@ -1,3 +1,5 @@
+from django.utils import timezone
+from datetime import timedelta
 from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -37,7 +39,7 @@ class AppointmentStatusOwnershipTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor_1,
             patient=self.patient,
             hospital=self.hospital,
-            appointment_date="2026-10-10",
+            appointment_date=timezone.localdate() + timedelta(days=1),
             appointment_time="10:00:00",
             status="pending"
         )
@@ -67,6 +69,16 @@ class AppointmentStatusOwnershipTests(TestCase, JeevanTestClientMixin):
         self.appointment.refresh_from_db()
         self.assertEqual(self.appointment.status, 'accepted')
 
+    def test_dashboard_upcoming_count_excludes_past_accepted_visit(self):
+        Appointment.objects.filter(pk=self.appointment.pk).update(
+            status='accepted', appointment_date=timezone.localdate() - timedelta(days=1))
+        self.client.force_login(self.doctor_user_1)
+        response = self.client.get(reverse('doctor:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['accepted_count'], 0)
+        self.appointment.refresh_from_db()
+        self.assertEqual(self.appointment.status, 'accepted')
+
 class DoctorServiceAndSecurityTests(TestCase, JeevanTestClientMixin):
     def setUp(self):
         self.client = Client()
@@ -85,7 +97,7 @@ class DoctorServiceAndSecurityTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor_a,
             patient=self.patient_a,
             hospital=self.hospital,
-            appointment_date=date.today() + timedelta(days=1),
+            appointment_date=timezone.localdate() + timedelta(days=1) + timedelta(days=1),
             appointment_time="11:00:00",
             status="accepted"
         )

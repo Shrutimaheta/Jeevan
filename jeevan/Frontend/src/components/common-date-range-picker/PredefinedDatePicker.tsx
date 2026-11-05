@@ -62,13 +62,13 @@ export default function PredefinedDatePicker() {
   );
 
   // Always format the input value when the picker is shown
-  const handleShow = (_event: any, picker: any) => {
+  const handleShow = (_event: unknown, picker: {startDate: {toDate(): Date}; endDate: {toDate(): Date}}) => {
     setDisplayValue(
       `${formatDate(picker.startDate.toDate())} - ${formatDate(picker.endDate.toDate())}`
     );
   };
 
-  const handleApply = (_event: any, picker: any) => {
+  const handleApply = (_event: unknown, picker: {startDate: {toDate(): Date}; endDate: {toDate(): Date}}) => {
     setDisplayValue(
       `${formatDate(picker.startDate.toDate())} - ${formatDate(picker.endDate.toDate())}`
     );

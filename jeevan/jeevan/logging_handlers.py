@@ -6,9 +6,10 @@ from django.conf import settings
 
 class CryptographicAuditLogHandler(logging.FileHandler):
     """
-    Custom append-only file logging handler that secures log lines cryptographically.
-    Each log entry is signed using HMAC-SHA256 chained to the previous line's signature,
-    preventing administrators from modifying or deleting past entries undetected.
+    Development-only HMAC-chained diagnostic file.
+    This is not immutable storage: processes may race, and a privileged actor
+    with the key can rewrite it. Production uses durable database events and
+    an independently protected external log collector instead.
     """
     def __init__(self, filename, mode='a', encoding=None, delay=False, errors=None):
         # Create directory if it doesn't exist

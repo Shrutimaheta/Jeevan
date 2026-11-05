@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/vaidya_login.css">
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
   <div class="vm-container">
@@ -15,7 +17,7 @@
       <div class="brand-block compact">
         <div class="logo-row">
           <div class="vm-media-logo-wrap">
-            <img src="/media/patient_photos/logo.jpg" alt="VaidyaMitra Logo" class="vm-media-logo" loading="lazy">
+            <img src="{% static 'images/clinic-mark.svg' %}" alt="VaidyaMitra Logo" class="vm-media-logo" loading="lazy">
           </div>
           <div>
             <h1 class="brand-name">VaidyaMitra</h1>

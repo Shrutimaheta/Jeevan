@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Calendar - Patient Management System</title>
+    <title>Doctor Calendar - Jeevan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -641,6 +641,7 @@
             padding: 0;
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Modern Header with Integrated Navigation -->
@@ -656,7 +657,7 @@
                         <div class="logo-container">
                                 <i class="fas fa-heartbeat"></i>
                         </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                         </a>
                     </div>
                 </div>
@@ -862,13 +863,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- FullCalendar JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    {{ appointments_data|json_script:"calendar-appointment-data" }}
     <script>
+        function calendarText(value) {
+            const text = document.createElement('span');
+            text.textContent = String(value);
+            return text.innerHTML;
+        }
         // Initialize FullCalendar
         document.addEventListener('DOMContentLoaded', function() {
             const calendarEl = document.getElementById('calendar');
             
             // Prepare appointment data
-            const appointmentsData = {{ appointments_json|safe }};
+            const appointmentsData = JSON.parse(document.getElementById('calendar-appointment-data').textContent);
             
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -881,7 +888,7 @@
                 eventClick: function(info) {
                     // Show appointment details in a modal or redirect
                     const appointment = info.event;
-                    const title = appointment.title;
+                    const title = calendarText(appointment.title);
                     const start = appointment.start;
                     const status = appointment.extendedProps.status;
                     

@@ -6,6 +6,35 @@ from django.contrib.auth.models import AbstractUser
 phone_validator = RegexValidator(regex=r'^\d{10}$', message='Phone number must be exactly 10 digits.')
 
 
+class RequestLimit(models.Model):
+    """Shared fixed-window counters for all application workers."""
+    key = models.CharField(max_length=64, primary_key=True)
+    window = models.BigIntegerField()
+    count = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)
+
+
+class AuditEvent(models.Model):
+    """Durable audit trail; use a protected collector for tamper evidence."""
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    actor_id = models.BigIntegerField(null=True)
+    role = models.CharField(max_length=32)
+    action = models.CharField(max_length=80)
+    target = models.CharField(max_length=100)
+    details = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValueError('Audit events cannot be edited.')
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError('Audit events cannot be deleted through the application.')
+
+
 ROLE_CHOICES = [
     ('admin', 'Admin'),
     ('doctor', 'Doctor'),
@@ -69,4 +98,4 @@ class Hospital(models.Model):
     def __str__(self):
         return self.name
 
- 
+

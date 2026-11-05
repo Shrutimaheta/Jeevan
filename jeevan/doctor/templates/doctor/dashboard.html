@@ -980,6 +980,7 @@
             }
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Modern Header with Integrated Navigation -->
@@ -995,7 +996,7 @@
                         <div class="logo-container">
                                 <i class="fas fa-heartbeat"></i>
                         </div>
-                        <h1 class="logo-text">Patient Management System</h1>
+                        <h1 class="logo-text">Jeevan</h1>
                         </a>
                     </div>
                 </div>
@@ -1137,8 +1138,8 @@
                 </div>
             </div>
 
-            <!-- Quick Stats matching patient theme -->
-            <div class="row mb-4">
+            <!-- Quick Stats -->
+            <div class="row mb-4 clinic-stats-row">
                 <div class="col-md-3">
                     <div class="stats-card">
                         <div class="stats-number">{{ accepted_count }}</div>
@@ -1205,7 +1206,7 @@
                                             </p>
                                             <p class="mb-1 text-muted">
                                                 <i class="fas fa-user me-1"></i>
-                                                {{ appointment.patient.contact_number }}
+                                                {{ appointment.patient.user.contact_number }}
                                             </p>
                                             {% if appointment.symptoms %}
                                             <p class="mb-0 text-muted small">
@@ -1358,7 +1359,7 @@
                                                     </div>
                                                     <div>
                                                         <div class="fw-semibold">{{ appointment.patient.full_name }}</div>
-                                                        <small class="text-muted">{{ appointment.patient.contact_number }}</small>
+                                                        <small class="text-muted">{{ appointment.patient.user.contact_number }}</small>
                                                     </div>
                                                 </div>
                                             </td>
@@ -1482,7 +1483,7 @@
                                                     </div>
                                                     <div>
                                                         <div class="fw-semibold">{{ appointment.patient.full_name }}</div>
-                                                        <small class="text-muted">{{ appointment.patient.contact_number }}</small>
+                                                        <small class="text-muted">{{ appointment.patient.user.contact_number }}</small>
                                                     </div>
                                                 </div>
                                             </td>

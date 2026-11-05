@@ -31,6 +31,7 @@
             background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
         }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <div class="dashboard-header">
@@ -72,7 +73,7 @@
                         {% if patients %}
                             <div class="list-group">
                                 {% for patient in patients %}
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="list-group-item d-flex flex-wrap gap-3 justify-content-between align-items-center">
                                         <div>
                                             <h6 class="mb-0">{{ patient.full_name }}</h6>
                                             <small class="text-muted">ABHA ID: {{ patient.abha_id|default:"N/A" }}</small>
@@ -82,7 +83,7 @@
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <p class="text-muted">No patients registered with booked/completed appointments at your hospital.</p>
+                            <p class="text-muted">No patients are currently registered at your hospital.</p>
                         {% endif %}
                     </div>
                 </div>

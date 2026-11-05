@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Select from "react-select";
-import type { StylesConfig } from "react-select";
+import type { DropdownIndicatorProps, StylesConfig } from "react-select";
 
 export type Option = {
   value: string;
@@ -17,7 +17,7 @@ export interface SelectProps {
 }
 
 // Custom dropdown indicator component
-const DropdownIndicator = (props: any) => {
+const DropdownIndicator = (props: DropdownIndicatorProps<Option, false>) => {
   return (
     <div {...props.innerProps} style={{ padding: '0 8px' }}>
       <div
@@ -44,8 +44,8 @@ const customComponents = {
 const CommonSelect: React.FC<SelectProps> = ({ options, defaultValue, className, ariaLabel, placeholder = "Select" }) => {
   const [selectedOption, setSelectedOption] = useState<Option | undefined>(defaultValue);
 
-  const customStyles = {
-    option: (base: any, state: any) => ({
+  const customStyles: StylesConfig<Option, false> = {
+    option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
         ? "#1F6DB2"
@@ -63,13 +63,13 @@ const CommonSelect: React.FC<SelectProps> = ({ options, defaultValue, className,
         color: state.isSelected ? "white" : "#fff",
       },
     }),
-    menu: (base: any) => ({
+    menu: (base) => ({
       ...base,
       position: "absolute",
       width: "100%",
       zIndex: 9999,
     }),
-    menuPortal: (base: any) => ({
+    menuPortal: (base) => ({
       ...base,
       zIndex: 9999,
     }),

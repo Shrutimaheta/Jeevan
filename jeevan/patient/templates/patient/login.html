@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patient Management System - Login</title>
+    <title>Jeevan - Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,6 +14,7 @@
     input[type="password"]::-ms-reveal,
     input[type="password"]::-ms-clear { display:none; }
     </style>
+{% include 'includes/clinic_ui.html' %}
 </head>
 <body>
     <!-- Premium Background with Animated Elements -->
@@ -37,11 +38,11 @@
                 <div class="brand-section">
                     <div class="logo-container">
                         <div class="logo-wrapper">
-                            <img src="/media/patient_photos/logo.jpg" alt="Patient Management System Logo" class="premium-logo" loading="lazy">
+                            <img src="{% static 'images/clinic-mark.svg' %}" alt="Jeevan Logo" class="premium-logo" loading="lazy">
                             <div class="logo-glow"></div>
                         </div>
                         <div class="brand-info">
-                            <h1 class="premium-brand-name">Patient Management System</h1>
+                            <h1 class="premium-brand-name">Jeevan</h1>
                             <div class="brand-accent"></div>
                         </div>
                     </div>
@@ -173,11 +174,11 @@
                 <div class="illustration-bg"></div>
                 <div class="illustration-content">
                     <div class="hero-image-wrapper">
-                        <img src="/media/patient_photos/b2.jpg" alt="Patient Management System" class="premium-hero-image" loading="lazy" decoding="async" />
+                        <img src="/media/patient_photos/b2.jpg" alt="Jeevan" class="premium-hero-image" loading="lazy" decoding="async" />
                         <div class="image-overlay"></div>
                     </div>
                     <div class="illustration-text">
-                        <h3 class="illustration-title">Patient Management System</h3>
+                        <h3 class="illustration-title">Jeevan</h3>
                         <p class="illustration-description">Comprehensive healthcare management for modern medical facilities</p>
                         <div class="feature-highlights">
                             <div class="feature-item">
@@ -208,7 +209,7 @@
     <div class="premium-loader" id="premiumLoader">
             <div class="loader-content">
                 <div class="loader-logo"></div>
-                <div class="loader-text">Patient Management System</div>
+                <div class="loader-text">Jeevan</div>
                 <div class="loader-dots">
                     <span></span>
                     <span></span>

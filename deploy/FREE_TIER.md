@@ -1,0 +1,48 @@
+# Chosen free-plan deployment for multiple clinics
+
+**Superseded as the primary hosting choice:** the user selected Render on 4 November 2026. Use [RENDER.md](RENDER.md) and the root `render.yaml` for the free fictional-data preview. This Oracle plan remains an alternative, not the current deployment instruction.
+
+Selected on 4 November 2026. This is a deployment plan for the existing Django/Docker application. Accounts, a host, DNS, SMTP and remote backup credentials have not been created or connected.
+
+## Selected services
+
+| Need | Selection | Limit or dependency |
+| --- | --- | --- |
+| Application and PostgreSQL | Oracle Cloud Always Free Ampere A1 VM, Ubuntu, running the existing Compose stack | Use only an Always Free eligible allocation. Current documentation lists 2 OCPUs and 12 GB RAM total; capacity is not guaranteed. |
+| Database and uploaded files | Existing PostgreSQL 16 and separate persistent Docker volumes on the VM | Allocate storage within the account's combined free boot/block-volume allowance; never use container-local uploads. |
+| HTTPS address | A free DuckDNS subdomain, with Caddy handling HTTPS | Reserve an available name in the owner's account and point it to the actual VM IP. No domain name has been reserved. |
+| Patient account recovery email | Brevo Free, SMTP with STARTTLS on port 587 | 300 sends per day shared across all clinics and all other account mail. Requires approved credentials and sender. |
+| Encrypted remote backups | restic to a private OCI Object Storage bucket through its S3-compatible endpoint | Off-host, separate from Docker volumes. Keep the repository within actual free object-storage and request limits, including retained snapshots. |
+| Availability and capacity alerts | OCI Monitoring and Notifications within the account's free allowances | Configure an actual recipient and verify delivery. These services are not configured by this document. |
+
+Oracle's current [Always Free resource limits](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) include 200 GB of combined boot/block storage and object-storage allowances. Check the current account/region limits before allocating resources. Oracle can reclaim idle free VMs. Its [free-tier FAQ](https://www.oracle.com/cloud/free/faq/) requires identity/card verification and states that free accounts have no SLA. There is no automatic paid fallback in this plan. Do not deliberately generate fake load to evade reclamation.
+
+[DuckDNS](https://www.duckdns.org/faqs.jsp) supplies a free address, not a mail domain. [Brevo's free allowance](https://help.brevo.com/hc/en-us/articles/208589409-About-Brevo-s-pricing-plans) is a quota, not a delivery guarantee. A free mailbox does not let you authenticate its domain; follow [Brevo's domain setup requirements](https://help.brevo.com/hc/en-us/articles/35852083084178-Domain-setup-for-better-email-deliverability). Use a sender/domain the operator can verify. If sender verification or recovery delivery cannot be established at zero cost, email remains a release blocker; the app must not invent a sender or claim that a DuckDNS address solves mail authentication.
+
+## Operator setup
+
+1. The owner completes Oracle signup and identity/card verification personally. Choose a home region appropriate for the clinics' data requirements. Request an eligible Ubuntu A1 instance only when the console confirms the allocation remains free. An out-of-capacity error is a blocker, not permission to buy a different shape. Keep SSH keys private and require MFA for cloud administration.
+2. Put persistent application data on durable block storage within the free allowance. Record disk ownership, mount paths and reboot behavior. Protect the host with current OS updates. Permit SSH only from the operator's trusted source; expose only HTTP/HTTPS publicly. Keep database and Django ports internal. Follow the official [Docker installation instructions](https://docs.docker.com/engine/install/ubuntu/) for the host architecture.
+3. Reserve a DuckDNS name and point it to the server's real public IP. Store its update token outside source control and logs. Use the resulting exact hostname as `JEEVAN_DOMAIN`; no wildcard host is needed for multiple clinics. Open ports 80/443 in both the cloud network and host firewall.
+4. Create/verify the Brevo account and sender. Copy the actual SMTP login and SMTP key into the host's protected environment file. A Brevo API key is not the SMTP password. Set `EMAIL_HOST=smtp-relay.brevo.com`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=true`, and the verified `DEFAULT_FROM_EMAIL`. Follow the provider's current SMTP settings if they differ.
+5. Complete the existing [production environment example](.env.production.example) and [deployment guide](README.md). Generate unique random application, database administrator, migration and runtime secrets. Store the file outside Git with mode 0600. Set an immutable reviewed image tag. Do not use trial-only resources or assume a billing budget alert prevents charges.
+6. Run the `Deployment package` GitHub workflow manually with architecture `arm64` before accepting an A1 release. Automatic runs keep the default x86 runner; this explicit check covers the selected host architecture. [GitHub documents ARM runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners); private repository minutes depend on the owner's plan. No workflow was dispatched here and no repository has been made public.
+7. Create a private backup bucket and a narrowly scoped backup identity. Obtain its actual S3-compatible endpoint and [customer secret key](https://docs.oracle.com/en-us/iaas/Content/Identity/access/working-with-customer-secret-keys.htm). Configure restic's S3 credentials in operator-only files/environment, separate from application credentials. The repository locator file uses `s3:https://ACTUAL_COMPATIBILITY_ENDPOINT/ACTUAL_BUCKET/jeevan`; replace both values with the console's values. Initialize the encrypted repository once and protect its password independently.
+8. Follow [backup and restore operations](OPERATIONS.md). Restore the database and both upload volumes into a fresh isolated project, check contents and access controls, and record recovery time. A volume snapshot or another copy on the same VM is not the remote backup. Same-provider off-host storage also does not protect against losing the entire cloud account; document that remaining risk.
+9. Configure alerts for HTTPS/readiness, application failures, storage capacity, database availability, SMTP failures/quota, backup age and certificate renewal. Verify receipt, then schedule monitored backups and request-limit cleanup. Choose a backup frequency and restore target with the clinics.
+10. Complete the acceptance gates in [the readiness review](../PRODUCTION_READINESS_2026-11-03.md) against the actual host. Test complete recovery mail flows with real test inboxes and a fictional visit at each clinic before admitting patient records.
+
+No cloud account, DNS name, bucket or email service was created during preparation. Signup, identity verification and sender ownership require the owner's participation. Free capacity, deliverability, backup retention and multi-clinic workload limits must be measured; a permanent zero bill and uninterrupted clinical service cannot be promised.
+
+## Clinic onboarding and access model
+
+All clinics share one application/database, with application-level permissions. This is not one isolated database per clinic. Patients have one account and may be registered with more than one clinic. Staff profiles currently belong to one clinic each; clinic administrators and cross-clinic staff memberships are not separate product roles.
+
+- A trusted platform administrator creates each hospital and individual doctor, nurse, receptionist and coordinator accounts, assigning each to the correct hospital. Public registration creates patient accounts only. Never share a staff login between clinics or people.
+- Verify hospital registration/contact details and staff roles before enabling access. Test the clinic with fictional accounts first, including an attempted request for another clinic's patient and report.
+- Nurses, receptionists and coordinators are scoped to the clinic's registered patients. Receptionists do not gain clinical-record access. Doctor report access requires the patient's active consent; an appointment alone permits demographics. Coordinator exports additionally require clinic registration and active consent to an active doctor at that clinic.
+- Consent-based report access can intentionally include a patient's medical history, not only files authored at the current clinic. Explain this to patients and clinic operators before rollout. Patients can revoke consent; existing sessions must then lose report access.
+- Do not reassign a staff profile with historical notes, visits or consent to another clinic as a routine edit. Staff transfer and multi-clinic employment require a reviewed workflow that preserves historical clinic ownership and obtains renewed consent where needed.
+- Archive exports are limited to 50 selected patients, 500 files and 100 MiB of original file bytes. Large archives spill to an owner-only temporary file after 8 MiB. Clinics can export smaller batches; failures return a recovery message rather than a partial archive.
+
+The startup verifier now checks applied database migrations and private-storage access before Gunicorn starts. This helps reject a broken deployment; it does not replace ongoing monitoring, backup verification or clinic acceptance.

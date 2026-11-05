@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse, Http404
@@ -11,11 +12,8 @@ from doctor.services import request_consent
 
 def check_consent(doctor, patient):
     """Check if doctor has approved consent to view patient reports"""
-    try:
-        consent = Consent.objects.get(doctor=doctor, patient=patient)
-        return consent.is_approved()
-    except Consent.DoesNotExist:
-        return False
+    from patient.access import has_medical_consent
+    return has_medical_consent(doctor, patient)
 
 @doctor_required
 def request_patient_consent(request, patient_id):
@@ -26,13 +24,16 @@ def request_patient_consent(request, patient_id):
         return redirect('doctor:patients')
         
     patient = get_object_or_404(Patient, id=patient_id)
+    from appointments.models import Appointment
+    if not check_consent(doctor, patient) and not Appointment.objects.filter(doctor=doctor, patient=patient, status__in=['pending', 'accepted', 'completed']).exists():
+        raise PermissionDenied('You have no care relationship with this patient.')
     has_consent = check_consent(doctor, patient)
     
     consent_status = None
     existing_consent = None
     try:
-        existing_consent = Consent.objects.get(doctor=doctor, patient=patient)
-        consent_status = existing_consent.status
+        existing_consent = Consent.objects.filter(doctor=doctor, patient=patient).order_by('-requested_at', '-id').first()
+        consent_status = existing_consent.status if existing_consent else 'none'
     except Consent.DoesNotExist:
         consent_status = 'none'
         
@@ -110,12 +111,17 @@ def consent_status(request, doctor_id, patient_id):
     try:
         doctor = get_object_or_404(Doctor, id=doctor_id)
         patient = get_object_or_404(Patient, id=patient_id)
+        if request.user.pk not in (doctor.user_id, patient.user_id):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied("You cannot inspect this consent.")
         has_consent = check_consent(doctor, patient)
         return JsonResponse({
             'has_consent': has_consent,
             'doctor_id': doctor_id,
             'patient_id': patient_id
         })
+    except PermissionDenied:
+        raise
     except Exception as e:
         return JsonResponse({
             'has_consent': False,
