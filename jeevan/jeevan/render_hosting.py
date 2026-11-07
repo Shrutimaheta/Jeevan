@@ -31,7 +31,7 @@ class RenderPreviewMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if not settings.IS_RENDER_PREVIEW:
+        if not (settings.IS_RENDER_PREVIEW or getattr(settings, 'IS_VERCEL_PREVIEW', False)):
             return self.get_response(request)
         if request.path in ('/health/live/', '/health/ready/'):
             response = self.get_response(request)
@@ -72,7 +72,7 @@ class RenderPreviewMiddleware:
 @require_safe
 def public_media(request, name):
     """Serve only raster images from public media on hosts without a file proxy."""
-    if not settings.RENDER_PROFILE:
+    if not (settings.RENDER_PROFILE or getattr(settings, 'IS_VERCEL_PREVIEW', False)):
         raise Http404
     types = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
              '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif',

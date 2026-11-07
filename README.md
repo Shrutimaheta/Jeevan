@@ -6,7 +6,7 @@ The Django application is the supported user interface. The separate React proje
 
 See [real-user verification](REAL_WORLD_TEST_REPORT.md) for the latest browser checks, fixes, fictional QA setup and remaining deployment requirements.
 See [UI/UX verification](UI_UX_VERIFICATION.md) for the responsive design and usability changes.
-The selected Render hosting path is in [the Render deployment guide](deploy/RENDER.md). The root `render.yaml` creates only a protected free preview for fictional data; a separate paid configuration is prepared for later real-patient acceptance. Provider connection, reviewed source publication and live acceptance remain required.
+The selected personal-demo hosting path is in [the Vercel deployment guide](deploy/VERCEL.md). It uses a protected fictional-data preview and a separate free Neon database. Real clinic use remains subject to commercial hosting, durable file storage and live acceptance. The [Render setup](deploy/RENDER.md) remains an alternative; its existing resources have not been deleted.
 See [4 November multiple-clinic verification](MULTICLINIC_READINESS_2026-11-04.md) for export safeguards, startup checks and current test results.
 For the prepared Linux/Docker production package, see [deployment setup](deploy/README.md), [backup and recovery](deploy/OPERATIONS.md) and [the exact preparation/verification status](DEPLOYMENT_PREPARATION_2026-11-02.md). Hosting, SMTP and live acceptance remain required.
 

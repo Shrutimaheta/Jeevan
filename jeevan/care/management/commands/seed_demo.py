@@ -32,7 +32,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         database = str(settings.DATABASES['default']['NAME'])
-        protected_preview = (getattr(settings, 'IS_RENDER_PREVIEW', False)
+        protected_preview = ((getattr(settings, 'IS_RENDER_PREVIEW', False) or getattr(settings, 'IS_VERCEL_PREVIEW', False))
                              and getattr(settings, 'DEMO_MODE', False) and database == 'jeevan_qa')
         if (settings.IS_PRODUCTION and not protected_preview) or not (database.endswith('qa.sqlite3') or database == 'jeevan_qa'):
             raise CommandError('Demo data may only be used in the isolated non-production database.')

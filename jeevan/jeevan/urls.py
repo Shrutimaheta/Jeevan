@@ -96,7 +96,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-elif settings.RENDER_PROFILE:
+elif settings.RENDER_PROFILE or settings.IS_VERCEL_PREVIEW:
     from .render_hosting import public_media
     urlpatterns += [path('media/<path:name>', public_media, name='render_public_media')]
 

@@ -1,0 +1,12 @@
+Frontend/
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.sqlite3
+.env*
+media/
+private_media/
+logs/
+staticfiles/
+.qa/

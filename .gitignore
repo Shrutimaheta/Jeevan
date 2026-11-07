@@ -49,6 +49,8 @@ npm-ls.json
 # Editors and operating systems
 .vscode/
 .idea/
+.vercel/
+.neon
 .DS_Store
 Thumbs.db
 *.swp

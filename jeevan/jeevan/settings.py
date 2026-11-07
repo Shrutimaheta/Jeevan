@@ -8,6 +8,7 @@ import base64
 import binascii
 import hashlib
 import os
+import tempfile
 from pathlib import Path
 import dotenv
 import dj_database_url
@@ -76,8 +77,6 @@ if IS_PRODUCTION:
     )
     if hosting_hostname and hosting_hostname not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(hosting_hostname)
-    if os.getenv("VERCEL", "") == "1" and ".vercel.app" not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(".vercel.app")
     if not ALLOWED_HOSTS:
         raise ImproperlyConfigured(
             "DJANGO_ALLOWED_HOSTS must contain at least one production host."
@@ -146,6 +145,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "jeevan.wsgi.application"
 ASGI_APPLICATION = "jeevan.asgi.application"
+if os.getenv('VERCEL') == '1':
+    # Vercel otherwise prefers ASGI when both entrypoints are defined.
+    ASGI_APPLICATION = None
 
 
 database_url = os.getenv("DATABASE_URL", "").strip()
@@ -225,10 +227,23 @@ RENDER_PROFILE = os.getenv('JEEVAN_RENDER_PROFILE', '').strip().lower()
 if RENDER_PROFILE not in ('', 'preview', 'production'):
     raise ImproperlyConfigured('JEEVAN_RENDER_PROFILE must be preview or production.')
 IS_RENDER_PREVIEW = RENDER_PROFILE == 'preview'
+VERCEL_PROFILE = os.getenv('JEEVAN_VERCEL_PROFILE', '').strip().lower()
+if VERCEL_PROFILE not in ('', 'preview'):
+    raise ImproperlyConfigured('Only the fictional preview is configured for Vercel.')
+IS_VERCEL_PREVIEW = VERCEL_PROFILE == 'preview'
+if IS_VERCEL_PREVIEW:
+    if RENDER_PROFILE or not IS_PRODUCTION or not DEMO_MODE or DATABASES['default']['NAME'] != 'jeevan_qa':
+        raise ImproperlyConfigured('Vercel preview requires production settings, demo mode and a separate jeevan_qa database.')
+    MEDIA_ROOT = Path(tempfile.gettempdir()) / 'jeevan-preview' / 'public'
+    PRIVATE_MEDIA_ROOT = Path(tempfile.gettempdir()) / 'jeevan-preview' / 'private'
+    STORAGES['private']['OPTIONS']['location'] = PRIVATE_MEDIA_ROOT
+    if os.getenv('VERCEL_URL'):
+        # The stable project alias must be supplied explicitly, never *.vercel.app.
+        hosting_hostname = os.environ['VERCEL_URL'].strip()
 if RENDER_PROFILE and not IS_PRODUCTION:
     raise ImproperlyConfigured('Render profiles require JEEVAN_ENV=production.')
 PREVIEW_ACCESS_TOKEN = os.getenv('PREVIEW_ACCESS_TOKEN', '')
-if IS_RENDER_PREVIEW:
+if IS_RENDER_PREVIEW or IS_VERCEL_PREVIEW:
     if not DEMO_MODE or DATABASES['default']['NAME'] != 'jeevan_qa':
         raise ImproperlyConfigured('Render preview requires demo mode and the disposable jeevan_qa database.')
     if len(PREVIEW_ACCESS_TOKEN) < 32 or len(os.getenv('PREVIEW_ACCOUNT_PASSWORD', '')) < 12:
@@ -240,6 +255,8 @@ if RENDER_PROFILE == 'production':
         raise ImproperlyConfigured('Render production uploads must be under the persistent /var/data mount.')
 TELECONSULTATION_ENABLED = env_bool('TELECONSULTATION_ENABLED', False)
 TELECONSULTATION_ORIGIN = os.getenv('TELECONSULTATION_ORIGIN', '').rstrip('/')
+if os.getenv('VERCEL') == '1' and not IS_VERCEL_PREVIEW:
+    raise ImproperlyConfigured('Vercel currently supports only the protected fictional preview.')
 if IS_PRODUCTION and not DEMO_MODE:
     if not os.getenv('PRIVATE_MEDIA_ROOT') or not os.getenv('MEDIA_ROOT'):
         raise ImproperlyConfigured('Real-user deployments require MEDIA_ROOT and PRIVATE_MEDIA_ROOT on persistent volumes.')
@@ -304,7 +321,7 @@ else:
 
 if IS_PRODUCTION and not DEMO_MODE and EMAIL_BACKEND != 'django.core.mail.backends.smtp.EmailBackend':
     raise ImproperlyConfigured('Real-user deployments require an SMTP email backend.')
-if IS_RENDER_PREVIEW and EMAIL_BACKEND != 'django.core.mail.backends.dummy.EmailBackend':
+if (IS_RENDER_PREVIEW or IS_VERCEL_PREVIEW) and EMAIL_BACKEND != 'django.core.mail.backends.dummy.EmailBackend':
     raise ImproperlyConfigured('Render preview must disable email delivery with the dummy backend.')
 if IS_PRODUCTION and DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
     raise ImproperlyConfigured('Production requires PostgreSQL, including DATABASE_URL.')
@@ -360,7 +377,7 @@ SECURE_HSTS_SECONDS = (
 SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
 SECURE_HSTS_PRELOAD = IS_PRODUCTION
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if IS_PRODUCTION else None
-if RENDER_PROFILE:
+if RENDER_PROFILE or IS_VERCEL_PREVIEW:
     SECURE_REDIRECT_EXEMPT = [r'^health/(live|ready)/$']
     MIDDLEWARE.insert(1, 'jeevan.render_hosting.RenderPreviewMiddleware')
 
@@ -368,7 +385,7 @@ if RENDER_PROFILE:
 LOG_DIR = BASE_DIR / "logs"
 if os.getenv("VERCEL", "") == "1":
     # Vercel function deployments have a read-only source directory.
-    LOG_DIR = Path("/tmp/jeevan-logs")
+    LOG_DIR = Path(tempfile.gettempdir()) / 'jeevan-logs'
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
