@@ -1,11 +1,12 @@
 from jeevan.errors import friendly_error
+from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from jeevan.decorators import role_required, patient_required, log_audit_event
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -293,7 +294,8 @@ def change_password(request):
             logout(request)
             
             # Redirect to login page with password change indicator
-            return redirect('patient:patient_login?password_changed=1')
+            messages.success(request, 'Password changed. Please log in with your new password.')
+            return redirect(reverse('universal_login'))
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -385,6 +387,7 @@ def document_detail(request, document_id):
 
 
 @login_required
+@require_POST
 def document_delete(request, document_id):
     """View to delete a document"""
     try:
@@ -635,10 +638,6 @@ def consent_requests(request):
 @login_required
 def upload_report(request):
     """Handle report upload functionality"""
-    print(f"Upload request method: {request.method}")
-    print(f"CSRF token in request: {request.META.get('HTTP_X_CSRFTOKEN')}")
-    print(f"CSRF token in POST: {request.POST.get('csrfmiddlewaretoken')}")
-    
     if request.method == 'POST':
         try:
             patient = Patient.objects.get(user=request.user)
@@ -649,6 +648,13 @@ def upload_report(request):
             
             if not title or not file:
                 return JsonResponse({'error': 'Title and file are required'}, status=400)
+
+            # Same size/extension/content checks as the document upload form.
+            from .forms import validate_file_security
+            try:
+                validate_file_security(file)
+            except ValidationError as exc:
+                return JsonResponse({'error': ' '.join(exc.messages)}, status=400)
             
             # Create a PatientDocument record
             document = PatientDocument.objects.create(

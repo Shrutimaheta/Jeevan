@@ -1,3 +1,4 @@
+import logging
 import secrets
 import string
 from django.shortcuts import render, redirect, get_object_or_404
@@ -106,7 +107,7 @@ Patient Management System Team'''
                         )
                         messages.success(request, 'A verification code has been sent to your registered email address.')
                     except Exception as e:
-                        print(f"Error sending email: {e}")
+                        logging.getLogger(__name__).warning("Password reset email failed: %s", e)
                         messages.error(request, 'Failed to send verification code. Please try again later.')
                         return render(request, 'patient/forgot_password.html', {'form': form})
                     
