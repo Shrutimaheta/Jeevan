@@ -1776,11 +1776,13 @@
             .then(data => {
                 if (data.success) {
                     const patientInfo = document.getElementById('patientInfo');
+                    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const sym = data.symptoms ? String(data.symptoms) : '';
                     patientInfo.innerHTML = `
-                        <strong>${data.patient_name}</strong><br>
+                        <strong>${esc(data.patient_name)}</strong><br>
                         <small class="text-muted">
-                            Appointment: ${data.appointment_date} at ${data.appointment_time}<br>
-                            ${data.symptoms ? `Symptoms: ${data.symptoms.substring(0, 50)}${data.symptoms.length > 50 ? '...' : ''}` : 'No symptoms listed'}
+                            Appointment: ${esc(data.appointment_date)} at ${esc(data.appointment_time)}<br>
+                            ${sym ? `Symptoms: ${esc(sym.substring(0, 50))}${sym.length > 50 ? '...' : ''}` : 'No symptoms listed'}
                         </small>
                     `;
                 } else {

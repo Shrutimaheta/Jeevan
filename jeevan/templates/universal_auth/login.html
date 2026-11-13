@@ -37,7 +37,7 @@
                 <div class="brand-section">
                     <div class="logo-container">
                         <div class="logo-wrapper">
-                            <img src="/media/patient_photos/logo.jpg" alt="Patient Management System Logo" class="premium-logo" loading="lazy">
+                            <img src="{% static 'images/logo.png' %}" alt="Patient Management System Logo" class="premium-logo" loading="lazy">
                             <div class="logo-glow"></div>
                         </div>
                         <div class="brand-info">
@@ -55,6 +55,30 @@
             </div>
 
             <!-- Premium Form Section -->
+            {% if site_flags.DEMO_MODE %}
+            <div class="demo-panel" role="note" style="border:1px solid #f0c36d;background:#fff8e6;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:14px;line-height:1.45;color:#5b4500;">
+                <strong>Demo version</strong> &middot; sample data only. Please don't enter real patient information.
+                <div style="margin-top:8px;">Try it as (password <code>{{ site_flags.DEMO_PASSWORD }}</code>):</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                    <button type="button" class="demo-login" data-user="demo_patient" data-role="patient">Patient</button>
+                    <button type="button" class="demo-login" data-user="dr_sharma" data-role="doctor">Doctor</button>
+                    <button type="button" class="demo-login" data-user="demo_receptionist" data-role="receptionist">Receptionist</button>
+                    <button type="button" class="demo-login" data-user="demo_nurse" data-role="nurse">Nurse</button>
+                </div>
+            </div>
+            <style>.demo-login{border:1px solid #d9a73a;background:#fff;color:#5b4500;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer}.demo-login:hover{background:#ffefc2}</style>
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.demo-login').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        document.getElementById('username').value = btn.dataset.user;
+                        document.getElementById('password').value = "{{ site_flags.DEMO_PASSWORD|escapejs }}";
+                        var role = document.getElementById('role'); if (role) role.value = btn.dataset.role;
+                    });
+                });
+            });
+            </script>
+            {% endif %}
             <form class="premium-login-form" action="{% url 'universal_login' %}" method="post" novalidate autocomplete="off" id="loginForm">
                 {% csrf_token %}
                 {% if next_url %}
@@ -108,7 +132,9 @@
                             <option value="">Choose your role</option>
                             <option value="patient">Patient</option>
                             <option value="doctor">Doctor</option>
+                            <option value="nurse">Nurse</option>
                             <option value="receptionist">Receptionist</option>
+                            <option value="care_coordinator">Care Coordinator</option>
                             <option value="admin">Admin</option>
                         </select>
                         <div class="input-icon role-icon"></div>
@@ -177,7 +203,7 @@
                 <div class="illustration-bg"></div>
                 <div class="illustration-content">
                     <div class="hero-image-wrapper">
-                        <img src="/media/patient_photos/b2.jpg" alt="Patient Management System" class="premium-hero-image" loading="lazy" decoding="async" />
+                        <img src="{% static 'images/medical-team.jpg' %}" alt="Patient Management System" class="premium-hero-image" loading="lazy" decoding="async" />
                         <div class="image-overlay"></div>
                     </div>
                     <div class="illustration-text">

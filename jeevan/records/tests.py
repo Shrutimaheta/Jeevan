@@ -161,13 +161,15 @@ class MedicalRecordsTests(TestCase, JeevanTestClientMixin):
             response = self.client.post(url, {'summary': 'Checkup summary'})
             self.assertEqual(response.status_code, 302) # successful redirect
             
-        # 6th call should be rate limited and redirect with error
+        from records.models import MedicalRecord
+        records_before = MedicalRecord.objects.count()
+
+        # 6th call should be rate limited: redirect with an error, nothing created
         response = self.client.post(url, {'summary': 'Checkup summary'})
         self.assertEqual(response.status_code, 302)
-        # Follow redirect or check messages
-        # Cache key should prevent it
-        cache_key = f"rl:create_record:{self.doctor_user_a.id}"
-        self.assertEqual(cache.get(cache_key), 5)
+        self.assertEqual(MedicalRecord.objects.count(), records_before)
+        cache_key = f"rl:create_record:u{self.doctor_user_a.id}"
+        self.assertEqual(cache.get(cache_key), 6)
 
     def test_fhir_and_snomed_interoperability(self):
         from records.services import create_medical_record

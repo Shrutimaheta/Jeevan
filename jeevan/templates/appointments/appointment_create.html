@@ -1113,8 +1113,8 @@ document.addEventListener('DOMContentLoaded', function() {
     slotBusyModal.show();
     {% endif %}
     
-    const hospitalSelect = document.getElementById('id_hospital');
-    const doctorSelect = document.getElementById('id_doctor');
+    const hospitalSelect = (document.getElementById('id_hospital') || document.getElementById('hospital-select'));
+    const doctorSelect = (document.getElementById('id_doctor') || document.getElementById('doctor-select'));
     const dateInput = document.getElementById('id_appointment_date') || document.getElementById('appointment-date');
     const hourSelect = document.getElementById('id_hour') || document.getElementById('hour-select');
     const minuteSelect = document.getElementById('id_minute') || document.getElementById('minute-select');
@@ -1238,7 +1238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     data.forEach(doctor => {
                         const option = document.createElement('option');
                         option.value = doctor.id;
-                        option.textContent = `${doctor.full_name} - ${doctor.specialization}`;
+                        option.textContent = `Dr. ${doctor.full_name} - ${doctor.specialization}`;
                         option.dataset.hospitalId = hospitalId; // Store hospital ID for validation
                         doctorSelect.appendChild(option);
                     });

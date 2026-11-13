@@ -8,6 +8,7 @@ urlpatterns = [
     # Web Views
     path('', views.patient_list, name='patient_list'),
     path('<int:patient_id>/', views.patient_detail, name='patient_detail'),
+    path('api/list/', views.patient_api_list, name='patient_api_list'),
     path('register/', views.patient_register, name='patient_register'),
     path('login/', RedirectView.as_view(pattern_name='universal_login', permanent=False), name='patient_login'),
     path('logout/', RedirectView.as_view(pattern_name='universal_logout', permanent=False), name='patient_logout'),

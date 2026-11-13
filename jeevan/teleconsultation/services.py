@@ -47,3 +47,15 @@ def create_teleconsultation(appointment, symptoms=None, actor=None):
         )
         
         return tele_session
+
+
+def ensure_meeting_link(session):
+    """Give a session created without a meeting room (e.g. via the admin) a
+    secure Jitsi link, so joining never fails."""
+    if not session.meeting_link:
+        room_name = f"JeevanRoom_{uuid.uuid4()}"
+        session.meeting_link = f"https://meet.jit.si/{room_name}#config.prejoinPageEnabled=false"
+        session.meeting_id = session.meeting_id or secrets.token_hex(8)
+        session.meeting_password = session.meeting_password or secrets.token_urlsafe(12)
+        session.save(update_fields=["meeting_link", "meeting_id", "meeting_password"])
+    return session.meeting_link

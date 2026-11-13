@@ -550,7 +550,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
     # Medical Information
     abha_id = forms.CharField(
         max_length=20,
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter 14-digit ABHA ID',
@@ -560,7 +560,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
         }),
         label='ABHA ID',
         validators=[validate_abha_id],
-        help_text='Required. Enter 14-digit ABHA ID.'
+        help_text='Optional. 14-digit ABHA ID if the patient has one.'
     )
     
     emergency_number = forms.CharField(
@@ -730,7 +730,7 @@ class ReceptionistBookAppointmentForm(forms.Form):
     def clean_abha_id(self):
         abha_id = self.cleaned_data.get('abha_id')
         if not abha_id:
-            raise forms.ValidationError("ABHA ID is required. Please enter your 14-digit ABHA ID.")
+            return None  # optional: many patients don't have an ABHA ID yet
         
         # Remove all non-digit characters
         digits_only = re.sub(r'\D', '', abha_id)

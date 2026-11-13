@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import datetime, time, timedelta
 from .models import Appointment
+from .constants import BUSINESS_HOURS_START, BUSINESS_HOURS_END, SLOT_MINUTES, SLOT_MESSAGE, MAX_DAYS_AHEAD
 from care.models import Hospital
 from doctor.models import Doctor
 from patient.models import Patient
@@ -79,7 +80,7 @@ class AppointmentForm(forms.ModelForm):
         # No ABHA field in this form
         
         # Set date restrictions (today to 6 months)
-        today = timezone.now().date()
+        today = timezone.localdate()
         max_date = today + timedelta(days=180)  # 6 months
         self.fields['appointment_date'].widget.attrs['min'] = today.strftime('%Y-%m-%d')
         self.fields['appointment_date'].widget.attrs['max'] = max_date.strftime('%Y-%m-%d')
@@ -107,6 +108,13 @@ class AppointmentForm(forms.ModelForm):
         self.fields['hospital'].help_text = "Select a hospital to see available doctors"
         self.fields['doctor'].help_text = "Select a doctor from the chosen hospital"
         self.fields['appointment_date'].help_text = f"Select a date between today and {max_date.strftime('%B %d, %Y')}"
+
+        # The page's JavaScript fills the hidden appointment_time field; the
+        # hour/minute/AM-PM dropdowns are the fallback. Either one is enough,
+        # clean() checks that a time was given.
+        for name in ('appointment_time', 'hour', 'minute', 'am_pm'):
+            if name in self.fields:
+                self.fields[name].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -139,32 +147,36 @@ class AppointmentForm(forms.ModelForm):
                 raise forms.ValidationError("Invalid time format selected.")
         else:
             raise forms.ValidationError("Appointment time must be explicitly specified.")
+
+        chosen_time = cleaned_data.get('appointment_time')
+        if chosen_time and (chosen_time.minute % SLOT_MINUTES or chosen_time.second):
+            raise forms.ValidationError(SLOT_MESSAGE)
         
         # Date must be explicitly specified
         if not appointment_date:
             raise forms.ValidationError("Appointment date must be explicitly specified.")
         # Check if appointment date is in the past
-        if appointment_date and appointment_date < timezone.now().date():
+        if appointment_date and appointment_date < timezone.localdate():
             raise forms.ValidationError("Appointment date cannot be in the past.")
         
         # Check if appointment date is within 6 months
         if appointment_date:
-            today = timezone.now().date()
+            today = timezone.localdate()
             max_date = today + timedelta(days=180)
             if appointment_date > max_date:
                 raise forms.ValidationError("Appointment date cannot be more than 6 months in the future.")
         
         # Check if appointment is today and time is in the past
         if appointment_date and 'appointment_time' in cleaned_data:
-            today = timezone.now().date()
-            current_time = timezone.now().time()
+            today = timezone.localdate()
+            current_time = timezone.localtime().time()
             
             if appointment_date == today and cleaned_data['appointment_time'] < current_time:
                 raise forms.ValidationError("Appointment time cannot be in the past for today's date.")
             
             # Check if appointment time is within business hours (8 AM to 6 PM)
-            business_start = time(8, 0)  # 8:00 AM
-            business_end = time(18, 0)   # 6:00 PM
+            business_start = BUSINESS_HOURS_START
+            business_end = BUSINESS_HOURS_END
             
             if cleaned_data['appointment_time'] < business_start or cleaned_data['appointment_time'] > business_end:
                 raise forms.ValidationError("Appointment time must be between 8:00 AM and 6:00 PM.")
@@ -255,7 +267,9 @@ class AppointmentUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        today = timezone.now().date()
+        # Time comes from the hour/minute/AM-PM dropdowns (see clean()).
+        self.fields['appointment_time'].required = False
+        today = timezone.localdate()
         max_date = today + timedelta(days=180)  # 6 months from today
         
         # Set min and max attributes for date field
@@ -310,26 +324,26 @@ class AppointmentUpdateForm(forms.ModelForm):
             raise forms.ValidationError("Invalid time format selected.")
         
         # Check if appointment date is in the past
-        if appointment_date and appointment_date < timezone.now().date():
+        if appointment_date and appointment_date < timezone.localdate():
             raise forms.ValidationError("Appointment date cannot be in the past.")
         
         # Check if appointment date is more than 6 months in the future
         if appointment_date:
-            max_date = timezone.now().date() + timedelta(days=180)  # 6 months
+            max_date = timezone.localdate() + timedelta(days=180)  # 6 months
             if appointment_date > max_date:
                 raise forms.ValidationError("Appointment date cannot be more than 6 months in the future.")
         
         # Check if appointment is today and time is in the past
         if appointment_date and appointment_time:
-            today = timezone.now().date()
-            current_time = timezone.now().time()
+            today = timezone.localdate()
+            current_time = timezone.localtime().time()
             
             if appointment_date == today and appointment_time < current_time:
                 raise forms.ValidationError("Appointment time cannot be in the past for today's date.")
             
             # Check if appointment time is within business hours (8 AM to 6 PM)
-            business_start = time(8, 0)  # 8:00 AM
-            business_end = time(18, 0)   # 6:00 PM
+            business_start = BUSINESS_HOURS_START
+            business_end = BUSINESS_HOURS_END
             
             if not (business_start <= appointment_time <= business_end):
                 raise forms.ValidationError("Appointment time must be between 8:00 AM and 6:00 PM.")
@@ -374,11 +388,11 @@ class AppointmentUpdateForm(forms.ModelForm):
             raise forms.ValidationError("Please select an appointment date.")
         
         # Check if appointment date is in the past
-        if appointment_date < timezone.now().date():
+        if appointment_date < timezone.localdate():
             raise forms.ValidationError("Appointment date cannot be in the past.")
         
         # Check if appointment date is more than 6 months in the future
-        max_date = timezone.now().date() + timedelta(days=180)  # 6 months
+        max_date = timezone.localdate() + timedelta(days=180)  # 6 months
         if appointment_date > max_date:
             raise forms.ValidationError("Appointment date cannot be more than 6 months in the future.")
         

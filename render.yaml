@@ -1,0 +1,50 @@
+# Render Blueprint: New + > Blueprint > pick this repo.
+# The database is not created here: use a free Neon Postgres and paste its
+# connection string into DATABASE_URL when Render asks for it.
+services:
+  - type: web
+    name: jeevan-demo
+    runtime: python
+    plan: free
+    rootDir: jeevan
+    buildCommand: ./build.sh
+    startCommand: gunicorn jeevan.wsgi:application --workers 2 --timeout 60
+    healthCheckPath: /healthz/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: JEEVAN_ENV
+        value: production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false          # paste the Neon connection string
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      # Email: Render's free plan blocks SMTP. Paste a Brevo or Resend API key
+      # to send real emails (password reset); without one, emails are only
+      # logged and password reset says it isn't available.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false          # e.g. Jeevan <no-reply@yourdomain.com> (a sender verified with your provider)
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.console.EmailBackend   # delete this line once BREVO_API_KEY is set
+      # Optional: keep uploads after restarts (free disk is wiped). Any private
+      # S3-compatible bucket, e.g. Cloudflare R2.
+      - key: S3_BUCKET_NAME
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false          # R2: https://<account-id>.r2.cloudflarestorage.com
+      - key: S3_REGION
+        value: auto
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_PASSWORD
+        value: Demo@2026
+      - key: DEMO_ADMIN_PASSWORD
+        sync: false          # optional: set a private password to get a demo_admin login

@@ -37,7 +37,7 @@ class AppointmentStatusOwnershipTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor_1,
             patient=self.patient,
             hospital=self.hospital,
-            appointment_date="2026-10-10",
+            appointment_date=(date.today() + timedelta(days=3)).isoformat(),
             appointment_time="10:00:00",
             status="pending"
         )

@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -10,10 +11,33 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.db.models import Avg
 from django.core.paginator import Paginator
 
+from functools import wraps
+
+
+def patient_json_required(view):
+    """These endpoints return the logged-in patient's own health data, so other
+    roles get a clear JSON 403 instead of a lookup error turned into a 500."""
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if getattr(request.user, 'role', None) != 'patient' or not Patient.objects.filter(user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Only patients can access their health data here.'}, status=403)
+        return view(request, *args, **kwargs)
+    return wrapped
+
+
+def _decimal_or_none(value):
+    """JSON numbers arrive as floats (98.6 -> 98.5999...); store the exact value."""
+    from decimal import Decimal
+    if value in (None, ''):
+        return None
+    return Decimal(str(value))
+
+
 from .models import Patient, VitalSign, WellnessLog, Medication, MedicationLog, Notification, LabResult, HealthGoal
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def vital_signs_api(request):
     """Get vital signs history for the patient with aggregation for longer periods"""
@@ -123,13 +147,14 @@ def vital_signs_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 from jeevan.decorators import rate_limit
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 @rate_limit(key_prefix="vitals", limit=5, period=60, is_api=True)
 def add_vital_sign_api(request):
@@ -143,9 +168,9 @@ def add_vital_sign_api(request):
             blood_pressure_systolic=data.get('blood_pressure_systolic'),
             blood_pressure_diastolic=data.get('blood_pressure_diastolic'),
             heart_rate=data.get('heart_rate'),
-            temperature=data.get('temperature'),
+            temperature=_decimal_or_none(data.get('temperature')),
             oxygen_saturation=data.get('oxygen_saturation'),
-            weight=data.get('weight'),
+            weight=_decimal_or_none(data.get('weight')),
             notes=data.get('notes', '')
         )
         
@@ -158,11 +183,12 @@ def add_vital_sign_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def wellness_log_api(request):
     """Get wellness tracking data"""
@@ -171,7 +197,7 @@ def wellness_log_api(request):
         period = request.GET.get('period', 'week')
         
         # Calculate date range
-        end_date = timezone.now().date()
+        end_date = timezone.localdate()
         if period == 'week':
             start_date = end_date - timedelta(days=7)
         elif period == 'month':
@@ -209,11 +235,12 @@ def wellness_log_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def log_wellness_api(request):
     """Log daily wellness data"""
@@ -222,7 +249,7 @@ def log_wellness_api(request):
         data = json.loads(request.body)
         
         # Get or create wellness log for today
-        today = timezone.now().date()
+        today = timezone.localdate()
         wellness_log, created = WellnessLog.objects.get_or_create(
             patient=patient,
             date=today,
@@ -258,11 +285,12 @@ def log_wellness_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def medications_api(request):
     """Get patient medications"""
@@ -279,7 +307,7 @@ def medications_api(request):
         data = []
         for med in medications:
             # Calculate adherence rate
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
+            total_days = (timezone.localdate() - med.prescribed_date).days + 1
             taken_days = MedicationLog.objects.filter(
                 medication=med,
                 taken_date__gte=med.prescribed_date
@@ -308,11 +336,12 @@ def medications_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def log_medication_api(request):
     """Log medication taken with daily idempotence"""
@@ -341,11 +370,12 @@ def log_medication_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def health_trends_api(request):
     """Get health trend data for charts"""
@@ -398,11 +428,12 @@ def health_trends_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def vital_signs_chart_api(request):
     """Get vital signs data for radar chart"""
@@ -458,11 +489,12 @@ def vital_signs_chart_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def medication_adherence_api(request):
     """Get medication adherence percentage"""
@@ -474,7 +506,7 @@ def medication_adherence_api(request):
         medication_count = 0
         
         for med in medications:
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
+            total_days = (timezone.localdate() - med.prescribed_date).days + 1
             if total_days > 0:
                 taken_days = MedicationLog.objects.filter(
                     medication=med,
@@ -497,11 +529,12 @@ def medication_adherence_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def notifications_api(request):
     """Get user notifications with pagination"""
@@ -546,11 +579,12 @@ def notifications_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def mark_notification_read_api(request):
     """Mark notification as read"""
@@ -572,5 +606,5 @@ def mark_notification_read_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)

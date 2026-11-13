@@ -52,3 +52,7 @@ npm-ls.json
 Thumbs.db
 *.swp
 *.swo
+
+# Uploaded files that were stored next to the code
+jeevan/hospital_logos/
+jeevan/patient_photos/

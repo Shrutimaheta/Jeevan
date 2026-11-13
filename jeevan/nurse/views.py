@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+from jeevan.errors import friendly_error
 import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse, Http404
@@ -91,10 +93,11 @@ def log_vitals(request, patient_id):
         blood_pressure_systolic = int(request.POST.get('blood_pressure_systolic'))
         blood_pressure_diastolic = int(request.POST.get('blood_pressure_diastolic'))
         heart_rate = int(request.POST.get('heart_rate'))
-        temperature = float(request.POST.get('temperature'))
+        # Decimal from the typed text (not float) so 98.6 stays exactly 98.6
+        temperature = Decimal(request.POST.get('temperature', '').strip())
         oxygen_saturation = int(request.POST.get('oxygen_saturation'))
         weight = request.POST.get('weight')
-        weight = float(weight) if weight else None
+        weight = Decimal(weight.strip()) if weight and weight.strip() else None
         notes = request.POST.get('notes', '').strip()
         
         log_patient_vitals(
@@ -112,8 +115,10 @@ def log_vitals(request, patient_id):
         
         messages.success(request, "Vitals recorded successfully.")
         
+    except (InvalidOperation, TypeError, ValueError):
+        messages.error(request, "Please enter valid numbers for all vital signs.")
     except Exception as e:
-        messages.error(request, f"Error recording vitals: {str(e)}")
+        messages.error(request, f"Error recording vitals: {friendly_error(e)}")
         
     return redirect('nurse:patient_detail', patient_id=patient_id)
 

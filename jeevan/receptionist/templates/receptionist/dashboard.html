@@ -972,6 +972,7 @@
     }
 </script>
 
+{{ chart_data|json_script:"chart-data" }}
 <script>
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -981,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusCanvas = document.getElementById('statusChart');
     if (statusCanvas) {
         const statusCtx = statusCanvas.getContext('2d');
-        const statusData = {{ chart_data|safe }};
+        const statusData = JSON.parse(document.getElementById('chart-data').textContent);
         
         console.log('Status chart data:', statusData);
         
