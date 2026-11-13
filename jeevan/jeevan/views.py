@@ -13,6 +13,9 @@ import json
 from django.core.cache import cache
 from django.utils.http import url_has_allowed_host_and_scheme
 from jeevan.decorators import rate_limit, get_client_ip
+import logging
+
+logger = logging.getLogger(__name__)
 
 LOGIN_FAIL_LIMIT = 5          # wrong passwords per account+IP ...
 LOGIN_FAIL_WINDOW = 15 * 60   # ... within 15 minutes
@@ -377,8 +380,7 @@ def book_appointment(request):
     
     # Handle POST request (form submission)
     if request.method == 'POST':
-        print("POST request received for appointment booking")
-        print("POST data:", request.POST)
+        logger.debug("POST request received for appointment booking")
         
         form = AppointmentForm(request.POST, patient=patient)
         
@@ -390,7 +392,7 @@ def book_appointment(request):
                 form.fields['doctor'].widget.attrs['disabled'] = False
         
         if form.is_valid():
-            print("Form is valid, creating appointment")
+            logger.debug("Form is valid, creating appointment")
             appointment = form.save(commit=False)
             appointment.patient = patient
             
@@ -413,12 +415,12 @@ def book_appointment(request):
                 appointment.abha_id = f"P{date_str}{sequence}"
             
             appointment.save()
-            print(f"Appointment created successfully: {appointment.id}")
+            logger.debug(f"Appointment created successfully: {appointment.id}")
             messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
             return redirect('appointments:appointment_list')
         else:
-            print("Form is invalid")
-            print("Form errors:", form.errors)
+            logger.debug("Form is invalid")
+            logger.debug("Form errors:")
             # Add error messages to the request
             for field, errors in form.errors.items():
                 for error in errors:
@@ -599,8 +601,6 @@ def book_appointment(request):
 
     if request.method == 'POST':
 
-        print(f"POST request received. CSRF token in headers: {request.META.get('HTTP_X_CSRFTOKEN')}")
-        print(f"CSRF token in POST data: {request.POST.get('csrfmiddlewaretoken')}")
         
         form = AppointmentForm(request.POST, patient=patient)
 
@@ -674,9 +674,8 @@ def book_appointment(request):
 
             # Debug: Print form errors
 
-            print("Form errors:", form.errors)
+            logger.debug("Form errors:")
 
-            print("Form data:", form.data)
 
     else:
 

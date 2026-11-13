@@ -14,6 +14,11 @@ from .forms import ReceptionistProfileForm, ReceptionistLoginForm, ReceptionistC
 from care.models import CustomUser, Hospital
 from appointments.models import Appointment
 from doctor.models import Doctor
+import logging
+from jeevan.errors import friendly_error
+from django.views.decorators.http import require_POST
+
+logger = logging.getLogger(__name__)
 
 
 @receptionist_required
@@ -255,6 +260,7 @@ def appointment_list(request):
     return render(request, 'receptionist/appointment_list.html', context)
 
 @receptionist_required
+@require_POST
 def appointment_action(request, appointment_id, action):
     """Accept or reject appointment"""
     try:
@@ -265,7 +271,7 @@ def appointment_action(request, appointment_id, action):
     try:
         # Fetch only if appointment belongs to receptionist's hospital
         appointment = Appointment.objects.get(id=appointment_id, doctor__hospital=receptionist.hospital)
-        print(f"Found appointment: {appointment.id}, status: {appointment.status}")
+        logger.debug(f"Found appointment: {appointment.id}, status: {appointment.status}")
     except Appointment.DoesNotExist:
         return JsonResponse({'error': 'Appointment not found for your hospital.'}, status=404)
     
@@ -352,15 +358,15 @@ def doctor_availability(request):
             appointment_date=selected_date
         ).exclude(status='cancelled')
         
-        print(f"\n=== DEBUG INFO ===")
-        print(f"Doctor: {selected_doctor.full_name}")
-        print(f"Date: {selected_date}")
-        print(f"Status Filter: {status_filter}")
-        print(f"Total appointments found: {all_appointments.count()}")
+        logger.debug(f"\n=== DEBUG INFO ===")
+        logger.debug(f"Doctor: {selected_doctor.full_name}")
+        logger.debug(f"Date: {selected_date}")
+        logger.debug(f"Status Filter: {status_filter}")
+        logger.debug(f"Total appointments found: {all_appointments.count()}")
         
         for apt in all_appointments:
-            print(f"  - {apt.patient.full_name} at {apt.appointment_time} (Status: {apt.status})")
-        print(f"==================\n")
+            logger.debug(f"  - {apt.patient.full_name} at {apt.appointment_time} (Status: {apt.status})")
+        logger.debug(f"==================\n")
         
         # Generate availability data for the selected date
         availability_data = generate_doctor_availability(selected_doctor, selected_date, status_filter)
@@ -446,10 +452,10 @@ def generate_doctor_availability(doctor, selected_date, status_filter):
         ).exclude(status='cancelled')
         
         # Debug: Print appointment details
-        print(f"Checking slot {slot_time} for doctor {doctor.full_name}")
-        print(f"Found {appointments_in_slot.count()} appointments")
+        logger.debug(f"Checking slot {slot_time} for doctor {doctor.full_name}")
+        logger.debug(f"Found {appointments_in_slot.count()} appointments")
         for apt in appointments_in_slot:
-            print(f"  - Appointment: {apt.patient.full_name} at {apt.appointment_time}")
+            logger.debug(f"  - Appointment: {apt.patient.full_name} at {apt.appointment_time}")
         
         if appointments_in_slot.exists():
             # Doctor is busy in this slot
@@ -464,19 +470,19 @@ def generate_doctor_availability(doctor, selected_date, status_filter):
                 'status': appointment.status,
                 'appointment_time': appointment.appointment_time.strftime('%I:%M %p'),
             }
-            print(f"  -> Slot marked as BUSY")
+            logger.debug(f"  -> Slot marked as BUSY")
         else:
             # Doctor is available in this slot
             slot_status = 'available'
             slot_class = 'success'
             slot_text = 'Available'
             slot_details = None
-            print(f"  -> Slot marked as AVAILABLE")
+            logger.debug(f"  -> Slot marked as AVAILABLE")
         
         # Apply status filter
-        print(f"Filtering: status_filter='{status_filter}', slot_status='{slot_status}'")
+        logger.debug(f"Filtering: status_filter='{status_filter}', slot_status='{slot_status}'")
         if status_filter == 'all' or slot_status == status_filter:
-            print(f"  -> Adding slot to results")
+            logger.debug(f"  -> Adding slot to results")
             availability_slots.append({
                 'time': slot_time,
                 'time_display': slot_time.strftime('%I:%M %p'),
@@ -488,7 +494,7 @@ def generate_doctor_availability(doctor, selected_date, status_filter):
                 'details': slot_details,
             })
         else:
-            print(f"  -> Filtering out slot")
+            logger.debug(f"  -> Filtering out slot")
         
         current_time += timedelta(hours=1)
     
@@ -601,139 +607,137 @@ def receptionist_book_appointment(request):
         form = ReceptionistBookAppointmentForm(request.POST, hospital=receptionist.hospital)
         if form.is_valid():
             try:
-                # Create or get patient user
-                patient_data = form.cleaned_data
+                # All-or-nothing: a failed booking must not leave a half-created
+                # account behind (which would block the next attempt).
+                with transaction.atomic():
+                    # Create or get patient user
+                    patient_data = form.cleaned_data
                 
-                # Check if patient already exists by email or contact number
-                patient_user = None
-                created = False
+                    # Check if patient already exists by email or contact number
+                    patient_user = None
+                    created = False
                 
-                email = patient_data.get('email', '')
-                contact_number = patient_data.get('contact_number', '')
+                    email = patient_data.get('email', '')
+                    contact_number = patient_data.get('contact_number', '')
                 
-                # First, try to find by email (if provided)
-                if email:
-                    try:
-                        patient_user = CustomUser.objects.get(email=email)
-                        created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If not found by email and contact number is provided, check by contact number
-                if not patient_user and contact_number:
-                    try:
-                        existing_user = CustomUser.objects.get(contact_number=contact_number)
-                        # If contact number exists but email is different, show error
-                        if email and existing_user.email != email:
-                            messages.error(request, f'A user with contact number {contact_number} already exists with a different email address.')
-                            return render(request, 'receptionist/book_appointment.html', {
-                                'form': form,
-                                'receptionist': receptionist,
-                                'doctors': doctors
-                            })
-                        else:
-                            patient_user = existing_user
-                            created = False
-                    except CustomUser.DoesNotExist:
-                        pass
-                
-                # If no existing user found, create new user
-                if not patient_user:
-                    # Generate username if email not provided
-                    username = email if email else f"patient_{patient_data['patient_name'].replace(' ', '_').lower()}_{contact_number}"
-                    
-                    patient_user = CustomUser.objects.create(
-                        username=username,
-                        email=email if email else None,
-                        full_name=patient_data['patient_name'],
-                        contact_number=contact_number if contact_number else None,
-                        role='patient'
-                    )
-                    created = True
-                
-                if not created:
-                    # Update existing patient information
-                    patient_user.full_name = patient_data['patient_name']
-                    # Only update contact number if it's different and not already used
-                    if patient_user.contact_number != patient_data['contact_number']:
+                    # First, try to find by email (if provided)
+                    if email:
                         try:
-                            patient_user.contact_number = patient_data['contact_number']
-                            patient_user.save()
-                        except Exception as e:
-                            messages.error(request, f'Contact number {patient_data["contact_number"]} is already in use by another user.')
-                            return render(request, 'receptionist/book_appointment.html', {
-                                'form': form,
-                                'receptionist': receptionist,
-                                'doctors': doctors
-                            })
-                    else:
-                        patient_user.save()
+                            patient_user = CustomUser.objects.get(email=email)
+                            created = False
+                        except CustomUser.DoesNotExist:
+                            pass
                 
-                # Create patient profile if it doesn't exist
-                from patient.models import Patient
-                patient_profile, profile_created = Patient.objects.get_or_create(
-                    user=patient_user,
-                    defaults={
-                        'full_name': patient_data['patient_name'],
-                        'email': email if email else None,
-                        'contact_number': contact_number if contact_number else None,
-                        'gender': patient_data['gender'],
-                        'dob': patient_data['date_of_birth'],
-                        'date_of_birth': patient_data['date_of_birth'],
-                        'address': patient_data['address'],
-                        'city': patient_data['city'],
-                        'pincode': patient_data['pincode'],
-                        'blood_group': patient_data.get('blood_group', ''),
-                        'emergency_number': patient_data['emergency_number'],
-                        'existing_condition': patient_data.get('existing_condition', ''),
-                        'allergies': patient_data.get('allergies', '')
-                    }
-                )
+                    # If not found by email and contact number is provided, check by contact number
+                    if not patient_user and contact_number:
+                        try:
+                            existing_user = CustomUser.objects.get(contact_number=contact_number)
+                            # If contact number exists but email is different, show error
+                            if email and existing_user.email != email:
+                                messages.error(request, f'A user with contact number {contact_number} already exists with a different email address.')
+                                return render(request, 'receptionist/book_appointment.html', {
+                                    'form': form,
+                                    'receptionist': receptionist,
+                                    'doctors': doctors
+                                })
+                            else:
+                                patient_user = existing_user
+                                created = False
+                        except CustomUser.DoesNotExist:
+                            pass
                 
-                if not profile_created:
-                    # Update existing patient profile
-                    patient_profile.full_name = patient_data['patient_name']
-                    patient_profile.email = email if email else patient_profile.email
-                    patient_profile.contact_number = contact_number if contact_number else patient_profile.contact_number
-                    patient_profile.gender = patient_data['gender']
-                    patient_profile.dob = patient_data['date_of_birth']
-                    patient_profile.date_of_birth = patient_data['date_of_birth']
-                    patient_profile.address = patient_data['address']
-                    patient_profile.city = patient_data['city']
-                    patient_profile.pincode = patient_data['pincode']
-                    patient_profile.blood_group = patient_data.get('blood_group', '')
-                    patient_profile.emergency_number = patient_data['emergency_number']
-                    patient_profile.existing_condition = patient_data.get('existing_condition', '')
-                    patient_profile.allergies = patient_data.get('allergies', '')
+                    # If no existing user found, create new user
+                    if not patient_user:
+                        # Generate username if email not provided
+                        username = email if email else f"patient_{patient_data['patient_name'].replace(' ', '_').lower()}_{contact_number}"
                     
-                    patient_profile.save()
+                        patient_user = CustomUser.objects.create(
+                            username=username,
+                            email=email if email else None,
+                            full_name=patient_data['patient_name'],
+                            contact_number=contact_number if contact_number else None,
+                            role='patient'
+                        )
+                        created = True
                 
-                # Create appointment using service
-                from appointments.services import create_appointment
-                appointment = create_appointment(
-                    patient=patient_profile,
-                    doctor=patient_data['doctor'],
-                    hospital=receptionist.hospital,
-                    appointment_date=patient_data['appointment_date'],
-                    appointment_time=patient_data['appointment_time'],
-                    symptoms=patient_data.get('symptoms', ''),
-                    payment_mode='offline',
-                    status='pending',
-                    actor=request.user
-                )
+                    if not created and getattr(patient_user, 'role', None) != 'patient':
+                        # Never attach a patient profile to a doctor/staff/admin account.
+                        messages.error(request, 'That email or phone number belongs to a staff account. Please use the patient\'s own contact details.')
+                        return render(request, 'receptionist/book_appointment.html', {
+                            'form': form,
+                            'receptionist': receptionist,
+                            'doctors': doctors
+                        })
+
+                    # Create patient profile if it doesn't exist
+                    from patient.models import Patient
+                    patient_profile, profile_created = Patient.objects.get_or_create(
+                        user=patient_user,
+                        defaults={
+                            'full_name': patient_data['patient_name'],
+                            'gender': (patient_data.get('gender') or '').capitalize() or None,
+                            'date_of_birth': patient_data['date_of_birth'],
+                            'abha_id': patient_data.get('abha_id') or None,
+                            'address': patient_data['address'],
+                            'city': patient_data['city'],
+                            'pincode': patient_data['pincode'],
+                            'blood_group': patient_data.get('blood_group', ''),
+                            'emergency_number': patient_data['emergency_number'],
+                            'existing_condition': patient_data.get('existing_condition', ''),
+                            'allergies': patient_data.get('allergies', '')
+                        }
+                    )
                 
-                messages.success(request, f'Appointment booked successfully! Appointment ID: {appointment.id}')
-                return redirect('receptionist:appointments')
+                    if not profile_created:
+                        # Existing patient: keep what they (or another hospital) already
+                        # recorded. Only fill in details that are still empty, so a
+                        # walk-in booking can't overwrite someone's identity or history.
+                        fill = {
+                            'gender': (patient_data.get('gender') or '').capitalize() or None,
+                            'date_of_birth': patient_data.get('date_of_birth'),
+                            'abha_id': patient_data.get('abha_id') or None,
+                            'address': patient_data.get('address'),
+                            'city': patient_data.get('city'),
+                            'pincode': patient_data.get('pincode'),
+                            'blood_group': patient_data.get('blood_group'),
+                            'emergency_number': patient_data.get('emergency_number'),
+                        }
+                        changed = False
+                        for field, value in fill.items():
+                            if value and not getattr(patient_profile, field, None):
+                                setattr(patient_profile, field, value)
+                                changed = True
+                        if changed:
+                            patient_profile.save()
+
+                    # Create appointment using service
+                    from appointments.services import create_appointment
+                    appointment = create_appointment(
+                        patient=patient_profile,
+                        doctor=patient_data['doctor'],
+                        hospital=receptionist.hospital,
+                        appointment_date=patient_data['appointment_date'],
+                        appointment_time=patient_data['appointment_time'],
+                        symptoms=patient_data.get('symptoms', ''),
+                        payment_mode='cash',
+                        status='pending',
+                        actor=request.user
+                    )
+                
+                    messages.success(request, f'Appointment booked successfully! Appointment ID: {appointment.id}')
+                    return redirect('receptionist:appointments')
                 
             except Exception as e:
                 error_message = str(e)
-                if 'UNIQUE constraint failed: care_customuser.contact_number' in error_message:
+                if 'abha_id' in error_message:
+                    messages.error(request, 'This ABHA ID is already linked to another patient.')
+                elif 'contact_number' in error_message and 'unique' in error_message.lower():
                     messages.error(request, 'This contact number is already registered with another user. Please use a different contact number.')
-                elif 'UNIQUE constraint failed: care_customuser.email' in error_message:
+                elif 'email' in error_message and 'unique' in error_message.lower():
                     messages.error(request, 'This email address is already registered. Please use a different email address.')
                 
                 else:
-                    messages.error(request, f'Error booking appointment: {error_message}')
+                    messages.error(request, f'Error booking appointment: {friendly_error(e)}')
                 
                 return render(request, 'receptionist/book_appointment.html', {
                     'form': form,
@@ -892,9 +896,11 @@ def receptionist_register_patient(request):
                 
             except Exception as e:
                 error_message = str(e)
-                if 'UNIQUE constraint failed: care_customuser.contact_number' in error_message:
+                if 'abha_id' in error_message:
+                    messages.error(request, 'This ABHA ID is already linked to another patient.')
+                elif 'contact_number' in error_message and 'unique' in error_message.lower():
                     messages.error(request, 'This contact number is already registered with another user. Please use a different contact number.')
-                elif 'UNIQUE constraint failed: care_customuser.email' in error_message:
+                elif 'email' in error_message and 'unique' in error_message.lower():
                     messages.error(request, 'This email address is already registered. Please use a different email address.')
                 else:
                     messages.error(request, f'Error registering patient: {error_message}')
@@ -951,7 +957,7 @@ def receptionist_book_appointment_for_patient(request, patient_id):
                     appointment_date=form.cleaned_data['appointment_date'],
                     appointment_time=form.cleaned_data['appointment_time'],
                     symptoms=form.cleaned_data.get('symptoms', ''),
-                    payment_mode='offline',
+                    payment_mode='cash',
                     status='pending',
                     actor=request.user
                 )

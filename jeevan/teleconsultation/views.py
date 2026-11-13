@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import Teleconsultation
 from jeevan.decorators import log_audit_event
+from .services import ensure_meeting_link
 
 @login_required
 def start_teleconsultation(request, teleconsultation_id):
@@ -34,7 +35,7 @@ def start_teleconsultation(request, teleconsultation_id):
         details=f"User {request.user.username} joined teleconsultation session ID: {session.id}"
     )
     
-    return redirect(session.meeting_link)
+    return redirect(ensure_meeting_link(session))
 
 @login_required
 def get_teleconsultation_details(request, teleconsultation_id):
@@ -50,6 +51,7 @@ def get_teleconsultation_details(request, teleconsultation_id):
     if not (is_doctor or is_patient):
         raise PermissionDenied("You do not have access to this teleconsultation.")
         
+    ensure_meeting_link(session)
     return JsonResponse({
         'id': session.id,
         'meeting_id': session.meeting_id,

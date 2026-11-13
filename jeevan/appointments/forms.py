@@ -267,6 +267,8 @@ class AppointmentUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Time comes from the hour/minute/AM-PM dropdowns (see clean()).
+        self.fields['appointment_time'].required = False
         today = timezone.localdate()
         max_date = today + timedelta(days=180)  # 6 months from today
         

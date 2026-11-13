@@ -11,10 +11,33 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.db.models import Avg
 from django.core.paginator import Paginator
 
+from functools import wraps
+
+
+def patient_json_required(view):
+    """These endpoints return the logged-in patient's own health data, so other
+    roles get a clear JSON 403 instead of a lookup error turned into a 500."""
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if getattr(request.user, 'role', None) != 'patient' or not Patient.objects.filter(user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Only patients can access their health data here.'}, status=403)
+        return view(request, *args, **kwargs)
+    return wrapped
+
+
+def _decimal_or_none(value):
+    """JSON numbers arrive as floats (98.6 -> 98.5999...); store the exact value."""
+    from decimal import Decimal
+    if value in (None, ''):
+        return None
+    return Decimal(str(value))
+
+
 from .models import Patient, VitalSign, WellnessLog, Medication, MedicationLog, Notification, LabResult, HealthGoal
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def vital_signs_api(request):
     """Get vital signs history for the patient with aggregation for longer periods"""
@@ -131,6 +154,7 @@ def vital_signs_api(request):
 from jeevan.decorators import rate_limit
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 @rate_limit(key_prefix="vitals", limit=5, period=60, is_api=True)
 def add_vital_sign_api(request):
@@ -144,9 +168,9 @@ def add_vital_sign_api(request):
             blood_pressure_systolic=data.get('blood_pressure_systolic'),
             blood_pressure_diastolic=data.get('blood_pressure_diastolic'),
             heart_rate=data.get('heart_rate'),
-            temperature=data.get('temperature'),
+            temperature=_decimal_or_none(data.get('temperature')),
             oxygen_saturation=data.get('oxygen_saturation'),
-            weight=data.get('weight'),
+            weight=_decimal_or_none(data.get('weight')),
             notes=data.get('notes', '')
         )
         
@@ -164,6 +188,7 @@ def add_vital_sign_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def wellness_log_api(request):
     """Get wellness tracking data"""
@@ -215,6 +240,7 @@ def wellness_log_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def log_wellness_api(request):
     """Log daily wellness data"""
@@ -264,6 +290,7 @@ def log_wellness_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def medications_api(request):
     """Get patient medications"""
@@ -314,6 +341,7 @@ def medications_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def log_medication_api(request):
     """Log medication taken with daily idempotence"""
@@ -347,6 +375,7 @@ def log_medication_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def health_trends_api(request):
     """Get health trend data for charts"""
@@ -404,6 +433,7 @@ def health_trends_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def vital_signs_chart_api(request):
     """Get vital signs data for radar chart"""
@@ -464,6 +494,7 @@ def vital_signs_chart_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def medication_adherence_api(request):
     """Get medication adherence percentage"""
@@ -503,6 +534,7 @@ def medication_adherence_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["GET"])
 def notifications_api(request):
     """Get user notifications with pagination"""
@@ -552,6 +584,7 @@ def notifications_api(request):
 
 
 @login_required
+@patient_json_required
 @require_http_methods(["POST"])
 def mark_notification_read_api(request):
     """Mark notification as read"""
