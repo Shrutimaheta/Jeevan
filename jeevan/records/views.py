@@ -1,5 +1,6 @@
 import os
 import mimetypes
+from jeevan.errors import friendly_error
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse, Http404, FileResponse
 from django.contrib import messages
@@ -120,7 +121,7 @@ def create_record(request, appointment_id):
         return redirect('doctor:patient_detail', patient_id=appointment.patient.id)
         
     except Exception as e:
-        messages.error(request, f"Error creating medical record: {str(e)}")
+        messages.error(request, f"Error creating medical record: {friendly_error(e)}")
         # Redirect back to where the request came from
         return redirect(request.META.get('HTTP_REFERER', 'home'))
 

@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -123,7 +124,7 @@ def vital_signs_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -158,7 +159,7 @@ def add_vital_sign_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -171,7 +172,7 @@ def wellness_log_api(request):
         period = request.GET.get('period', 'week')
         
         # Calculate date range
-        end_date = timezone.now().date()
+        end_date = timezone.localdate()
         if period == 'week':
             start_date = end_date - timedelta(days=7)
         elif period == 'month':
@@ -209,7 +210,7 @@ def wellness_log_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -222,7 +223,7 @@ def log_wellness_api(request):
         data = json.loads(request.body)
         
         # Get or create wellness log for today
-        today = timezone.now().date()
+        today = timezone.localdate()
         wellness_log, created = WellnessLog.objects.get_or_create(
             patient=patient,
             date=today,
@@ -258,7 +259,7 @@ def log_wellness_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -279,7 +280,7 @@ def medications_api(request):
         data = []
         for med in medications:
             # Calculate adherence rate
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
+            total_days = (timezone.localdate() - med.prescribed_date).days + 1
             taken_days = MedicationLog.objects.filter(
                 medication=med,
                 taken_date__gte=med.prescribed_date
@@ -308,7 +309,7 @@ def medications_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -341,7 +342,7 @@ def log_medication_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -398,7 +399,7 @@ def health_trends_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -458,7 +459,7 @@ def vital_signs_chart_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -474,7 +475,7 @@ def medication_adherence_api(request):
         medication_count = 0
         
         for med in medications:
-            total_days = (timezone.now().date() - med.prescribed_date).days + 1
+            total_days = (timezone.localdate() - med.prescribed_date).days + 1
             if total_days > 0:
                 taken_days = MedicationLog.objects.filter(
                     medication=med,
@@ -497,7 +498,7 @@ def medication_adherence_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -546,7 +547,7 @@ def notifications_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)
 
 
@@ -572,5 +573,5 @@ def mark_notification_read_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': friendly_error(e)
         }, status=500)

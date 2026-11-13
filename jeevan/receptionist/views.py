@@ -30,7 +30,7 @@ def receptionist_dashboard(request):
         return redirect('/login/')
     
     # Get appointments for the receptionist's hospital (exclude cancelled)
-    today = timezone.now().date()
+    today = timezone.localdate()
     appointments = Appointment.objects.select_related('doctor', 'patient', 'hospital').filter(doctor__hospital=receptionist.hospital).exclude(status='cancelled')
     
     # Dashboard statistics
@@ -98,7 +98,7 @@ def receptionist_dashboard(request):
         'recent_appointments': recent_appointments,
         'upcoming_appointments': upcoming_appointments,
         'doctor_schedules': doctor_schedules,
-        'chart_data': json.dumps(chart_data),
+        'chart_data': chart_data,
         'date_data': json.dumps(date_data),
         'next_7_days_labels': next_7_days_labels,
         'next_7_days_counts': next_7_days_counts
@@ -424,9 +424,9 @@ def generate_doctor_availability(doctor, selected_date, status_filter):
     """Generate hourly availability data for a doctor on a specific date"""
     from datetime import time, datetime, timedelta
     
-    # Define working hours (9 AM to 6 PM)
-    start_time = time(9, 0)   # 9:00 AM
-    end_time = time(18, 0)     # 6:00 PM
+    from appointments.constants import BUSINESS_HOURS_START, BUSINESS_HOURS_END
+    start_time = BUSINESS_HOURS_START
+    end_time = BUSINESS_HOURS_END
     
     # Generate hourly slots
     availability_slots = []

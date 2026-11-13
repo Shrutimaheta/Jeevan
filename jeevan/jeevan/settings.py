@@ -5,6 +5,7 @@ environment variables; secrets must never be committed to source control.
 """
 
 import os
+import sys
 from pathlib import Path
 import dotenv
 import dj_database_url
@@ -13,7 +14,12 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-dotenv.load_dotenv(BASE_DIR.parent / '.env', override=True)
+# Load a local .env if present (repo root or next to manage.py). Real environment
+# variables set by the hosting platform always win over the file.
+for _env_file in (BASE_DIR.parent / ".env", BASE_DIR / ".env"):
+    if _env_file.exists():
+        dotenv.load_dotenv(_env_file, override=False)
+TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 ENVIRONMENT = os.getenv("JEEVAN_ENV", "development").strip().lower()
 IS_PRODUCTION = ENVIRONMENT == "production"
 
@@ -70,8 +76,11 @@ if IS_PRODUCTION:
         )
 else:
     # This value is deliberately development-only and must never be reused in production.
-    SECRET_KEY = os.getenv(
-        "DJANGO_SECRET_KEY", "django-insecure-jeevan-development-only"
+    # `or` (not a getenv default) so an empty DJANGO_SECRET_KEY= line in .env
+    # still falls back to the development key.
+    SECRET_KEY = (
+        os.getenv("DJANGO_SECRET_KEY", "").strip()
+        or "django-insecure-jeevan-development-only"
     )
     DEBUG = True
     ALLOWED_HOSTS = env_list(
@@ -122,6 +131,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "jeevan.context_processors.site_flags",
             ],
         },
     }
@@ -132,7 +142,8 @@ ASGI_APPLICATION = "jeevan.asgi.application"
 
 
 database_url = os.getenv("DATABASE_URL", "").strip()
-db_engine = os.getenv("DB_ENGINE", "django.db.backends.postgresql").strip()
+db_engine = (os.getenv("DB_ENGINE", "").strip()
+             or ("django.db.backends.postgresql" if IS_PRODUCTION else "django.db.backends.sqlite3"))
 if IS_PRODUCTION and "sqlite" in db_engine:
     raise ImproperlyConfigured("SQLite is disabled in production. You must configure and use PostgreSQL.")
 
@@ -192,7 +203,13 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        # Hashed, compressed files in production; plain storage for tests so they
+        # don't need `collectstatic` to run first.
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if TESTING
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
     },
 }
 
@@ -201,6 +218,32 @@ MEDIA_ROOT = BASE_DIR / "media"
 PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Cache (used by login lockout and rate limiting). Local memory is per-process,
+# so production uses the database to share counts across gunicorn workers.
+# Run `python manage.py createcachetable` once (build.sh does this).
+if IS_PRODUCTION:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "jeevan_cache",
+        }
+    }
+else:
+    CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+    }
+
+# Behind Render/Railway/Heroku the real client IP is in X-Forwarded-For.
+TRUST_X_FORWARDED_FOR = env_bool("TRUST_X_FORWARDED_FOR", IS_PRODUCTION)
+
+# Demo mode: shows a "sample data only" banner and the demo logins on the
+# login page. Never enable on a deployment with real patients.
+DEMO_MODE = env_bool("DEMO_MODE", False)
+
+# Password reset by SMS needs an SMS provider; keep the option hidden until one
+# is wired up.
+SMS_ENABLED = env_bool("SMS_ENABLED", False)
 AUTH_USER_MODEL = "care.CustomUser"
 
 LOGIN_URL = "/login/"

@@ -70,30 +70,59 @@ doctor_required = role_required('doctor')
 receptionist_required = role_required('receptionist')
 nurse_required = role_required('nurse')
 
+from django.conf import settings
 from django.core.cache import cache
-def rate_limit(key_prefix, limit=5, period=60, is_api=False):
+
+
+def get_client_ip(request):
+    """Best-effort client IP.
+
+    Behind a hosting proxy (Render, Railway, Heroku) every request arrives from
+    the proxy's address, so REMOTE_ADDR alone would make all visitors share one
+    rate-limit bucket. When TRUST_X_FORWARDED_FOR is on, use the first address
+    in X-Forwarded-For, which the proxy sets to the real client.
     """
-    Simple rate limiting decorator using Django's cache framework.
+    if getattr(settings, "TRUST_X_FORWARDED_FOR", False):
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+def hit_limit(key, limit, period):
+    """Count one hit for ``key`` in a fixed window; return True once over ``limit``."""
+    if cache.add(key, 1, period):
+        return 1 > limit
+    try:
+        count = cache.incr(key)
+    except ValueError:  # key expired between add() and incr()
+        cache.set(key, 1, period)
+        count = 1
+    return count > limit
+
+
+def rate_limit(key_prefix, limit=5, period=60, is_api=False, methods=("POST",)):
+    """Simple fixed-window rate limit using Django's cache.
+
+    Only requests whose method is in ``methods`` are counted, so just viewing a
+    form page never uses up the allowance.
     """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            if not request.user.is_authenticated:
-                user_ident = request.META.get('REMOTE_ADDR', 'anon')
+            if request.method not in methods:
+                return view_func(request, *args, **kwargs)
+
+            if request.user.is_authenticated:
+                ident = f"u{request.user.id}"
             else:
-                user_ident = str(request.user.id)
-                
-            cache_key = f"rl:{key_prefix}:{user_ident}"
-            request_count = cache.get(cache_key, 0)
-            
-            if request_count >= limit:
+                ident = get_client_ip(request)
+            if hit_limit(f"rl:{key_prefix}:{ident}", limit, period):
                 if is_api or request.path.startswith('/api/') or request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': 'Rate limit exceeded. Please try again later.'}, status=429)
+                    return JsonResponse({'success': False, 'error': 'Too many requests. Please wait a minute and try again.'}, status=429)
                 from django.contrib import messages
-                messages.error(request, 'Rate limit exceeded. Please try again later.')
-                return redirect(request.META.get('HTTP_REFERER', 'home'))
-                
-            cache.set(cache_key, request_count + 1, period)
+                messages.error(request, 'Too many attempts. Please wait a minute and try again.')
+                return redirect(request.path)
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator

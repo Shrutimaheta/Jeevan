@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -144,7 +145,7 @@ def appointment_create(request):
                     messages.success(request, 'Appointment booked successfully! You will be notified once it\'s confirmed.')
                     return redirect('appointments:appointment_list')
                 except Exception as e:
-                    messages.error(request, str(e))
+                    messages.error(request, friendly_error(e))
             else:
                 # Check for slot busy errors specifically
                 slot_busy_error = None
@@ -248,7 +249,7 @@ def appointment_update(request, appointment_id):
                     messages.success(request, 'Appointment updated successfully!')
                     return redirect('appointments:appointment_list')
                 except Exception as e:
-                    messages.error(request, str(e))
+                    messages.error(request, friendly_error(e))
         else:
             form = AppointmentUpdateForm(instance=appointment)
         
@@ -284,7 +285,7 @@ def appointment_cancel(request, appointment_id):
                 messages.success(request, 'Appointment cancelled successfully!')
                 return redirect('appointments:appointment_list')
             except Exception as e:
-                messages.error(request, str(e))
+                messages.error(request, friendly_error(e))
         
         context = {
             'appointment': appointment,
@@ -313,7 +314,7 @@ def get_doctors(request):
             return JsonResponse(doctor_list, safe=False)
         return JsonResponse([], safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'error': friendly_error(e)}, status=400)
 
 @login_required
 def doctor_selection(request, hospital_id):

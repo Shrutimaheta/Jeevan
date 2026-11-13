@@ -1,4 +1,6 @@
+import re
 from django import forms
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -117,21 +119,36 @@ class PatientRegistrationForm(forms.ModelForm):
         return username
     
     def clean_contact_number(self):
-        contact_number = self.cleaned_data.get('contact_number')
-        if contact_number:
-            if CustomUser.objects.filter(contact_number=contact_number).exists():
-                raise ValidationError("A user with this phone number already exists.")
-        return contact_number
-    
+        contact_number = (self.cleaned_data.get('contact_number') or '').strip()
+        digits = re.sub(r'[\s\-]', '', contact_number)
+        if digits.startswith('+91'):
+            digits = digits[3:]
+        elif digits.startswith('91') and len(digits) == 12:
+            digits = digits[2:]
+        if not re.fullmatch(r'[6-9]\d{9}', digits):
+            raise ValidationError("Enter a valid 10-digit mobile number (e.g. 9876543210).")
+        if CustomUser.objects.filter(contact_number=digits).exists():
+            raise ValidationError("A user with this phone number already exists.")
+        return digits
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         confirm_password = cleaned_data.get('confirm_password')
-        
+
         if password and confirm_password:
             if password != confirm_password:
                 raise ValidationError("Passwords don't match.")
-        
+            # Apply the project's AUTH_PASSWORD_VALIDATORS (length, common, numeric...)
+            candidate = CustomUser(
+                username=cleaned_data.get('username') or '',
+                email=cleaned_data.get('email') or '',
+            )
+            try:
+                validate_password(password, user=candidate)
+            except ValidationError as exc:
+                self.add_error('password', exc)
+
         return cleaned_data
     
     def save(self, commit=True):

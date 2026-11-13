@@ -10,14 +10,29 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponseRedirect
 from urllib.parse import urlencode
 import json
-from jeevan.decorators import rate_limit
+from django.core.cache import cache
+from django.utils.http import url_has_allowed_host_and_scheme
+from jeevan.decorators import rate_limit, get_client_ip
 
-@rate_limit(key_prefix="login", limit=5, period=60)
+LOGIN_FAIL_LIMIT = 5          # wrong passwords per account+IP ...
+LOGIN_FAIL_WINDOW = 15 * 60   # ... within 15 minutes
+
+
+def _safe_next_url(request, url):
+    """Only allow redirects back into this site (prevents open redirects)."""
+    if url and url_has_allowed_host_and_scheme(
+        url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return url
+    return None
+
+
+@rate_limit(key_prefix="login", limit=20, period=60)
 def universal_login(request):
     """Universal login view for all user types"""
     # Hide next query parameter in the address bar by storing it in the session
     if request.method == 'GET' and 'next' in request.GET:
-        next_url = request.GET.get('next')
+        next_url = _safe_next_url(request, request.GET.get('next'))
         if next_url:
             request.session['next_url'] = next_url
         return redirect('universal_login')
@@ -27,6 +42,11 @@ def universal_login(request):
         password = request.POST.get('password')
         role = request.POST.get('role', 'patient')  # Default to patient if no role selected
         
+        fail_key = f"login_fail:{(username or '').strip().lower()}:{get_client_ip(request)}"
+        if username and cache.get(fail_key, 0) >= LOGIN_FAIL_LIMIT:
+            messages.error(request, 'Too many failed login attempts. Please wait 15 minutes or reset your password.')
+            return render(request, 'universal_auth/login.html')
+
         if username and password:
             # Try to authenticate the user
             user = authenticate(request, username=username, password=password)
@@ -44,11 +64,18 @@ def universal_login(request):
             if user is not None:
                 # Validate role using user.role (except for admin)
                 has_role = (role == 'admin' and user.is_superuser) or (getattr(user, 'role', None) == role)
+                profile_attr = {'doctor': 'doctor', 'nurse': 'nurse', 'receptionist': 'receptionist'}.get(role)
+                if has_role and profile_attr and not hasattr(user, profile_attr):
+                    messages.error(request, 'Your account is not fully set up yet (no staff profile). Please contact the administrator.')
+                    return render(request, 'universal_auth/login.html')
                 if has_role:
                     login(request, user)
+                    cache.delete(fail_key)
 
-                    # Retrieve and redirect to stored next_url if exists
-                    next_url = request.session.pop('next_url', None) or request.POST.get('next')
+                    # Retrieve and redirect to stored next_url if exists (same-site only)
+                    next_url = _safe_next_url(
+                        request, request.session.pop('next_url', None) or request.POST.get('next')
+                    )
                     if next_url:
                         messages.success(request, 'Logged in successfully!')
                         return redirect(next_url)
@@ -80,6 +107,9 @@ def universal_login(request):
                         else:
                             messages.success(request, 'Welcome back!')
                         return redirect('nurse:dashboard')
+                    elif role == 'care_coordinator':
+                        messages.success(request, 'Welcome back!')
+                        return redirect('coordinator_dashboard')
                     elif role == 'admin' and user.is_superuser:
                         messages.success(request, 'Welcome back, Admin!')
                         return redirect('/admin/')
@@ -88,6 +118,11 @@ def universal_login(request):
                 else:
                     messages.error(request, f'Invalid credentials or user does not have {role} role.')
             else:
+                if cache.add(fail_key, 1, LOGIN_FAIL_WINDOW) is False:
+                    try:
+                        cache.incr(fail_key)
+                    except ValueError:
+                        cache.set(fail_key, 1, LOGIN_FAIL_WINDOW)
                 messages.error(request, 'Invalid username or password.')
         else:
             messages.error(request, 'Please fill in all fields.')
@@ -226,13 +261,8 @@ def htmx_filter_doctors(request):
 
 
 def patient_home(request):
-    doctors = [
-        {"name": "Dr. Aditi Sharma", "specialty": "Cardiologist", "photo": "https://via.placeholder.com/300x300?text=Dr.+Aditi"},
-        {"name": "Dr. Rohan Verma", "specialty": "Neurologist", "photo": "https://via.placeholder.com/300x300?text=Dr.+Rohan"},
-        {"name": "Dr. Meera Iyer", "specialty": "Pediatrician", "photo": "https://via.placeholder.com/300x300?text=Dr.+Meera"},
-        {"name": "Dr. Akash Patel", "specialty": "Dermatologist", "photo": "https://via.placeholder.com/300x300?text=Dr.+Akash"},
-    ]
-    return render(request, 'patient_home.html', {"doctors": doctors})
+    """Legacy URL: the old placeholder page was removed; send people to the real home."""
+    return redirect('patient:profile_dashboard' if request.user.is_authenticated else 'home')
 
 def vaidya_login(request):
     return render(request, 'vaidya_login.html')

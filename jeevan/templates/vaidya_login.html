@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +16,7 @@
       <div class="brand-block compact">
         <div class="logo-row">
           <div class="vm-media-logo-wrap">
-            <img src="/media/patient_photos/logo.jpg" alt="VaidyaMitra Logo" class="vm-media-logo" loading="lazy">
+            <img src="{% static 'images/logo.png' %}" alt="VaidyaMitra Logo" class="vm-media-logo" loading="lazy">
           </div>
           <div>
             <h1 class="brand-name">VaidyaMitra</h1>
@@ -60,7 +61,7 @@
     <div class="vm-illustration">
       <div class="art-wrapper">
         <!-- Replace src with actual illustration path when available -->
-        <img src="/static/img/doctor_patient_placeholder.svg" alt="Doctor examining patient illustration" class="hero-illustration" />
+        <img src="{% static 'images/medical-team.jpg' %}" alt="Doctor examining patient illustration" class="hero-illustration" />
         <div class="art-caption">Compassionate Digital Healthcare</div>
       </div>
     </div>

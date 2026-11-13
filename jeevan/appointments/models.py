@@ -4,6 +4,7 @@ from django.utils import timezone
 from care.models import Hospital
 from doctor.models import Doctor
 from patient.models import Patient
+from .constants import BUSINESS_HOURS_START, BUSINESS_HOURS_END, BUSINESS_HOURS_MESSAGE
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
@@ -62,7 +63,7 @@ class Appointment(models.Model):
         from django.core.exceptions import ValidationError
         from datetime import time, datetime
         super().clean()
-        if self.doctor and self.hospital and self.doctor.hospital != self.hospital:
+        if self.doctor_id and self.hospital_id and self.doctor.hospital_id != self.hospital_id:
             raise ValidationError("The selected doctor does not belong to the selected hospital.")
             
         date_val = self.appointment_date
@@ -72,7 +73,11 @@ class Appointment(models.Model):
             except ValueError:
                 raise ValidationError("Invalid date format.")
 
-        if date_val and date_val < timezone.localdate():
+        # Only new bookings must be in the future. Existing appointments keep their
+        # original date, so a doctor can still complete, prescribe for or cancel
+        # an appointment after its day has passed.
+        is_new = self._state.adding or self._date_or_time_changed()
+        if is_new and date_val and date_val < timezone.localdate():
             raise ValidationError("Appointment date cannot be in the past.")
             
         time_val = self.appointment_time
@@ -85,11 +90,23 @@ class Appointment(models.Model):
                 except ValueError:
                     raise ValidationError("Invalid time format.")
 
-        if time_val:
-            start_time = time(9, 0)
-            end_time = time(18, 0)
-            if time_val < start_time or time_val > end_time:
-                raise ValidationError("Appointments must be scheduled within business hours (9:00 AM - 6:00 PM).")
+        if time_val and is_new:
+            if time_val < BUSINESS_HOURS_START or time_val > BUSINESS_HOURS_END:
+                raise ValidationError(BUSINESS_HOURS_MESSAGE)
+
+    def _date_or_time_changed(self):
+        """True when an existing appointment is being rescheduled."""
+        if not self.pk:
+            return True
+        original = type(self).objects.filter(pk=self.pk).values(
+            "appointment_date", "appointment_time"
+        ).first()
+        if original is None:
+            return True
+        return (
+            str(original["appointment_date"]) != str(self.appointment_date)
+            or str(original["appointment_time"])[:5] != str(self.appointment_time)[:5]
+        )
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -105,7 +122,7 @@ class Appointment(models.Model):
     @property
     def is_expired(self):
         """Check if appointment date has passed"""
-        today = timezone.now().date()
+        today = timezone.localdate()
         return self.appointment_date < today
     
     def check_and_update_expired_status(self):
@@ -122,7 +139,7 @@ class Appointment(models.Model):
     @classmethod
     def mark_expired_appointments(cls):
         """Class method to mark all expired pending appointments"""
-        today = timezone.now().date()
+        today = timezone.localdate()
         expired_count = cls.objects.filter(
             appointment_date__lt=today,
             status='pending'

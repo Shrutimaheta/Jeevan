@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,7 @@ import json
 from care.models import CustomUser
 
 def index(request):
-    return HttpResponse("ABHA module works!")
+    return redirect("abha:create_abha_id")
 
 @login_required
 def create_abha_id(request):
@@ -159,7 +160,7 @@ def create_abha_id(request):
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': friendly_error(e)
             })
     
     return render(request, 'abha/create_abha.html')
@@ -191,7 +192,6 @@ def generate_unique_abha_id():
     # If we can't generate a unique ID after max attempts, raise an error
     raise Exception("Unable to generate unique ABHA ID. Please try again.")
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def generate_otp(request):
     """
@@ -299,10 +299,9 @@ def generate_otp(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': f'Error generating OTP: {str(e)}'
+            'error': f'Error generating OTP: {friendly_error(e)}'
         })
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def verify_otp(request):
     """
@@ -373,9 +372,8 @@ def verify_otp(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'error': f'Error verifying OTP: {str(e)}'
+            'error': f'Error verifying OTP: {friendly_error(e)}'
         })
-@csrf_exempt
 @require_http_methods(["POST"])
 def check_abha_uniqueness(request):
     """
@@ -434,10 +432,9 @@ def check_abha_uniqueness(request):
     except Exception as e:
         return JsonResponse({
             'can_create': False,
-            'error': str(e)
+            'error': friendly_error(e)
         })
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def verify_abha(request):
     """
