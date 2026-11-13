@@ -19,6 +19,10 @@ from jeevan.decorators import rate_limit
 @rate_limit(key_prefix="forgot_password", limit=5, period=60)
 def forgot_password(request):
     """Forgot password page - step 1: Enter email or phone"""
+    if request.method == 'POST' and not getattr(settings, 'EMAIL_DELIVERY_ENABLED', True):
+        messages.error(request, 'Password reset by email is not set up on this server yet. Please contact the hospital administrator.')
+        return render(request, 'patient/forgot_password.html', {'form': ForgotPasswordForm()})
+
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
         if form.is_valid():

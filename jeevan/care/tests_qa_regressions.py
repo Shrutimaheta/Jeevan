@@ -151,3 +151,23 @@ class QARegressionTests(TestCase, JeevanTestClientMixin):
         form = resp.context["form"]
         self.assertIn("password", form.errors)
         self.assertIn("contact_number", form.errors)
+
+
+class SeedDemoTests(TestCase):
+    """seed_demo runs on every demo deploy, so it must work on PostgreSQL
+    (strict field lengths) and be safe to run twice."""
+
+    def test_seed_demo_twice(self):
+        from django.core.management import call_command
+        from io import StringIO
+
+        from care.models import CustomUser
+
+        call_command("seed_demo", stdout=StringIO())
+        call_command("seed_demo", stdout=StringIO())
+        for username in ("demo_patient", "dr_sharma", "demo_receptionist", "demo_nurse"):
+            user = CustomUser.objects.get(username=username)
+            self.assertTrue(user.check_password("Demo@2026"), username)
+        self.assertEqual(
+            Appointment.objects.filter(patient__user__username="demo_patient").count(), 3
+        )

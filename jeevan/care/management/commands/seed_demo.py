@@ -29,7 +29,7 @@ from receptionist.models import Receptionist
 DEMO_ACCOUNTS = [
     # username, role, full name
     ("demo_patient", "patient", "Asha Patel"),
-    ("dr_sharma", "doctor", "Dr. Rajesh Sharma"),
+    ("dr_sharma", "doctor", "Rajesh Sharma"),
     ("demo_receptionist", "receptionist", "Kiran Desai"),
     ("demo_nurse", "nurse", "Meena Rao"),
 ]

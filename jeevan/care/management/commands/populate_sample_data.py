@@ -39,7 +39,7 @@ class Command(BaseCommand):
                     'name': 'City General Hospital',
                     'location': 'Downtown Medical District, Mumbai',
                     'email': 'info@citygeneral.com',
-                    'contact_no': '+91-22-1234-5678',
+                    'contact_no': '+912212345678',
                     'registration_number': 'MH-HOSP-001',
                     'rating': 4.5,
                     'accepts_insurance': True,
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     'name': 'Metro Medical Center',
                     'location': 'Central Business District, Delhi',
                     'email': 'contact@metromedical.com',
-                    'contact_no': '+91-11-9876-5432',
+                    'contact_no': '+911198765432',
                     'registration_number': 'DL-HOSP-002',
                     'rating': 4.2,
                     'accepts_insurance': True,
@@ -59,7 +59,7 @@ class Command(BaseCommand):
                     'name': 'Sunrise Healthcare',
                     'location': 'Tech Park Area, Bangalore',
                     'email': 'admin@sunrisehealth.com',
-                    'contact_no': '+91-80-5555-1234',
+                    'contact_no': '+918055551234',
                     'registration_number': 'KA-HOSP-003',
                     'rating': 4.8,
                     'accepts_insurance': True,
@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     'name': 'Green Valley Hospital',
                     'location': 'Suburban Area, Chennai',
                     'email': 'info@greenvalley.com',
-                    'contact_no': '+91-44-7777-8888',
+                    'contact_no': '+914477778888',
                     'registration_number': 'TN-HOSP-004',
                     'rating': 4.0,
                     'accepts_insurance': False,
@@ -104,7 +104,7 @@ class Command(BaseCommand):
             doctors_data = [
                 {
                     'username': 'dr_sharma',
-                    'full_name': 'Dr. Rajesh Sharma',
+                    'full_name': 'Rajesh Sharma',
                     'email': 'rajesh.sharma@citygeneral.com',
                     'contact_number': '+91-98765-43210',
                     'hospital': 'City General Hospital',
@@ -116,7 +116,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_patel',
-                    'full_name': 'Dr. Priya Patel',
+                    'full_name': 'Priya Patel',
                     'email': 'priya.patel@metromedical.com',
                     'contact_number': '+91-98765-43211',
                     'hospital': 'Metro Medical Center',
@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_kumar',
-                    'full_name': 'Dr. Amit Kumar',
+                    'full_name': 'Amit Kumar',
                     'email': 'amit.kumar@sunrisehealth.com',
                     'contact_number': '+91-98765-43212',
                     'hospital': 'Sunrise Healthcare',
@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_singh',
-                    'full_name': 'Dr. Neha Singh',
+                    'full_name': 'Neha Singh',
                     'email': 'neha.singh@greenvalley.com',
                     'contact_number': '+91-98765-43213',
                     'hospital': 'Green Valley Hospital',
@@ -152,7 +152,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_gupta',
-                    'full_name': 'Dr. Vikram Gupta',
+                    'full_name': 'Vikram Gupta',
                     'email': 'vikram.gupta@citygeneral.com',
                     'contact_number': '+91-98765-43214',
                     'hospital': 'City General Hospital',
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_reddy',
-                    'full_name': 'Dr. Sunita Reddy',
+                    'full_name': 'Sunita Reddy',
                     'email': 'sunita.reddy@metromedical.com',
                     'contact_number': '+91-98765-43215',
                     'hospital': 'Metro Medical Center',
@@ -176,7 +176,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_verma',
-                    'full_name': 'Dr. Anil Verma',
+                    'full_name': 'Anil Verma',
                     'email': 'anil.verma@sunrisehealth.com',
                     'contact_number': '+91-98765-43216',
                     'hospital': 'Sunrise Healthcare',
@@ -188,7 +188,7 @@ class Command(BaseCommand):
                 },
                 {
                     'username': 'dr_joshi',
-                    'full_name': 'Dr. Meera Joshi',
+                    'full_name': 'Meera Joshi',
                     'email': 'meera.joshi@greenvalley.com',
                     'contact_number': '+91-98765-43217',
                     'hospital': 'Green Valley Hospital',
