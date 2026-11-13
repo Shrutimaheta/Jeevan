@@ -42,14 +42,19 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-Copy-Item ..\.env.example .env
+Copy-Item ..\.env.example ..\.env     # optional: defaults work for local development
 python manage.py migrate
+python manage.py seed_demo              # optional: demo logins + sample data
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>.
+Open <http://127.0.0.1:8000/>. After `seed_demo`, log in as `demo_patient`, `dr_sharma`,
+`demo_receptionist` or `demo_nurse` with password `Demo@2026`.
 
-The application reads configuration from environment variables. Copy `.env.example` as a reference, but note that Django does not automatically load `.env` files. Export the variables in your shell or use an approved environment loader in your deployment platform.
+Settings are read from environment variables. A `.env` file in the repository root
+(or next to `manage.py`) is loaded automatically; variables set by the hosting
+platform take priority. With no `.env` at all, development uses SQLite and a
+development-only secret key.
 
 ## Frontend setup
 
@@ -77,7 +82,21 @@ python manage.py test
 
 ## Production configuration
 
-Set `JEEVAN_ENV=production`. Production startup intentionally fails unless the secret key, allowed hosts, server database and SMTP credentials are configured.
+Set `JEEVAN_ENV=production`. Production startup intentionally fails unless the secret key, allowed hosts and a PostgreSQL database are configured. Use `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` if no SMTP server is available.
+
+## Deploying a free demo (Render + Neon)
+
+1. Create a free Postgres project on [Neon](https://neon.com) and copy its connection string (it ends with `?sslmode=require`).
+2. On [Render](https://render.com): **New + → Blueprint**, pick this repository. `render.yaml` creates the web service; paste the Neon URL when asked for `DATABASE_URL`.
+3. The build runs `jeevan/build.sh`: installs packages, collects static files, migrates, creates the cache table and (with `DEMO_MODE=true`) seeds the demo logins.
+4. Open `https://<your-service>.onrender.com/login/`. The demo panel fills in a login for each role.
+
+Things to know about the free tiers:
+
+- The free web service sleeps after 15 minutes without traffic and takes about a minute to wake. Open the site a minute before showing it to someone.
+- Uploaded files are lost whenever the service restarts or redeploys. Fine for a demo; for real use move uploads to S3-compatible storage.
+- Render's free Postgres is deleted after 30 days, which is why the blueprint uses Neon instead.
+- Never enable `DEMO_MODE` where real patient data is stored: it publishes the demo password on the login page.
 
 Required production variables include:
 

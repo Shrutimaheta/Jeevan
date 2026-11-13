@@ -3007,7 +3007,11 @@ function handleConsentAction(consentId, action, evt) {
 document.addEventListener('DOMContentLoaded', function() {
 	
 	// Handle dropdown toggle
-			
+	document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
+		toggle.addEventListener('click', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+
 			var dropdown = this.closest('.dropdown');
 			var menu = dropdown.querySelector('.dropdown-menu');
 			

@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import re
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -39,7 +40,7 @@ class TeleconsultationTests(TestCase, JeevanTestClientMixin):
             doctor=self.doctor,
             patient=self.patient,
             hospital=self.hospital,
-            appointment_date="2026-07-06",
+            appointment_date=(date.today() + timedelta(days=3)).isoformat(),
             appointment_time="12:00:00",
             status="accepted"
         )

@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse, Http404
@@ -48,7 +49,7 @@ def request_patient_consent(request, patient_id):
             consent = req_consent_svc(doctor=doctor, patient=patient, reason=reason)
             messages.success(request, 'Consent request sent to patient successfully.')
         except Exception as e:
-            messages.error(request, str(e))
+            messages.error(request, friendly_error(e))
         return redirect('doctor:request_consent', patient_id=patient_id)
         
     context = {
@@ -79,8 +80,8 @@ def approve_consent(request, consent_id):
     except Http404:
         raise
     except Exception as e:
-        messages.error(request, f'Error approving consent: {str(e)}')
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        messages.error(request, f'Error approving consent: {friendly_error(e)}')
+        return JsonResponse({'status': 'error', 'message': friendly_error(e)}, status=400)
 
 @patient_required
 @require_http_methods(["POST"])
@@ -101,8 +102,8 @@ def reject_consent(request, consent_id):
     except Http404:
         raise
     except Exception as e:
-        messages.error(request, f'Error rejecting consent: {str(e)}')
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        messages.error(request, f'Error rejecting consent: {friendly_error(e)}')
+        return JsonResponse({'status': 'error', 'message': friendly_error(e)}, status=400)
 
 @login_required
 def consent_status(request, doctor_id, patient_id):
@@ -119,5 +120,5 @@ def consent_status(request, doctor_id, patient_id):
     except Exception as e:
         return JsonResponse({
             'has_consent': False,
-            'error': str(e)
+            'error': friendly_error(e)
         })

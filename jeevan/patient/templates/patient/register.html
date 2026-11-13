@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,7 +52,7 @@
     <div class="card-shell">
         <div class="header">
             <div class="logo-wrap">
-                <img src="/media/patient_photos/logo.jpg" alt="Logo" loading="lazy">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" loading="lazy">
             </div>
             <div>
                 <h1>Register</h1>

@@ -1,0 +1,31 @@
+# Render Blueprint: New + > Blueprint > pick this repo.
+# The database is not created here: use a free Neon Postgres and paste its
+# connection string into DATABASE_URL when Render asks for it.
+services:
+  - type: web
+    name: jeevan-demo
+    runtime: python
+    plan: free
+    rootDir: jeevan
+    buildCommand: ./build.sh
+    startCommand: gunicorn jeevan.wsgi:application --workers 2 --timeout 60
+    healthCheckPath: /login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: JEEVAN_ENV
+        value: production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false          # paste the Neon connection string
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.console.EmailBackend   # Render free blocks SMTP
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_PASSWORD
+        value: Demo@2026
+      - key: DEMO_ADMIN_PASSWORD
+        sync: false          # optional: set a private password to get a demo_admin login

@@ -22,6 +22,9 @@ def forgot_password(request):
         form = ForgotPasswordForm(request.POST)
         if form.is_valid():
             recovery_method = form.cleaned_data['recovery_method']
+            if recovery_method == 'phone' and not getattr(settings, 'SMS_ENABLED', False):
+                messages.error(request, 'Reset by phone is not available yet. Please use your email address.')
+                return render(request, 'patient/forgot_password.html', {'form': form})
             email = form.cleaned_data.get('email')
             contact_number = form.cleaned_data.get('contact_number')
             
@@ -70,16 +73,17 @@ def forgot_password(request):
                 )
                 
                 # Log/print OTP in console for developer/test access
-                print(f"==========================================")
-                print(f"[SECURITY] Generated OTP for user {user.username}: {otp}")
-                print(f"==========================================")
+                # Show the code in the console during local development only;
+                # never write reset codes to production logs.
+                if settings.DEBUG:
+                    print(f"[DEV ONLY] Password reset code for {user.username}: {otp}")
                 
                 # Send the OTP via recovery channel
                 if recovery_method == 'phone':
-                    # In production, send SMS. For dev, we do NOT put OTP in messages.
+                    # Requires an SMS provider (SMS_ENABLED=true) - not implemented yet.
                     messages.success(request, 'A verification code has been sent to your registered phone number.')
                     request.session['reset_user_id'] = user.id
-                    return redirect('patient:verify_otp', patient_id=patient.id)
+                    return redirect('patient:verify_otp', patient_id=0)
                 else:
                     subject = 'Password Reset Code - Patient Management System'
                     message = f'''Hello {patient.full_name},
@@ -107,12 +111,12 @@ Patient Management System Team'''
                         return render(request, 'patient/forgot_password.html', {'form': form})
                     
                     request.session['reset_user_id'] = user.id
-                    return redirect('patient:verify_email_otp', patient_id=patient.id)
+                    return redirect('patient:verify_email_otp', patient_id=0)
             else:
                 # To prevent user enumeration, simulate a redirect and success message even if user does not exist
                 messages.success(request, f'A verification code has been sent to your registered {recovery_method}.')
                 request.session['reset_user_id'] = None
-                dummy_id = 9999999
+                dummy_id = 0  # same URL as a real account, so it reveals nothing
                 if recovery_method == 'phone':
                     return redirect('patient:verify_otp', patient_id=dummy_id)
                 else:
@@ -128,13 +132,10 @@ def verify_otp_internal(request, patient_id, template_name, recovery_method):
     """Internal helper to verify phone/email OTP"""
     reset_user_id = request.session.get('reset_user_id')
     
-    # Try to fetch the patient for UI rendering
-    patient = None
-    if patient_id != 9999999:
-        try:
-            patient = Patient.objects.get(id=patient_id)
-        except Patient.DoesNotExist:
-            pass
+    # Only show details of the account this browser session is resetting.
+    # The patient_id in the URL is ignored so it can't be used to look up
+    # other people's email addresses or phone numbers.
+    patient = Patient.objects.filter(user_id=reset_user_id).first() if reset_user_id else None
             
     if request.method == 'POST':
         entered_otp = request.POST.get('otp', '').strip()

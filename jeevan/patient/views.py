@@ -1,3 +1,4 @@
+from jeevan.errors import friendly_error
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
@@ -11,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.views import View
 import json
+from .access import can_view_patient, visible_patients_for
 from .models import Patient, PatientDocument, VitalSign, WellnessLog, Medication, MedicationLog, LabResult, HealthGoal, Notification
 from .forms import PatientRegistrationForm, PatientLoginForm, PatientProfileForm, ChangePasswordForm, PatientDocumentForm
 from .help_views import (
@@ -21,6 +23,7 @@ from .forgot_password_views import (
     forgot_password, verify_otp, verify_email_otp, reset_password, forgot_password_sent
 )
 from datetime import date, timedelta
+from django.utils import timezone
 
 from django.views.decorators.http import require_GET, require_POST
 
@@ -28,8 +31,8 @@ from django.views.decorators.http import require_GET, require_POST
 @login_required
 @role_required(['doctor', 'receptionist', 'nurse'])
 def patient_list(request):
-    """View to list all patients"""
-    patients = Patient.objects.all().order_by('-id')
+    """List the patients the logged-in staff member is allowed to see."""
+    patients = visible_patients_for(request.user).order_by('-id')
     
     # Add pagination
     paginator = Paginator(patients, 10)  # Show 10 patients per page
@@ -48,17 +51,11 @@ def patient_detail(request, patient_id):
     """View to show detailed information about a specific patient"""
     patient = get_object_or_404(Patient, id=patient_id)
     
-    # Check permissions: must be the patient themselves or a staff member
-    if request.user.role == 'patient':
-        try:
-            user_patient = request.user.patient_profile
-            if user_patient.id != patient.id:
-                raise PermissionDenied("You do not have permission to view this profile.")
-        except Patient.DoesNotExist:
-            raise PermissionDenied("Patient profile not found.")
-    elif request.user.role not in ['doctor', 'receptionist', 'nurse']:
+    # Patients see only themselves; staff see only patients linked to them
+    # (doctor: appointment or approved consent; nurse/receptionist: same hospital).
+    if not can_view_patient(request.user, patient):
         raise PermissionDenied("You do not have permission to view this profile.")
-        
+
     context = {
         'patient': patient,
     }
@@ -68,8 +65,8 @@ def patient_detail(request, patient_id):
 @login_required
 @role_required(['doctor', 'receptionist', 'nurse'])
 def patient_api_list(request):
-    """API view to return patient data as JSON"""
-    patients = Patient.objects.all().order_by('-id')
+    """API view to return patient data as JSON (scoped to the caller)."""
+    patients = visible_patients_for(request.user).order_by('-id')
     
     # Convert to list of dictionaries
     patients_data = []
@@ -241,7 +238,7 @@ def patient_profile(request):
     # Count upcoming appointments
     upcoming_appointments = Appointment.objects.filter(
         patient=patient, 
-        appointment_date__gte=timezone.now().date()
+        appointment_date__gte=timezone.localdate()
     ).exclude(status='cancelled').count()
     
     # Count completed teleconsultations (placeholder - feature not implemented yet)
@@ -464,7 +461,7 @@ def document_download(request, document_id):
         response['Content-Disposition'] = f'{disposition}; filename="{document.title}.{file_ext}"'
         return response
     except Exception as e:
-        messages.error(request, f"Error reading file: {str(e)}")
+        messages.error(request, f"Error reading file: {friendly_error(e)}")
         return redirect('patient:document_list')
 
 
@@ -671,7 +668,7 @@ def upload_report(request):
         except Patient.DoesNotExist:
             return JsonResponse({'error': 'Patient not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({'error': friendly_error(e)}, status=500)
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -768,7 +765,7 @@ def calculate_health_score(patient):
     from datetime import timedelta
     recent_appointments = Appointment.objects.filter(
         patient=patient,
-        appointment_date__gte=timezone.now().date() - timedelta(days=30)
+        appointment_date__gte=timezone.localdate() - timedelta(days=30)
     ).exclude(status='cancelled')
     
     if recent_appointments:
@@ -798,7 +795,7 @@ def calculate_medication_adherence(patient):
     
     for med in medications:
         # Calculate expected doses based on frequency
-        days_since_prescribed = (timezone.now().date() - med.prescribed_date).days + 1
+        days_since_prescribed = (timezone.localdate() - med.prescribed_date).days + 1
         if days_since_prescribed <= 0:
             continue
         
@@ -835,7 +832,7 @@ def calculate_wellness_stats(patient):
     from datetime import timedelta
     
     # Get last 7 days of wellness data
-    end_date = timezone.now().date()
+    end_date = timezone.localdate()
     start_date = end_date - timedelta(days=7)
     
     wellness_logs = WellnessLog.objects.filter(

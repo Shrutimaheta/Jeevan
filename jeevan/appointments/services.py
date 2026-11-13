@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.utils import timezone
 from .models import Appointment
@@ -62,16 +62,23 @@ def create_appointment(patient, doctor, hospital, appointment_date, appointment_
         if conflicting_appointments.exists():
             raise ValidationError("This time slot is already booked for the selected doctor.")
             
-        appointment = Appointment.objects.create(
-            patient=patient,
-            doctor=doctor,
-            hospital=hospital,
-            appointment_date=appointment_date,
-            appointment_time=appointment_time,
-            symptoms=symptoms,
-            payment_mode=payment_mode,
-            status=status
-        )
+        try:
+            # Savepoint so a lost race doesn't break the outer transaction.
+            with transaction.atomic():
+                appointment = Appointment.objects.create(
+                    patient=patient,
+                    doctor=doctor,
+                    hospital=hospital,
+                    appointment_date=appointment_date,
+                    appointment_time=appointment_time,
+                    symptoms=symptoms,
+                    payment_mode=payment_mode,
+                    status=status
+                )
+        except IntegrityError:
+            # Another booking for the same slot was saved a moment earlier
+            # (enforced by the unique_active_appointment_slot constraint).
+            raise ValidationError("This time slot was just booked by someone else. Please choose another time.")
         
         # Add to associated hospitals
         patient.associated_hospitals.add(hospital)

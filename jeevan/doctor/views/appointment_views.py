@@ -1,4 +1,5 @@
 import json
+from jeevan.errors import friendly_error
 from datetime import datetime, date, timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
@@ -124,12 +125,12 @@ def update_appointment_status(request, appointment_id, status):
                 'new_status': status
             })
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
+            return JsonResponse({'success': False, 'message': friendly_error(e)})
             
     except Appointment.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Appointment not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+        return JsonResponse({'success': False, 'message': friendly_error(e)})
 
 @doctor_required
 @require_http_methods(["GET"])
@@ -152,7 +153,7 @@ def get_appointment_info(request, appointment_id):
     except (Doctor.DoesNotExist, Appointment.DoesNotExist):
         return JsonResponse({'success': False, 'message': 'Appointment not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+        return JsonResponse({'success': False, 'message': friendly_error(e)})
 
 @doctor_required
 def appointment_prescription(request, appointment_id):
@@ -184,7 +185,7 @@ def appointment_prescription(request, appointment_id):
                 messages.success(request, 'Prescription saved and appointment marked completed.')
                 return redirect('doctor:appointments')
             except Exception as e:
-                messages.error(request, str(e))
+                messages.error(request, friendly_error(e))
     else:
         form = AppointmentPrescriptionForm(instance=prescription, appointment=appointment)
 
@@ -263,11 +264,11 @@ def doctor_calendar(request):
         context = {
             'doctor': doctor,
             'appointments': appointments,
-            'appointments_json': json.dumps(appointments_data),
+            'appointments_data': appointments_data,
             'current_month': date.today(),
         }
         return render(request, 'doctor/calendar.html', context)
         
     except Exception as e:
-        messages.error(request, f'Error loading calendar: {str(e)}')
-        return render(request, 'doctor/calendar.html', {'doctor': doctor, 'appointments': [], 'appointments_json': '[]'})
+        messages.error(request, f'Error loading calendar: {friendly_error(e)}')
+        return render(request, 'doctor/calendar.html', {'doctor': doctor, 'appointments': [], 'appointments_data': []})
