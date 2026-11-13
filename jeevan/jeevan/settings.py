@@ -217,6 +217,33 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
 
+# Private medical files: never served from a public URL, only streamed by the
+# app after an access check.
+STORAGES["private"] = {
+    "BACKEND": "django.core.files.storage.FileSystemStorage",
+    "OPTIONS": {"location": PRIVATE_MEDIA_ROOT, "base_url": None},
+}
+
+# Optional: keep uploads in an S3-compatible bucket (AWS S3, Cloudflare R2,
+# Backblaze B2...) so they survive restarts on hosts with temporary disks
+# (Render's free plan). The bucket must be PRIVATE; files are fetched by the
+# app or through short-lived signed links.
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "").strip()
+if S3_BUCKET_NAME:
+    _s3 = {
+        "bucket_name": S3_BUCKET_NAME,
+        "access_key": required_env("S3_ACCESS_KEY_ID"),
+        "secret_key": required_env("S3_SECRET_ACCESS_KEY"),
+        "endpoint_url": os.getenv("S3_ENDPOINT_URL", "").strip() or None,  # e.g. R2: https://<account>.r2.cloudflarestorage.com
+        "region_name": os.getenv("S3_REGION", "").strip() or None,         # R2: "auto"
+        "default_acl": None,
+        "querystring_auth": True,      # signed, expiring URLs
+        "querystring_expire": 300,
+        "file_overwrite": False,
+    }
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {**_s3, "location": "media"}}
+    STORAGES["private"] = {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {**_s3, "location": "private"}}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Cache (used by login lockout and rate limiting). Local memory is per-process,
@@ -244,6 +271,9 @@ DEMO_MODE = env_bool("DEMO_MODE", False)
 # Password reset by SMS needs an SMS provider; keep the option hidden until one
 # is wired up.
 SMS_ENABLED = env_bool("SMS_ENABLED", False)
+
+# Show /api/v1/docs/ in production too (always on in development).
+API_DOCS_PUBLIC = env_bool("API_DOCS_PUBLIC", False)
 AUTH_USER_MODEL = "care.CustomUser"
 
 LOGIN_URL = "/login/"
@@ -251,25 +281,42 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 
-if IS_PRODUCTION:
-    EMAIL_BACKEND = os.getenv(
-        "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
-    )
-    if EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
-        EMAIL_HOST = ""
-        EMAIL_HOST_USER = ""
-        EMAIL_HOST_PASSWORD = ""
-    else:
-        EMAIL_HOST = required_env("EMAIL_HOST")
-        EMAIL_HOST_USER = required_env("EMAIL_HOST_USER")
-        EMAIL_HOST_PASSWORD = required_env("EMAIL_HOST_PASSWORD")
+# Email. Options:
+#   * SMTP (EMAIL_HOST/EMAIL_HOST_USER/EMAIL_HOST_PASSWORD)
+#   * an HTTP email API, for hosts that block SMTP ports (Render's free plan):
+#     set BREVO_API_KEY or RESEND_API_KEY and the backend is chosen for you
+#   * the console backend, which only prints emails (development / demos)
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "").strip()
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
+ANYMAIL = {}
+if BREVO_API_KEY:
+    _default_email_backend = "anymail.backends.brevo.EmailBackend"
+    ANYMAIL["BREVO_API_KEY"] = BREVO_API_KEY
+elif RESEND_API_KEY:
+    _default_email_backend = "anymail.backends.resend.EmailBackend"
+    ANYMAIL["RESEND_API_KEY"] = RESEND_API_KEY
+elif IS_PRODUCTION:
+    _default_email_backend = "django.core.mail.backends.smtp.EmailBackend"
 else:
-    EMAIL_BACKEND = os.getenv(
-        "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
-    )
+    _default_email_backend = "django.core.mail.backends.console.EmailBackend"
+
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "").strip() or _default_email_backend
+if IS_PRODUCTION and EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    EMAIL_HOST = required_env("EMAIL_HOST")
+    EMAIL_HOST_USER = required_env("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = required_env("EMAIL_HOST_PASSWORD")
+else:
     EMAIL_HOST = os.getenv("EMAIL_HOST", "")
     EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+# False when emails are only printed/discarded; password reset then tells the
+# user it isn't available instead of "sending" a code nobody receives.
+EMAIL_DELIVERY_ENABLED = EMAIL_BACKEND not in (
+    "django.core.mail.backends.console.EmailBackend",
+    "django.core.mail.backends.dummy.EmailBackend",
+    "django.core.mail.backends.filebased.EmailBackend",
+) or DEBUG
 
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)

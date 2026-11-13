@@ -137,8 +137,8 @@ def download_record_file(request, record_id):
     if not record.report_file:
         raise Http404("No report file attached to this record.")
         
-    file_path = record.report_file.path
-    if not os.path.exists(file_path):
+    file_name = record.report_file.name
+    if not record.report_file.storage.exists(file_name):
         raise Http404("File does not exist on storage.")
         
     log_audit_event(
@@ -148,7 +148,11 @@ def download_record_file(request, record_id):
         details=f"Streamed report file of Medical Record ID: {record.id}"
     )
     
-    content_type, _ = mimetypes.guess_type(file_path)
-    response = FileResponse(open(file_path, 'rb'), content_type=content_type or 'application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-    return response
+    # Works for local disk and cloud (S3/R2) storage alike.
+    content_type, _ = mimetypes.guess_type(file_name)
+    return FileResponse(
+        record.report_file.open('rb'),
+        as_attachment=True,
+        filename=os.path.basename(file_name),
+        content_type=content_type or 'application/octet-stream',
+    )

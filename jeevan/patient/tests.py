@@ -263,7 +263,7 @@ class PatientSecurityTests(TestCase):
         resp = client.get(reverse('patient:document_download', args=[document.id]))
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp['Content-Type'], 'application/pdf')
-        self.assertIn(b'%PDF', resp.content)
+        self.assertIn(b'%PDF', b''.join(resp.streaming_content))
         
         # 3. Other Patient denied access
         client.force_login(self.other_user)

@@ -1,7 +1,7 @@
 from jeevan.errors import friendly_error
 from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponse
+from django.http import FileResponse, JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
 from django.contrib.auth import login, logout
@@ -459,10 +459,14 @@ def document_download(request, document_id):
     log_audit_event(request.user, "ACCESS_PATIENT_RECORDS", document.patient.id, f"Downloaded/Viewed document: {document.title} (ID: {document.id})")
     
     try:
-        response = HttpResponse(document.file.read(), content_type=content_type)
-        disposition = 'inline' if (view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']) else 'attachment'
-        response['Content-Disposition'] = f'{disposition}; filename="{document.title}.{file_ext}"'
-        return response
+        inline = view_mode and file_ext in ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        # FileResponse quotes/encodes the filename safely (titles may contain quotes or non-ASCII).
+        return FileResponse(
+            document.file.open('rb'),
+            as_attachment=not inline,
+            filename=f"{document.title}.{file_ext}",
+            content_type=content_type,
+        )
     except Exception as e:
         messages.error(request, f"Error reading file: {friendly_error(e)}")
         return redirect('patient:document_list')

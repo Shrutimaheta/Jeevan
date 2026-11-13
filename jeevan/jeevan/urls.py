@@ -17,8 +17,20 @@ from patient import api_views as patient_api_views
 from . import views
 
 
+# The API docs are useful during development. In production they are hidden
+# unless API_DOCS_PUBLIC=true, because most endpoints aren't described yet.
+API_DOC_URLS = []
+if not settings.IS_PRODUCTION or settings.API_DOCS_PUBLIC:
+    API_DOC_URLS = [
+        path("schema/", SpectacularAPIView.as_view(), name="schema"),
+        path("docs/", SpectacularSwaggerView.as_view(url_name="api_v1:schema"), name="swagger-ui"),
+        path("redoc/", SpectacularRedocView.as_view(url_name="api_v1:schema"), name="redoc"),
+    ]
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("healthz/", views.healthz, name="healthz"),
     path("login/", views.universal_login, name="universal_login"),
     path("logout/", views.universal_logout, name="universal_logout"),
     path("", views.home, name="home"),
@@ -63,12 +75,9 @@ urlpatterns = [
         include(
             (
                 [
-                    # OpenAPI Schema View
-                    path("schema/", SpectacularAPIView.as_view(), name="schema"),
-                    # Interactive OpenAPI UI Docs
-                    path("docs/", SpectacularSwaggerView.as_view(url_name="api_v1:schema"), name="swagger-ui"),
-                    path("redoc/", SpectacularRedocView.as_view(url_name="api_v1:schema"), name="redoc"),
-                    
+                    # OpenAPI docs: see API_DOC_URLS below (hidden in production unless API_DOCS_PUBLIC=true)
+                    *API_DOC_URLS,
+
                     # Doctor APIs
                     path("doctors/appointments/", doctor_views.doctor_appointments_api, name="doctor_appointments_api"),
                     path("doctors/profile/", doctor_views.doctor_profile_api, name="doctor_profile_api"),

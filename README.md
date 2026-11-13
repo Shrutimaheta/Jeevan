@@ -94,7 +94,9 @@ Set `JEEVAN_ENV=production`. Production startup intentionally fails unless the s
 Things to know about the free tiers:
 
 - The free web service sleeps after 15 minutes without traffic and takes about a minute to wake. Open the site a minute before showing it to someone.
-- Uploaded files are lost whenever the service restarts or redeploys. Fine for a demo; for real use move uploads to S3-compatible storage.
+- Uploaded files are lost whenever the service restarts or redeploys, unless you set `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_ENDPOINT_URL` for a **private** S3-compatible bucket (Cloudflare R2 has a free tier). Medical files are then stored under `private/` and only ever streamed through the app after an access check.
+- Render's free plan blocks SMTP. To send password-reset emails, add a `BREVO_API_KEY` (or `RESEND_API_KEY`) and a verified `DEFAULT_FROM_EMAIL`, and remove the `EMAIL_BACKEND` console line. Without it, the reset page says email isn't set up.
+- `/healthz/` reports whether the app and database are up (Render uses it as the health check).
 - Render's free Postgres is deleted after 30 days, which is why the blueprint uses Neon instead.
 - Never enable `DEMO_MODE` where real patient data is stored: it publishes the demo password on the login page.
 
