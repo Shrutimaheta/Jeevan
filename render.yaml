@@ -6,6 +6,8 @@ services:
     name: jeevan-demo
     runtime: python
     plan: free
+    region: singapore    # same region as the Neon database
+    branch: main
     rootDir: jeevan
     buildCommand: ./build.sh
     startCommand: gunicorn jeevan.wsgi:application --workers 2 --timeout 60
