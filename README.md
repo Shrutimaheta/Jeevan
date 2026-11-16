@@ -1,78 +1,139 @@
 # Jeevan — Patient Management System
 
-Jeevan is a Django-based patient-management system for patient profiles, hospitals, doctors, appointment scheduling, prescriptions, documents and role-based dashboards.
+Jeevan is a hospital and clinic management web application built with Django. It brings patients, doctors, receptionists and nurses onto one platform, with a separate dashboard for each role, appointment booking, digital prescriptions, consent-based access to medical records and video teleconsultations.
 
-> **Project status:** Enhanced prototype. Private patient records are secured using a HIPAA-compliant `private_media` storage pattern, security test paths are conditionally disabled in production, and login/reset actions are protected by rate limiters. Teleconsultations are integrated with live Jitsi Meet rooms. Review plan status is tracked in `scripts/JEEVAN_CODE_REVIEW_CORRECTION_PLAN.md`.
+**Live demo:** https://jeevan-demo.onrender.com
+**Built by:** [Shruti Maheta](https://github.com/Shrutimaheta)
 
-## Technology
+> The demo runs on a free server that sleeps when idle, so the first visit can take up to a minute to load. It contains fictional sample data only.
 
-- Python and Django 5.2
-- Django REST Framework
-- SQLite for local development
-- React 19, TypeScript and Vite for the separate frontend source
-- Django templates for the currently integrated web interface
+---
 
-## Repository layout
+## Try the demo
+
+Open the [login page](https://jeevan-demo.onrender.com/login/) and click one of the demo buttons, or sign in manually. Every demo account uses the password **`Demo@2026`**.
+
+| Role | Username | What to try |
+|---|---|---|
+| Patient | `demo_patient` | Book an appointment, view prescriptions, log vitals and wellness |
+| Doctor | `dr_sharma` | Accept or reject appointments, write prescriptions, request record access |
+| Receptionist | `demo_receptionist` | Register walk-in patients, book for them, check doctor availability |
+| Nurse | `demo_nurse` | View hospital patients, record vitals and nursing notes |
+
+Please don't enter real personal or medical information in the demo.
+
+---
+
+## Features
+
+### Patients
+- Self-registration, profile management and secure password reset by email OTP
+- Book, reschedule and cancel appointments by hospital, doctor, date and time slot
+- View prescriptions written by doctors
+- Upload and manage medical documents in private storage
+- Track vital signs, wellness logs and medications, with trend charts
+- Approve or reject doctors' requests to view their records
+- Help centre with FAQs, support tickets and health resources
+
+### Doctors
+- Dashboard with today's schedule, upcoming appointments and a 7-day overview
+- Accept, reject and complete appointments; calendar view
+- Write structured digital prescriptions
+- View patient history and reports only after the patient grants consent
+- Start video teleconsultations (Jitsi Meet) for accepted appointments
+- Public profile page for patients
+
+### Receptionists
+- Register walk-in patients and book appointments on their behalf
+- Approve, reject and manage appointments for their hospital
+- See every doctor's hourly availability for any date
+
+### Nurses
+- View patients registered at their hospital
+- Record vital signs and add or edit nursing notes
+
+### Platform
+- Role-based access control: each role can open only its own pages and its own hospital's data
+- Care coordinator and admin dashboards, including ZIP export of patient reports
+- Emergency guide and nearest-hospital finder
+- ABHA (Ayushman Bharat Health Account) ID flow with OTP verification *(simulated; not connected to the national ABDM system)*
+- REST API endpoints with OpenAPI documentation (drf-spectacular)
+
+### Security
+- Medical files stored in private storage and served only after an access check
+- Login and password-reset rate limiting, hashed one-time codes and CSRF protection on every form and API
+- Audit logging of sensitive actions with tamper-evident log records
+- Production hardening: HTTPS-only secure cookies, HSTS and strict security headers, with startup refusing to run on unsafe settings
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.12, Django 5.2, Django REST Framework |
+| Database | PostgreSQL (production), SQLite (local development) |
+| Frontend | Django templates, Bootstrap, JavaScript; React 19 + TypeScript + Vite source in `jeevan/Frontend` |
+| Static files | WhiteNoise |
+| File storage | Local disk, or any private S3-compatible bucket (e.g. Cloudflare R2) |
+| Email | SMTP or Brevo / Resend API via django-anymail |
+| Video calls | Jitsi Meet |
+| Hosting | Render (web service) + Neon (PostgreSQL) |
+| CI | GitHub Actions: migration check, tests on PostgreSQL, production settings check |
+
+---
+
+## Project structure
 
 ```text
 Jeevan/
-├── jeevan/                 # Django project root (manage.py is here)
-│   ├── jeevan/             # Django settings, URLs, WSGI and ASGI
-│   ├── care/               # Users, hospitals and specializations
-│   ├── patient/
-│   ├── doctor/
-│   ├── nurse/
-│   ├── receptionist/
-│   ├── appointments/
-│   ├── records/
-│   ├── abha/
-│   ├── Frontend/           # React/Vite source
-│   └── requirements.txt
-└── scripts/                # Review and maintenance documentation
+├── render.yaml              # Render deployment blueprint
+├── .env.example             # Environment variable reference
+└── jeevan/                  # Django project (manage.py is here)
+    ├── jeevan/              # Settings, URLs, middleware helpers
+    ├── care/                # Users, hospitals, specializations, admin/coordinator dashboards
+    ├── patient/             # Patient portal, health tracking, documents, help centre
+    ├── doctor/              # Doctor portal, prescriptions, consent
+    ├── receptionist/        # Front-desk tools
+    ├── nurse/               # Nursing tools
+    ├── appointments/        # Booking rules and scheduling
+    ├── records/             # Medical records
+    ├── teleconsultation/    # Video consultation sessions
+    ├── abha/                # ABHA ID flow
+    ├── templates/           # Shared templates
+    ├── static/              # CSS, JS and images
+    ├── Frontend/            # React/TypeScript source
+    ├── build.sh             # Build script used on Render
+    └── requirements.txt
 ```
 
-## Backend setup
+---
 
-Python 3.11 or newer is recommended.
+## Run it locally
+
+Requires Python 3.11 or newer and Git.
 
 ```powershell
 git clone https://github.com/Shrutimaheta/Jeevan.git
-cd Jeevan\jeevan
+cd Jeevan
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-Copy-Item ..\.env.example ..\.env     # optional: defaults work for local development
+.\.venv\Scripts\Activate.ps1          # macOS/Linux: source .venv/bin/activate
+pip install -r jeevan\requirements.txt
+Copy-Item .env.example .env           # macOS/Linux: cp .env.example .env
+cd jeevan
 python manage.py migrate
-python manage.py seed_demo              # optional: demo logins + sample data
+python manage.py seed_demo            # optional: demo accounts and sample data
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. After `seed_demo`, log in as `demo_patient`, `dr_sharma`,
-`demo_receptionist` or `demo_nurse` with password `Demo@2026`.
+Then open http://127.0.0.1:8000/.
 
-Settings are read from environment variables. A `.env` file in the repository root
-(or next to `manage.py`) is loaded automatically; variables set by the hosting
-platform take priority. With no `.env` at all, development uses SQLite and a
-development-only secret key.
+- The virtual environment and `.env` file live in the repository root. Settings load `.env` automatically, and real environment variables always take precedence.
+- Keep `JEEVAN_ENV=development` locally. This uses SQLite and prints emails and one-time codes to the console.
 
-## Frontend setup
+### Run the checks
 
-The React frontend is maintained separately from the Django templates:
-
-```powershell
-cd Jeevan\jeevan\Frontend
-npm ci
-npm run lint
-npm test -- --runInBand
-npm run build
-```
-
-Do not commit `node_modules`, generated `dist` output or collected `staticfiles`.
-
-## Development checks
-
-Run these commands from `Jeevan\jeevan`:
+From the `jeevan` folder:
 
 ```powershell
 python manage.py makemigrations --check --dry-run
@@ -80,58 +141,40 @@ python manage.py check
 python manage.py test
 ```
 
-## Production configuration
+The same checks run automatically on GitHub for every push, against PostgreSQL.
 
-Set `JEEVAN_ENV=production`. Production startup intentionally fails unless the secret key, allowed hosts and a PostgreSQL database are configured. Use `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` if no SMTP server is available.
+---
 
-## Deploying a free demo (Render + Neon)
+## Deployment (Render + Neon, free tier)
 
-1. Create a free Postgres project on [Neon](https://neon.com) and copy its connection string (it ends with `?sslmode=require`).
-2. On [Render](https://render.com): **New + → Blueprint**, pick this repository. `render.yaml` creates the web service; paste the Neon URL when asked for `DATABASE_URL`.
-3. The build runs `jeevan/build.sh`: installs packages, collects static files, migrates, creates the cache table and (with `DEMO_MODE=true`) seeds the demo logins.
-4. Open `https://<your-service>.onrender.com/login/`. The demo panel fills in a login for each role.
+1. Create a free PostgreSQL project on [Neon](https://neon.com) and copy its pooled connection string.
+2. On [Render](https://render.com), choose **New → Blueprint** and select this repository. `render.yaml` creates the web service. Paste the Neon string when asked for `DATABASE_URL`.
+3. The build (`jeevan/build.sh`) installs packages, collects static files, runs migrations, creates the cache table and, when `DEMO_MODE=true`, creates the demo accounts.
+4. Render redeploys automatically, but only after the GitHub Actions checks pass.
 
-Things to know about the free tiers:
+Optional settings:
 
-- The free web service sleeps after 15 minutes without traffic and takes about a minute to wake. Open the site a minute before showing it to someone.
-- Uploaded files are lost whenever the service restarts or redeploys, unless you set `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_ENDPOINT_URL` for a **private** S3-compatible bucket (Cloudflare R2 has a free tier). Medical files are then stored under `private/` and only ever streamed through the app after an access check.
-- Render's free plan blocks SMTP. To send password-reset emails, add a `BREVO_API_KEY` (or `RESEND_API_KEY`) and a verified `DEFAULT_FROM_EMAIL`, and remove the `EMAIL_BACKEND` console line. Without it, the reset page says email isn't set up.
-- `/healthz/` reports whether the app and database are up (Render uses it as the health check).
-- Render's free Postgres is deleted after 30 days, which is why the blueprint uses Neon instead.
-- Never enable `DEMO_MODE` where real patient data is stored: it publishes the demo password on the login page.
+| Purpose | Variables |
+|---|---|
+| Keep uploaded files across restarts | `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL` (private bucket) |
+| Send real emails (password reset) | `BREVO_API_KEY` or `RESEND_API_KEY`, plus a verified `DEFAULT_FROM_EMAIL` |
+| Public API docs at `/api/v1/docs/` | `API_DOCS_PUBLIC=true` |
 
-Required production variables include:
+In production (`JEEVAN_ENV=production`) the app refuses to start without a secret key, allowed hosts and a PostgreSQL database. `/healthz/` reports whether the app and database are up.
 
-- `DJANGO_SECRET_KEY`
-- `DJANGO_ALLOWED_HOSTS`
-- `DJANGO_CSRF_TRUSTED_ORIGINS`
-- `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
-- `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`
+---
 
-Production deployment is not approved until all phases in the correction plan have passed.
+## Limitations
 
-## Vercel portfolio deployment
+This is a portfolio and learning project, not a certified medical system.
 
-Jeevan can be deployed to Vercel without Docker. In Vercel, import this
-repository and set the **Root Directory** to `jeevan` (the directory that
-contains `manage.py` and `requirements.txt`). Vercel detects Django, serves
-static files through its CDN, and runs the application as a Python deployment.
+- ABHA integration is simulated, and SMS delivery is not connected.
+- Before handling real patient data it would need a security review, backups, a privacy policy and patient consent, and compliance with India's DPDP Act.
 
-Add these environment variables in Vercel:
+---
 
-- `JEEVAN_ENV=production`
-- `DJANGO_SECRET_KEY` (a new long random value)
-- `DATABASE_URL` (a PostgreSQL connection string from Neon, Supabase, or another hosted provider)
-- `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`
-- `DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000`
-- `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` for the public demo
+## Author
 
-Vercel provides the deployed hostname automatically. Use only fictional demo
-accounts and records: uploaded files and local logs are not persistent in a
-serverless deployment.
+**Shruti Maheta** — [GitHub](https://github.com/Shrutimaheta)
 
-## Data safety
-
-- Use fictional records in development and demonstrations.
-- Never commit databases, uploaded media, credentials, OTPs or logs.
-- Medical uploads require private storage and authorization before production use.
+If you have feedback or would like to discuss this project, feel free to open an issue.
