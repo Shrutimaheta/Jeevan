@@ -2,16 +2,30 @@ from jeevan.errors import friendly_error
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.core.cache import cache
 from django.utils import timezone
 import random
+import secrets
+from functools import wraps
 import string
 from datetime import datetime, timedelta
 import json
 from care.models import CustomUser
+
+
+def login_required_json(view_func):
+    """Return a JSON 401 instead of a login redirect for API calls."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {'success': False, 'error': 'Authentication required.'}, status=401
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
 
 def index(request):
     return redirect("abha:create_abha_id")
@@ -80,7 +94,7 @@ def create_abha_id(request):
                     if existing_user.patient_profile.abha_id:
                         return JsonResponse({
                             'success': False,
-                            'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                            'error': 'An ABHA ID is already linked to this mobile number.'
                         })
                 except Patient.DoesNotExist:
                     pass
@@ -94,7 +108,7 @@ def create_abha_id(request):
             if existing_by_details and existing_by_details.abha_id:
                 return JsonResponse({
                     'success': False,
-                    'error': f'ABHA ID already exists for this person: {existing_by_details.abha_id}'
+                    'error': 'An ABHA ID already exists for these details.'
                 })
             
             # Check if current user already has an ABHA ID
@@ -192,6 +206,7 @@ def generate_unique_abha_id():
     # If we can't generate a unique ID after max attempts, raise an error
     raise Exception("Unable to generate unique ABHA ID. Please try again.")
 
+@login_required_json
 @require_http_methods(["POST"])
 def generate_otp(request):
     """
@@ -238,7 +253,7 @@ def generate_otp(request):
                     if existing_user.patient_profile.abha_id:
                         return JsonResponse({
                             'success': False,
-                            'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                            'error': 'An ABHA ID is already linked to this mobile number.'
                         })
                 except Patient.DoesNotExist:
                     pass
@@ -252,7 +267,7 @@ def generate_otp(request):
             if existing_by_details and existing_by_details.abha_id:
                 return JsonResponse({
                     'success': False,
-                    'error': f'ABHA ID already exists for this person: {existing_by_details.abha_id}'
+                    'error': 'An ABHA ID already exists for these details.'
                 })
             
             # Check if current user already has an ABHA ID
@@ -269,7 +284,7 @@ def generate_otp(request):
             pass
         
         # Generate 4-digit OTP
-        otp = str(random.randint(1000, 9999))
+        otp = f"{secrets.randbelow(10000):04d}"
         
         # Store OTP in cache with expiration (5 minutes)
         cache_key = f"abha_otp_{mobile}_{aadhaar}"
@@ -302,6 +317,7 @@ def generate_otp(request):
             'error': f'Error generating OTP: {friendly_error(e)}'
         })
 
+@login_required_json
 @require_http_methods(["POST"])
 def verify_otp(request):
     """
@@ -374,6 +390,7 @@ def verify_otp(request):
             'success': False,
             'error': f'Error verifying OTP: {friendly_error(e)}'
         })
+@login_required_json
 @require_http_methods(["POST"])
 def check_abha_uniqueness(request):
     """
@@ -398,7 +415,7 @@ def check_abha_uniqueness(request):
                 if existing_user.patient_profile.abha_id:
                     return JsonResponse({
                         'can_create': False,
-                        'error': f'ABHA ID already exists for this mobile number: {existing_user.patient_profile.abha_id}'
+                        'error': 'An ABHA ID is already linked to this mobile number.'
                     })
             except Patient.DoesNotExist:
                 pass
@@ -412,7 +429,7 @@ def check_abha_uniqueness(request):
         if existing_by_details and existing_by_details.abha_id:
             return JsonResponse({
                 'can_create': False,
-                'error': f'ABHA ID already exists for this person: {existing_by_details.abha_id}'
+                'error': 'An ABHA ID already exists for these details.'
             })
         
         # Check if current user already has an ABHA ID
@@ -435,6 +452,7 @@ def check_abha_uniqueness(request):
             'error': friendly_error(e)
         })
 
+@login_required_json
 @require_http_methods(["POST"])
 def verify_abha(request):
     """

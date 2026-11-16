@@ -33,7 +33,19 @@ class ABHATests(TestCase):
         self.assertTrue(parts[2].isdigit())
         self.assertTrue(parts[3].isdigit())
 
+    def test_otp_endpoints_require_login(self):
+        for name in ('abha:generate_otp', 'abha:verify_otp', 'abha:check_abha_uniqueness', 'abha:verify_abha'):
+            response = self.client.post(reverse(name), '{}', content_type='application/json')
+            self.assertEqual(response.status_code, 401, name)
+
+    def test_otp_endpoints_enforce_csrf(self):
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.user)
+        response = csrf_client.post(reverse('abha:generate_otp'), '{}', content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+
     def test_otp_flow_and_attempts_limiter(self):
+        self.client.force_login(self.user)
         # 1. Generate OTP
         url_gen = reverse('abha:generate_otp')
         payload = {
