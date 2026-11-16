@@ -66,6 +66,15 @@ class Hospital(models.Model):
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0, validators=[MinValueValidator(0), MaxValueValidator(5)])
     accepts_insurance = models.BooleanField(default=False)
 
+    # Aliases used by templates.
+    @property
+    def contact_number(self):
+        return self.contact_no
+
+    @property
+    def address(self):
+        return self.location
+
     def __str__(self):
         return self.name
 

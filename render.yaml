@@ -8,6 +8,8 @@ services:
     plan: free
     region: singapore    # same region as the Neon database
     branch: main
+    # Deploy only after GitHub CI (tests, migrations, deploy checks) passes.
+    autoDeployTrigger: checksPass
     rootDir: jeevan
     buildCommand: ./build.sh
     startCommand: gunicorn jeevan.wsgi:application --workers 2 --timeout 60

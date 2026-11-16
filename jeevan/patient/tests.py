@@ -357,3 +357,18 @@ class PatientSecurityTests(TestCase):
         
         self.patient_user.refresh_from_db()
         self.assertTrue(self.patient_user.check_password('NewPassword123!'))
+
+
+from jeevan.test_helpers import JeevanTestClientMixin
+
+
+class PatientProfileDobTests(TestCase, JeevanTestClientMixin):
+    """The profile page must show (and therefore re-submit) the date of birth."""
+
+    def test_profile_renders_date_of_birth_input(self):
+        user = self.create_user(username="dobpatient", role="patient")
+        self.create_patient_profile(user, date_of_birth="1992-04-18")
+        self.login_user(self.client, "dobpatient")
+        response = self.client.get(reverse("patient:patient_profile"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="date_of_birth" value="1992-04-18"')

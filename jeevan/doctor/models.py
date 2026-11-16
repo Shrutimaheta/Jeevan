@@ -57,6 +57,15 @@ class Doctor(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    # Contact details live on the linked user account; templates read them here.
+    @property
+    def contact_number(self):
+        return getattr(self.user, 'contact_number', None) if self.user_id else None
+
+    @property
+    def email(self):
+        return getattr(self.user, 'email', None) if self.user_id else None
+
     def __str__(self):
         return f"{self.full_name} ({self.hospital.name})"
 

@@ -1134,10 +1134,10 @@
             }
         }
         
+        // Called after the doctor confirms in the "Confirm Medical Action" modal,
+        // so no second browser confirm() prompt is needed here.
         function updateAppointmentStatus(appointmentId, status) {
-            const actionText = status === 'accepted' ? 'accept' : status === 'rejected' ? 'reject' : status === 'cancelled' ? 'cancel' : 'mark as complete';
-            
-            if (confirm(`Are you sure you want to ${actionText} this appointment?`)) {
+            {
                 fetch(`/doctor/appointments/update-status/${appointmentId}/${status}/`, {
                     method: 'POST',
                     headers: {

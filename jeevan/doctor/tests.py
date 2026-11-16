@@ -67,6 +67,33 @@ class AppointmentStatusOwnershipTests(TestCase, JeevanTestClientMixin):
         self.appointment.refresh_from_db()
         self.assertEqual(self.appointment.status, 'accepted')
 
+    def test_appointments_page_lists_own_appointments(self):
+        self.login_user(self.client, "doc1")
+        response = self.client.get(reverse('doctor:appointments'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.appointment, list(response.context['page_obj']))
+        self.assertNotContains(response, 'No Appointments Found')
+
+    def test_appointments_page_filters_and_ignores_bad_input(self):
+        self.login_user(self.client, "doc1")
+        url = reverse('doctor:appointments')
+        pending = self.client.get(url, {'status': 'pending'})
+        self.assertIn(self.appointment, list(pending.context['page_obj']))
+        accepted = self.client.get(url, {'status': 'accepted'})
+        self.assertNotIn(self.appointment, list(accepted.context['page_obj']))
+        self.appointment.refresh_from_db()
+        on_date = self.client.get(url, {'date': self.appointment.appointment_date.isoformat()})
+        self.assertIn(self.appointment, list(on_date.context['page_obj']))
+        bad = self.client.get(url, {'date': 'not-a-date', 'status': 'bogus', 'page': 'x'})
+        self.assertEqual(bad.status_code, 200)
+        self.assertIn(self.appointment, list(bad.context['page_obj']))
+
+    def test_other_doctor_does_not_see_appointment(self):
+        self.login_user(self.client, "doc2")
+        response = self.client.get(reverse('doctor:appointments'))
+        self.assertNotIn(self.appointment, list(response.context['page_obj']))
+
+
 class DoctorServiceAndSecurityTests(TestCase, JeevanTestClientMixin):
     def setUp(self):
         self.client = Client()
@@ -89,6 +116,20 @@ class DoctorServiceAndSecurityTests(TestCase, JeevanTestClientMixin):
             appointment_time="11:00:00",
             status="accepted"
         )
+
+    def test_prescription_shows_on_patient_dashboard(self):
+        save_prescription(
+            appointment_id=self.appointment.id,
+            doctor=self.doctor_a,
+            diagnosis="Common Cold",
+            medications="Paracetamol - 500mg - Twice daily - 5 days",
+        )
+        self.login_user(self.client, "patient_a")
+        response = self.client.get(reverse('patient:profile_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['prescriptions']), 1)
+        self.assertContains(response, "Common Cold")
+        self.assertNotContains(response, "No prescriptions available")
 
     def test_prescription_medications_validation(self):
         # Invalid format should fail

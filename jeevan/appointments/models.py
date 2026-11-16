@@ -56,6 +56,10 @@ class Appointment(models.Model):
             models.Index(fields=["status"]),
         ]
 
+    @property
+    def abha_id(self):
+        return self.patient.abha_id if self.patient_id else None
+
     def __str__(self):
         return f"Appointment of {self.patient.full_name} with {self.doctor.full_name} on {self.appointment_date}"
 

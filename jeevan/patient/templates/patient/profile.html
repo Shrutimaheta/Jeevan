@@ -543,7 +543,7 @@
             </div>
                                     <div>
                                         <p class="text-base font-medium text-gray-700">Date of Birth</p>
-                                        <input type="date" name="{{ form.dob.name }}" value="{{ form.dob.value|default:'' }}" 
+                                        <input type="date" name="{{ form.date_of_birth.name }}" value="{{ form.date_of_birth.value|date:'Y-m-d'|default:form.date_of_birth.value|default:'' }}" 
                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-blue focus:border-transparent transition-all duration-200 focus-ring">
         </div>
                 </div>

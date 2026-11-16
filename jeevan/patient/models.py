@@ -50,6 +50,19 @@ class Patient(models.Model):
     allergies = models.TextField(blank=True, null=True)
     associated_hospitals = models.ManyToManyField('care.Hospital', blank=True, related_name='patients')
 
+    # Contact details live on the linked user account; templates read them here.
+    @property
+    def contact_number(self):
+        return getattr(self.user, 'contact_number', None) if self.user_id else None
+
+    @property
+    def email(self):
+        return getattr(self.user, 'email', None) if self.user_id else None
+
+    @property
+    def dob(self):
+        return self.date_of_birth
+
     def __str__(self):
         return f"{self.full_name} ({self.user.email if self.user else ''})"
 

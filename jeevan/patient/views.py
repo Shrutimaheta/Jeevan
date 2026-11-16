@@ -174,6 +174,13 @@ def patient_dashboard(request):
     # Get wellness statistics
     wellness_stats = calculate_wellness_stats(patient)
     
+    from doctor.models import AppointmentPrescription
+    prescriptions = list(
+        AppointmentPrescription.objects.filter(appointment__patient=patient)
+        .select_related('appointment', 'doctor')
+        .order_by('-created_at')
+    )
+
     context = {
         'patient': patient,
         'upcoming_appointments': upcoming_appointments,
@@ -194,6 +201,7 @@ def patient_dashboard(request):
         'health_score': health_score,
         'medication_adherence': medication_adherence,
         'wellness_stats': wellness_stats,
+        'prescriptions': prescriptions,
     }
     response = render(request, 'patient/profile_dashboard.html', context)
     

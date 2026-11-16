@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from django.core.paginator import Paginator
 from jeevan.decorators import doctor_required, log_audit_event
 from doctor.models import Doctor, AppointmentPrescription
 from appointments.models import Appointment
@@ -71,6 +72,7 @@ def doctor_dashboard(request):
         'today_appointments': today_appointments,
         'next_7_days_counts': next_7_days_counts,
         'next_7_days_labels': next_7_days_labels,
+        'today': timezone.localtime(),
     }
     
     response = render(request, 'doctor/dashboard.html', context)
@@ -88,18 +90,38 @@ def doctor_appointments(request):
         return redirect('universal_login')
         
     Appointment.mark_expired_appointments()
-    
-    # Filter status
-    status_filter = request.GET.get('status', 'all').strip().lower()
-    appointments = Appointment.objects.filter(doctor=doctor).select_related('patient').order_by('-appointment_date', '-appointment_time')
-    
-    if status_filter != 'all':
+
+    appointments = (
+        Appointment.objects.filter(doctor=doctor)
+        .select_related('patient')
+        .order_by('-appointment_date', '-appointment_time')
+    )
+
+    # Filters. Unknown values are ignored rather than erroring.
+    valid_statuses = {choice[0] for choice in Appointment._meta.get_field('status').choices}
+    status_filter = request.GET.get('status', '').strip().lower()
+    if status_filter in valid_statuses:
         appointments = appointments.filter(status=status_filter)
-        
+    else:
+        status_filter = ''
+
+    date_filter = request.GET.get('date', '').strip()
+    if date_filter:
+        try:
+            appointments = appointments.filter(
+                appointment_date=datetime.strptime(date_filter, '%Y-%m-%d').date()
+            )
+        except ValueError:
+            date_filter = ''
+
+    page_obj = Paginator(appointments, 10).get_page(request.GET.get('page'))
+
     context = {
         'doctor': doctor,
-        'appointments': appointments,
+        'page_obj': page_obj,
         'status_filter': status_filter,
+        'date_filter': date_filter,
+        'today_date': timezone.localdate().strftime('%Y-%m-%d'),
     }
     return render(request, 'doctor/appointments.html', context)
 
