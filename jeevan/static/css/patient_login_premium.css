@@ -1324,3 +1324,40 @@ a.register-link {
     border: 1px solid #000;
   }
 }
+
+/* ------------------------------------------------------------------
+   Layout fix: never clip the login form.
+   The panel used fixed viewport heights with overflow hidden, so on
+   phones and short laptop screens the Sign In button was cut off and
+   the page could not scroll. Let the panel grow to fit its content
+   and let the page scroll instead.
+   ------------------------------------------------------------------ */
+.vm-container.premium-container {
+  height: auto;
+  min-height: 100vh;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-top: var(--space-md);
+  padding-bottom: var(--space-md);
+}
+
+.vm-auth-panel.premium-panel {
+  max-height: none;
+}
+
+@media (max-width: 1024px) {
+  .vm-container.premium-container {
+    justify-content: flex-start;
+  }
+
+  .vm-auth-panel.premium-panel {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+
+  /* The decorative image card overlapped the form on tablets. */
+  .vm-illustration.premium-illustration {
+    display: none;
+  }
+}
